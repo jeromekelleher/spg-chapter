@@ -35,6 +35,7 @@
 %%%%%%%%%%%%%%%%%%%%
 % Extra packages
 %%%%%%%%%%%%%%%%%%%%
+\usepackage{minted}
 \usepackage{natbib}
 \bibliographystyle{plainnat}
 
@@ -92,9 +93,37 @@ in \ms. [Quick round up of other simulators]
 \subsection{Time scaling}
 \label{sec:time-scaling}
 
-\subsection{Kingman's coalescent}
+\subsection{Simple simulations and replication}
 \label{sec:sim-kingman}
 
+The simplest possible simulation that we can perform generates a tree sampled
+from the distribution defined by the Kingman coalescent.
+
+\begin{minted}{python}
+import msprime
+ts = msprime.simulate(10, Ne=0.5)
+\end{minted}
+
+There are two parameters to the \apiref{simulate} function. The first is the
+sample size (i.e., the number of leaves in the tree that we output) and the
+second defines the effective population size (see section~\ref{sec:time-scaling}).
+Here we set $N_e$ to $1/2$ so that the branch lengths in our simulated trees
+are in coalescent units.
+
+A single sample from the distribution of trees is rarely enough to tell us
+anything interesting, however. Usually we  will require many different
+independent samples from the distribution we are interested in. This can
+be done using the \apiref{num\_replicates} argument.
+
+\begin{minted}{python}
+import numpy as np
+import msprime
+N = 100
+T_mrca = np.zeros(N)
+for j, ts in enumerate(msprime.simulate(10, Ne=0.5, num_replicates=N)):
+    tree = ts.first()
+    T_mrca[j] = tree.time(tree.root)
+\end{minted}
 
 \subsection{Recombination}
 \label{sec:sim-recombination}

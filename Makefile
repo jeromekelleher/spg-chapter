@@ -1,5 +1,5 @@
 chapter.pdf: chapter.tex references.bib
-	pdflatex chapter.tex
-	pdflatex chapter.tex
+	pdflatex -shell-escape chapter.tex
+	pdflatex -shell-escape chapter.tex
 	bibtex chapter
-	pdflatex chapter.tex
+	pdflatex -shell-escape chapter.tex
