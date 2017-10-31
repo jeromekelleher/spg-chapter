@@ -43,6 +43,8 @@
 %%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\msprime}[0]{\texttt{msprime}}
+\newcommand{\ms}[0]{\texttt{ms}}
+\newcommand{\apiref}[1]{\texttt{#1}}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,8 +80,91 @@ King's Buildings, Edinburgh EH9 3FL, UK. \email{konrad.lohse@ed.ac.uk}}
 This chapter is a tutorial for running and analysing coalescent simulations
 using \msprime~\citep{kelleher2016efficient}.
 
+% Other simulators you might use.
+The \msprime\ simulator is based on the classical \ms\
+program~\citep{hudson2002generating} and the models for population
+structure and demography are directly derived from the approach taken
+in \ms. [Quick round up of other simulators]
+
+\section{Running simulations}
+\label{sec:simulations}
+
+\subsection{Time scaling}
+\label{sec:time-scaling}
+
+\subsection{Kingman's coalescent}
+\label{sec:sim-kingman}
+
+
+\subsection{Recombination}
+\label{sec:sim-recombination}
+
+[Include a paragraph about variable recombination via recombination maps here.]
+
+\subsection{Mutations}
+\label{sec:sim-mutations}
+
+\subsection{Historical samples}
+\label{sec:sim-historical-samples}
+
+\subsection{Population structure}
+\label{sec:sim-population-structure}
+
+\subsection{Demographic events}
+\label{sec:sim-demographic-events}
+
+
+\section{Analysing simulation results}
+\label{sec:analysing}
+In the previous section we saw how to run simulations of various biological models
+using \msprime. A major advantage of \msprime\ over simulators that are structured
+as a command line program is that we can analyse our data in the same script
+as we generated it. This facilitates reproduciblility as well as being much
+more efficient (parsing the text output by simulators is inefficient). In this
+section we show some examples of how to use the \msprime\ API to analyse the
+data produced by simulations.
+
+\subsection{Tree Sequences}
+\label{sec:tree-sequences}
+In this subsection we describe the basic data structure that underlies all of
+\msprime's APIs.
+
+\subsection{Tree traversals}
+\label{sec:tree-traversals}
+
+
+\subsection{Genotype data}
+\label{sec:sequence-data}
+For many tasks we wish to have direct access to the observed sequence
+data, i.e., the sample genotypes. The most efficient way to access this
+information in \msprime\ is to use the \apiref{variants} iterator.
+
+[Example of using the variants iterator]
+
+The \msprime\ API is not currently a complete solution for calculating
+statistics of interest in population genetics [mention ongoing work
+with Peter Ralph here?]. However, there are two excellent Python
+libraries for efficiently working with sequence data that can efficiently
+accept data from \msprime. We briefly illustrate their usage here.
+
+The \texttt{scikit-allel}\citep{miles2017scikit} package provides a
+comprehensive suite of utilities for working with data.
+[Short example using scikit-allel]
+
+Another option is to use the \texttt{pylibseq} package, which is a
+Python interface to the powerful \texttt{libsequence}
+library~\citep{thornton2003libsequence}. [Short example using pylibseq]
+
+
+\section{Data examples}
+\label{sec:data-examples}
+
+In this section we apply the tools developed in sections~\ref{sec:simulations}
+and~\ref{sec:analysing} to some real data examples.
+
 
 \bibliography{references}
+
 
 \clearpage
 \appendix
