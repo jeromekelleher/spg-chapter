@@ -32,6 +32,19 @@
                        % please use the style svind.ist with
                        % your makeindex program
 
+%%%%%%%%%%%%%%%%%%%%
+% Extra packages
+%%%%%%%%%%%%%%%%%%%%
+\usepackage{natbib}
+\bibliographystyle{plainnat}
+
+%%%%%%%%%%%%%%%%%%%%
+% local macros
+%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\msprime}[0]{\texttt{msprime}}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
@@ -42,7 +55,7 @@
 \author{Jerome Kelleher and Konrad Lohse}
 % Use \authorrunning{Short Title} for an abbreviated version of
 % your contribution title if the original one is too long
-\institute{Jerome Kelleher \at 
+\institute{Jerome Kelleher \at
 Big Data Institute, Li Ka Shing Centre for Health Information and Discovery, University of Oxford, Oxford, OX3 7FZ, UK. \email{jerome.kelleher@bdi.ox.ac.uk}
 \and Konrad Lohse \at Institute of Evolutionary Biology, University of Edinburgh, King's Buildings, Edinburgh EH9 3FL, UK. \email{konrad.lohse@ed.ac.uk}}
 %
@@ -56,7 +69,19 @@ Big Data Institute, Li Ka Shing Centre for Health Information and Discovery, Uni
 
 \abstract{Coalescent simulation is really useful. It's easy to simulate stuff with msprime. Examples of stuff that you can simulate.}
 
-\section{Section Heading}
+
+\section{Introduction}
+\label{sec:introduction}
+
+This chapter is a tutorial for running and analysing coalescent simulations
+using \msprime~\citep{kelleher2016efficient}.
+
+
+\bibliography{references}
+
+\clearpage
+\appendix
+\section{Stuff from template}
 \label{sec:1}
 Use the template \emph{chapter.tex} together with the Springer document class SVMono (monograph-type books) or SVMult (edited books) to style the various elements of your chapter content in the Springer layout.
 
@@ -311,5 +336,4 @@ When placed at the end of a chapter or contribution (as opposed to at the end of
 a \times b = c
 \end{equation}
 
-\input{referenc}
 \end{document}
