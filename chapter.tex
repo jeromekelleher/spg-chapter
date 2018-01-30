@@ -36,8 +36,11 @@
 % Extra packages
 %%%%%%%%%%%%%%%%%%%%
 \usepackage{minted}
+\usepackage{wrapfig}
 \usepackage{natbib}
 \bibliographystyle{plainnat}
+
+\newminted{python}{fontsize=\footnotesize}
 
 %%%%%%%%%%%%%%%%%%%%
 % local macros
@@ -47,6 +50,7 @@
 \newcommand{\ms}[0]{\texttt{ms}}
 \newcommand{\apiref}[1]{\texttt{#1}}
 
+\newcommand{\includenbimage}[1]{\begin{center}\includegraphics[height=3cm]{#1}\end{center}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -87,369 +91,1543 @@ program~\citep{hudson2002generating} and the models for population
 structure and demography are directly derived from the approach taken
 in \ms. [Quick round up of other simulators]
 
+We emphasise integration with existing Python data analysis toolkits
+such as NumPy~\citep{walt2011numpy}, SciPy~\citep{jones-2018-scipy},
+Jupyter Notebooks~\citep{perez2007ipython},
+Matplotlib~\citep{hunter2007matplotlib}, Pandas~\citep{mckinney2010data}
+and Seaborn~\citep{michael_waskom_2017_883859}.
+
+Thanks to the rapid advances in sequencing technologies generating
+genome-wide sequence datasets for any species has become routine and
+there is great interest in learning about the demographic and selective
+past of populations from sequence variation. The coalescent gives an
+elegant mathematical description of the ancestry of a sample of
+sequences from a more or less idealized population and, given its focus
+on samples, has become the bread and butter of modern population
+genetics.
+
+However, despite the flood of sequence data and the plethora of
+coalescent-based inference tools now available, many analyses of genome
+wide variation remain superficial or entirely descriptive. Developing
+efficient inference methods has been difficult for two reasons. First,
+analytic results for models of population structure and/or history are
+often restricted to average coalescence times and small (often pairwise)
+samples. Even when it is possible to derive the full distribution of
+genealogies for realistic samples sizes and models, the results are
+cumbersome and generally rely on automation (Lohse 2016). Second, and
+perhaps more fundamentally, dealing with recombination has proven
+extremely challenging and we still lack a full analytic description of
+genetic drift and recombination even under the simplest null models (in
+the absence of demography and selection). Thus, inference methods that
+incorporate linkage information generally rely on drastic simplifying
+assumptions about recombination (cite SMC papers and Song).
+
+Given the severe limitations of relating sequence variation to
+mechanistic models analytically, coalescent simulations have become an
+integral part of inference in a number of ways: First, comparisons
+between analytic results against simulations serve as an important
+sanity check for both. Second, while it is often possible to use
+analytic approaches to obtain unbiased point estimates of demographic
+parameters by ignoring linkage (cite dadi and ), quantifying the
+uncertainty and potential biases in such estimates requires simulating
+data with linkage to conduct parametric bootstrapping. Finally, a range
+of inference approaches that rely on coalescent simulations directly to
+approximate the likelihood or - in a Bayesian setting - the posterior,
+of parameters under arbitrarily complex models of demography:
+Approximate Bayesian computation (ABC) (cite DIYABC, msBayes) has
+evolved ii) Approximate likelihood methods either based on SNPs (cite
+Excoffier) or blockwise data (cite ABLE).
+
+From the perspective of the user, inference tools are generally
+implemented with a command line or graphical user interface and are
+designed for a more or less narrow set of inference problems. Moreover,
+curent inference methods are based on a variety of coalescent simulators
+which are often. The aim of this chapter is to illustrate that how
+msprime (and its API) provides a flexible way to run and use coalescent
+simulations under under any model. We first explain the basic
+datastruture and methods msprimes for coalescent simulations and then
+show by the way of a set of simple practical examples how msprime can be
+used to obtain predictions for commonly used data summaries and
+diffferent models of demography. Finally, we show how msprime can be
+used to set up a ABC inference.
+
+
+
 \section{Running simulations}
 \label{sec:simulations}
 
-\subsection{Time scaling}
-\label{sec:time-scaling}
 
-\subsection{Simple simulations and replication}
-\label{sec:sim-kingman}
+\subsection{Trees and replication}\label{running-simulations}
+    At the simplest level, coalescent simulation is about generating trees.
+These trees represent the simulated history of a sample of individuals
+drawn from an idealised population (in later sections we show how to
+vary the properites of this idealised population). The function
+\texttt{msprime.simulate} runs these simulations, and the parameters
+that we provide to this function determine the exact simulation that we
+run. It returns a \texttt{TreeSequence} object, which represents the
+full simulated history of the sample. In later sections we discuss the
+effects of recombination, when this \texttt{TreeSequence} contains a
+list of correlated trees. For now, we assume that there is no
+recombinations, and we use the method \texttt{first()} to obtain the
+tree object from this tree sequence. For example, here we simulate a
+history for a sample of three chromosomes:
 
-The simplest possible simulation that we can perform generates a tree sampled
-from the distribution defined by the Kingman coalescent.
+\begin{pythoncode}
+ts = msprime.simulate(3)
+tree = ts.first()
+SVG(tree.draw())
+\end{pythoncode}
 
-\begin{minted}{python}
-import msprime
-ts = msprime.simulate(10, Ne=0.5)
-\end{minted}
+\begin{wrapfigure}{r}{0.4\textwidth}
+  \begin{center}
+    \includegraphics[width=0.38\textwidth]{images/simulations_5_0.pdf}
+  \end{center}
+\end{wrapfigure}
 
-There are two parameters to the \apiref{simulate} function. The first is the
-sample size (i.e., the number of leaves in the tree that we output) and the
-second defines the effective population size (see section~\ref{sec:time-scaling}).
-Here we set $N_e$ to $1/2$ so that the branch lengths in our simulated trees
-are in coalescent units.
+    In this tree we have 5 nodes. Nodes 0, 1 and 2 are \emph{leaves}, and
+represent our samples. Node 3 is an \emph{internal} node, and is the
+parent of 0 and 1. Node 4 is also an internal node, and is the root of
+the tree. In mpsrime, we always refer to nodes by their integer IDs and
+obtain information about these nodes by calling methods on the tree
+object. For example the code \texttt{tree.children(4)} will return the
+tuple \texttt{(2,\ 3)} here, as these are the node IDs of the children
+of the root node. Similarly, \texttt{tree.parent(0)} will return
+\texttt{3}.
 
-A single sample from the distribution of trees is rarely enough to tell us
-anything interesting, however. Usually we  will require many different
-independent samples from the distribution we are interested in. This can
-be done using the \apiref{num\_replicates} argument.
+The height of nodes in a tree are determined by their \emph{time}; this
+is how long ago the ancestor that corresponds the node was born. So,
+contemporary samples always have a node time of zero, and time values
+increase as we go upwards in the tree (and further back in time). Times
+in msprime are always measured in \emph{generations}.
 
-\begin{minted}{python}
-import numpy as np
-import msprime
-N = 100
+When we run a single simulation, the resulting tree is a single random
+sample from the probability distribution of coalescent trees. Since a
+single random draw from any distribution is not usually informative, we
+nearly always need to run many different \emph{replicate} simulations to
+obtain useful information. This simplest way to do this in msprime is to
+use the \texttt{num\_replicates} argument.
+
+\begin{pythoncode}
+N = 1000
+mean_T_mrca = 0
+for ts in msprime.simulate(10, num_replicates=N):
+    tree = ts.first()
+    mean_T_mrca += tree.time(tree.root)
+mean_T_mrca = mean_T_mrca / N
+print(mean_T_mrca)
+
+>>> 3.6717548653768133
+\end{pythoncode}
+
+    In this example we run 1000 independent replicates of the coalescent for
+a sample of 10 chromosomes, and compute the mean time to the most recent
+common ancestor of the entire sample, or equivalently the root of the
+tree. (The value we obtain is a highly unrealistic 3.5 generations in
+the past; however, this is unsurprising since we have specified a highly
+unrealistic population model. See the next for more details on how to
+specify population models and interpret simulation times.) The
+\texttt{simulate} function behaves slightly differently when it is
+called with the \texttt{num\_replicates} argument: rather than returning
+a single tree sequence we return an \emph{iterator} over the individual
+replicates. What this essentially means is that we can use the
+convenient \textbf{for} loop construction to consider each simulation in
+turn, but without actually storing all these simulations. As a result,
+we can run millions of replicates using this method if needs be without
+using any extra storage.
+
+When simulating coalescent trees, we are often interested in more than
+just the mean of the distribution of some statistic. Rather than compute
+the various summaries by hand (as we have done for the mean in the last
+example), it is much more convenient to store the result for each
+replicate and analyse this array after the simulations have completed.
+For example:
+
+\begin{pythoncode}
+N = 1000
 T_mrca = np.zeros(N)
-for j, ts in enumerate(msprime.simulate(10, Ne=0.5, num_replicates=N)):
+for j, ts in enumerate(msprime.simulate(10, num_replicates=N)):
     tree = ts.first()
     T_mrca[j] = tree.time(tree.root)
-\end{minted}
+print(np.mean(T_mrca), np.var(T_mrca))
+
+>>> (3.6690718290544053, 4.8541533617765706)
+\end{pythoncode}
+
+    Here we simulate 1000 replicates, storing the time to the most recent
+common ancestor for each replicate in the array \texttt{T\_mrca}. (By
+default, time is measured in units of \(4 N_e\) generations; see the
+next section for details.) We use the Python \texttt{enumerate} function
+here to simplify the process of efficiently inserting values into this
+array, which simply ensures that \texttt{j} for the first replicate,
+\texttt{1} for the second, and so on. Thus, by the time we finish the
+loop, the array has been filled with T\_mrca values randomly generated
+under the coalescent. We then use the \texttt{numpy} library (which has
+an extensive suite of statistical functions) to compute the mean and
+variance of this array. This example is idiomatic, and we will use this
+type of approach throughout the rest of the tutorial.
+
+It is usually more convenient to use the \texttt{num\_replicates}
+argument to peform replication, but there are situations in which it is
+better the specify random seeds manually. For example, if simulations
+require a long time to run then we may wish to use multiple processes to
+run these simulations. To ensure that the seeds used in these different
+processes are unique, it is best to manually specify them. For example,
+
+\begin{pythoncode}
+def run_simulation(seed):
+    ts = msprime.simulate(10, random_seed=seed)
+    tree = ts.first()
+    return tree.time(tree.root)
+
+N = 1000
+seeds = np.random.randint(1, 2**32 - 1, N)
+with multiprocessing.Pool(4) as pool:
+    T_mrca = np.array(pool.map(run_simulation, seeds))
+print(np.mean(T_mrca))
+
+>>> 3.6459775450221832
+\end{pythoncode}
+
+    In this example we create a list of 1000 seeds between 1 and $2^{32} -
+1$ (the range accepted by msprime) randomly using numpy. We then use the
+multiprocessing module to create a worker pool of four processes, and
+run our different replicates in these subprocesses. The results are then
+collected together in a numpy array so that we can easily process them.
+This approach is a straightforward way to fully utilise modern
+multi-core processors.
+
+Specifying the same random seed for two different simulations (with the
+same parameters) ensures that we get precisely the same results from
+both simulations (at least, on the same computer and with the same
+software versions). This is very useful when we wish to examine the
+properties of a specific simulation (for example, when debugging), or if
+we wish to illustrate a particular example. We will often set the random
+seed in the examples in this tutorial for this reason.
+
+\subsection{Population models}\label{population-models}
+
+In the previous section the only parameters that we supplied to
+\texttt{simulate} were the \texttt{sample\_size} and
+\texttt{num\_replicates} parameters. This allows us to randomly sample
+trees with a given number of nodes, but has little connection with
+biological reality. The most imporant parameter used to model biology in
+coalescent simulations is the \emph{effective population size}, or
+\texttt{Ne}. This parameter simply rescales time; larger effective
+population sizes mean larger coalescence times:
+
+\begin{pythoncode}
+def pairwise_T_mrca(Ne):
+    N = 10000
+    T_mrca = np.zeros(N)
+    for j, ts in enumerate(
+            msprime.simulate(2, Ne=Ne, num_replicates=N)):
+        tree = ts.first()
+        T_mrca[j] = tree.time(tree.root)
+    return np.mean(T_mrca)
+
+print(
+    pairwise_T_mrca(0.5), pairwise_T_mrca(10),
+    pairwise_T_mrca(100))
+
+>>> (0.99569690432656333, 19.816809844176138, 196.42125227336615)
+\end{pythoncode}
+
+    Thus, when we specify \(N_e=10\) we get a mean coalescence time of about
+20 generations, and when \(N_e=100\) the mean coalescence time is about
+200 generations. See Wakeley (citation) for details on the biological
+interpretation of effective population size.
+
+By default, \(N_e = 1\) in msprime, which is equivalent to measuring
+time in units of \(4N_e\) generations. It is very important to note that
+\(N_e\) in msprime is the \emph{diploid} effective population size,
+which means that all times are scaled by \(4N_e\) (rather than 2Ne for a
+haploid coalescent). Thus, if we wish to compare the results that are
+given in the literature for a haploid coalescent, then we must set
+\(N_e\) to 1/2 to compensate. For example, we know that the expected
+coalescence time for a sample of size 2 is 1, and this is the value we
+obtain from the \texttt{pairwise\_T\_mrca} function when we have
+\(N_e=0.5\). We will usually assume that we are working in haploid
+coalescent time units from here on, and so set \(N_e=0.5\) in most
+examples. However, when running simulations of a specific organism, it
+is substantially more convenient to use an appropriate estimated value
+for \(N_e\) so that times are directly interpretable.
+
+\subsubsection{Exponentially growing/shrinking
+populations}\label{exponentially-growingshrinking-populations}
+
+When we provide an \(N_e\) parameter, this specifies a fixed effective
+population size. We can also model populations that are exponentially
+growing or contracting at some rate over time. Given a population size
+at the present \(s\) and a growth rate \(\alpha\), the size of the
+population \(t\) generations in the past \(s e^{-\alpha t}\). (Note
+again that time and rates are measured in units of \emph{generations},
+not coalescent units.)
+
+In msprime, the initial size and growth rate for a particular population
+are specified using the \texttt{PopulationConfiguration} object. A list
+of these objects (describing the different populations; see the
+Population Structure section) are then provided to the simulate
+function. When providing a list of
+\texttt{PopulationConfiguration\ objects}, the \texttt{Ne} parameter to
+\texttt{simulate} is not required, as the \texttt{initial\_size} of the
+population configurations performs the same task. For example,
+
+\begin{pythoncode}
+def pairwise_T_mrca(growth_rate):
+    N = 10000
+    T_mrca = np.zeros(N)
+    replicates = msprime.simulate(
+        population_configurations=[
+             msprime.PopulationConfiguration(
+                sample_size=2, initial_size=0.5,
+                growth_rate=growth_rate)],
+        num_replicates=N, random_seed=100)
+    for j, ts in enumerate(replicates):
+        tree = ts.first()
+        T_mrca[j] = tree.time(tree.root)
+    return np.mean(T_mrca)
+
+print(
+    pairwise_T_mrca(0.05), pairwise_T_mrca(0),
+    pairwise_T_mrca(-0.05))
+>>> (0.96598072124289924, 1.0124999939843193, 1.0694803236032397)
+\end{pythoncode}
+
+    Here we simulate the pairwise \(T_{MRCA}\) for positive, zero and
+negative growth rates. When we have a growth rate of zero, we see that
+recover the usual result of 1.0 (as our initial size, and hence \(N_e\),
+is set to \(1/2\)). When the growth rate is positive, we see that the
+mean coalescence time is reduced, since the population size is getting
+smaller as we go backwards in time, resulting in an increased rate of
+coalescence. Conversely, when we have a negative growth rate, the
+population is getting larger as we go backwards in time, resulting in a
+slower coalescence rate. (Care must be taken with negative growth rates,
+however, as it is possible to specify models in which the MRCA is never
+reached. In some cases this will lead to an error being raised, but it
+is also possible that the simulator will keep generating events
+indefinitely.)
+
+    \subsection{Mutations}\label{mutations}
+
+We cannot directly observe gene genealogies; rather we observe the
+effects of mutations occuring on the branches of these trees. We are
+there very often interesting not just in the genealogies that are
+simulated by the coalescent process, but also in the results of
+mutational processes imposed on these trees. Msprime currently supports
+simulating mutations under the infinitely many sites model. This is
+accessed by the \texttt{mutation\_rate} parameter to the
+\texttt{simulate} function. As usual, this rate is the per-generation
+rate.
+
+\begin{pythoncode}
+ts = msprime.simulate(3, mutation_rate=1, random_seed=7)
+tree = ts.first()
+SVG(tree.draw())
+\end{pythoncode}
+
+\begin{wrapfigure}{r}{0.4\textwidth}
+  \begin{center}
+    \includegraphics[width=0.38\textwidth]{images/simulations_19_0.pdf}
+  \end{center}
+\end{wrapfigure}
+% \includenbimage{images/simulations_19_0.pdf}
+    In this example we have two mutations, shown by the red squares.
+Mutations occur above a given node in the tree, and all samples beneath
+this node will inherit the mutation. The infinite sites mutations used
+here are simple binary mutations, so that the ancestral state is 0 and
+the derived state is 1. One convenient way to access the resulting
+sample genotypes is to use the \texttt{genotype\_matrix()} method, which
+returns an \(m \times n\) numpy array, if we have \(m\) variable sites
+and \(n\) samples. Thus, if \(G\) is the genotype matrix, \(G[j, k]\) is
+the state of the \(k\)th sample at the \(j\)th site. In our example
+above, the site 0 has a mutation over node 3, and site 1 has a mutation
+over node 1, and so we get the following matrix:
+
+\begin{pythoncode}
+print(ts.genotype_matrix())
+
+>>> array([[1, 0, 1],
+           [0, 1, 0]], dtype=uint8)
+\end{pythoncode}
+
+    The genotype matrix is provides a convenient way of accessing this
+information, but will consume a great deal of memory for larger
+simulations. Msprime has an extensive suite of tools for efficiently
+working with sequence data and computing population genetics statistics,
+and a full review of these tools is beyond the scope of this document.
+Please consult the online documentation for more information on
+processing simulated sequences.
+
+When comparing with analytical results regarding neutral genetic
+variation, it is very imporant to be aware of the way in which the
+mutation rates are defined in coalescent theory. For historical reasons,
+the scaled mutation rate \(\theta\) is defined as \(2N_e \mu\), where
+\(\mu\) is the per-generation mutation rate. Since all times and rates
+are specified in units of generations in msprime, we must divide this
+factor of two out if we are to compare with analytical predictions. For
+example, the mean number of segregating sites for a sample of two is
+\(\theta\); to run this in msprime we do the following:
+
+\begin{pythoncode}
+N = 10000
+theta = 5
+S = np.zeros(N)
+replicates = msprime.simulate(
+    2, Ne=0.5, mutation_rate=theta / 2, num_replicates=N)
+for j, ts in enumerate(replicates):
+    S[j] = ts.num_sites  # Number of segregrating sites.
+print(np.mean(S))
+
+>>> 4.8276000000000003
+\end{pythoncode}
+
+    Note that here we set the mutation rate to \(\theta / 2\) (to cancel out
+the factor of 2 in the definition of \(\theta\)) and \(N_e = 1/2\) (so
+that time is measured in haploid coalescent time units). Such
+factor-of-two gymnastics are unfortunately unavoidable in coalescent
+theory.
+
+\subsection{Population structure}\label{population-structure}
+
+Msprime supports a discrete-deme model of population structure in which
+\(d\) panmictic populations exchange migrants according to the rates
+defined in an \(d \times d\) matrix. This approach is very flexible,
+allowing us to simulate island models (in which all populations exchange
+migrants at a fixed rate), one and two dimensional stepping stone models
+(where migrants only move to adjacent demes) and other more complex
+migration patterns.
+
+This population structure is declared in msprime using the
+\texttt{population\_configurations} and \texttt{migration\_matrix}
+parameters to the \texttt{simulate} function. The list of population
+configurations defines the populations; each element of this list must
+be a \texttt{PopulationConfiguration} instance (each population has
+independent initial population size and growth rate parameters). The
+migration matrix is a numpy array (or list of lists) of per-generation
+migration rates; \(M[j,k]\) defines the fraction of population \(j\)
+that consists of migrants from population \(k\) in each generation.
+
+\begin{pythoncode}
+pop_configs = [
+    msprime.PopulationConfiguration(sample_size=2),
+    msprime.PopulationConfiguration(sample_size=2)
+]
+M = np.array([
+    [0, 0.1],
+    [0, 0]
+])
+ts  = msprime.simulate(
+    population_configurations=pop_configs, migration_matrix=M,
+    random_seed=2)
+tree = ts.first()
+colour_map = {0:"red", 1:"blue"}
+node_colours = {
+    u: colour_map[tree.population(u)] for u in tree.nodes()}
+SVG(tree.draw(node_colours=node_colours))
+\end{pythoncode}
+
+\begin{wrapfigure}{r}{0.4\textwidth}
+  \begin{center}
+    \includegraphics[width=0.38\textwidth]{images/simulations_26_0.pdf}
+  \end{center}
+\end{wrapfigure}
+%
+% \includenbimage{images/simulations_26_0.pdf}
+
+    We create our population model by first making a list of two
+\texttt{PopulationConfiguration} objects. For convenience here, we use
+the \texttt{sample\_size} argument to these objects to state that we
+wish to have two samples from each population. This results in samples
+being allocated sequentially to the populations when \texttt{simulate}
+is called: 0 and 1 are placed in population 0, and samples 2 and 3 are
+place in population 1. We then declare our migration matrix, which is
+asymmetric in this example. Because \texttt{M{[}0,1{]}\ =\ 0.1} and
+\texttt{M{[}0,1{]}\ =\ 0}, forwards in time, individuals can migrate
+from population 1 to population 0 but not vice-versa. This is shown in
+the tree for this simulation, where each node has been coloured by its
+population (red is population 0 and blue population 1). Thus, the leaf
+nodes 0 and 1 are both from population 0, and 2 and 3 are both from
+population 2 (as explained above). As we go up the tree, the first event
+that occurs is 2 and 3 coalescing in population 1, creating node 4.
+After this, 4 coalesces with with node 0, which has at some point before
+this migrated into deme 1, creating node 5. Node 1 also migrates into
+deme 1, where it coalesces with 5. Because migration is asymmetric here,
+the most recent common ancestor of the four samples \emph{must} occur
+within deme 1.
+
+The exact history of migration events is available if we use the
+\texttt{record\_migrations} option. In the next example, we set up a
+symmetric island model and track every migration event:
+
+\begin{pythoncode}
+pop_configs = [
+    msprime.PopulationConfiguration(sample_size=3),
+    msprime.PopulationConfiguration(sample_size=1),
+    msprime.PopulationConfiguration(sample_size=1)]
+M = [
+    [0, 1, 1],
+    [1, 0, 1],
+    [1, 1, 0]]
+ts  = msprime.simulate(
+    population_configurations=pop_configs, migration_matrix=M,
+    record_migrations=True, random_seed=101)
+tree = ts.first()
+colour_map = {0:"red", 1:"blue", 2: "green"}
+node_colours = {
+    u: colour_map[tree.population(u)] for u in tree.nodes()}
+SVG(tree.draw(node_colours=node_colours))
+\end{pythoncode}
+
+\begin{wrapfigure}{r}{0.4\textwidth}
+  \begin{center}
+    \includegraphics[width=0.38\textwidth]{images/simulations_28_0.pdf}
+    \end{center}
+\end{wrapfigure}
+% \includenbimage{images/simulations_28_0.pdf}
+
+    Here we sample three nodes from population 0, but because we have a lot
+of migration the locations of coalescences are quite random. For
+example, the first coalescence occurs in deme 2 (green), after node zero
+has migrated in. To see the details of these migration events, we can
+examine the "migration records" that are stored by msprime. (These are
+not stored by default, as they may require a substantial amount of
+memory to store. The \texttt{record\_migrations} parameter must be
+supplied to \texttt{simulate} to turn on this feature.) Migration
+records store complete information about the time, source and
+destination demes and the genomic interval in question. Here we are
+interested in the total number of migrations experienced by each node:
+
+\begin{pythoncode}
+node_count = np.zeros(ts.num_nodes)
+for migration in ts.migrations():
+    node_count[migration.node] += 1
+plt.bar(np.arange(ts.num_nodes), node_count)
+plt.xlabel("Node ID")
+plt.ylabel("Number of migrations");
+\end{pythoncode}
+
+This code produces the plot in Figure~\ref{fig:migration_counts}.
+We can see that node zero experienced very few migrations before it
+ended up in deme 2, where it coalesced with 4 (which never migrated).
+Node 2, on the other hand migrated 30 times before it finally coalesced
+with 7 in deme 0. Note that there are many more migrations events than
+nodes there, implying that most migration events are not identifiable
+from a genealogy in real data~\citep{sousa2011nonidentifiability}.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=\textwidth]{images/simulations_30_0.pdf}
+\end{center}
+\caption{\label{fig:migration_counts} Number of migration events for
+each tree node in a simulation with migration.}
+\end{figure}
+
+Other forms of migration are also possible between specific demes at
+specific times. These are one of a number of different demographic
+event, which are dealt with in the next section.
+
+\subsection{Demographic events}\label{demographic-events}
+
+Demographic events allow us to model more complex histories involving
+changes to the population structure over time. These are specified using
+the \texttt{demographic\_events} parameter to \texttt{simulate}. Each
+demographic event occurs at a specific time, and the list of events must
+be supplied in the order they occur (backwards in time). There are a
+number of different types of demographic event, which we examine in
+turn.
+
+\subsubsection{Migration rate change}\label{migration-rate-change}
+
+Migration rate change events allow us to update the migration rate
+matrix at some point in time. We can either update a single cell in the
+matrix or all (non-diagonal) entries at the same time.
+\begin{pythoncode}
+ts  = msprime.simulate(
+    population_configurations=[
+        msprime.PopulationConfiguration(sample_size=2),
+        msprime.PopulationConfiguration(sample_size=2)],
+    demographic_events=[
+        msprime.MigrationRateChange(20, rate=1.0, matrix_index=(0, 1))],
+    random_seed=2)
+tree = ts.first()
+colour_map = {0:"red", 1:"blue"}
+node_colours = {u: colour_map[tree.population(u)] for u in tree.nodes()}
+node_labels = {
+    u: (str(u) if tree.is_sample(u) else "{} (t={:.1f})".format(u,
+tree.time(u)))
+    for u in tree.nodes()}
+SVG(tree.draw(node_colours=node_colours, node_labels=node_labels))
+\end{pythoncode}
+
+\begin{wrapfigure}{r}{0.5\textwidth}
+  \begin{center}
+    \includegraphics[width=0.48\textwidth]{images/simulations_34_0.pdf}
+  \end{center}
+\end{wrapfigure}
+% \includenbimage{images/simulations_34_0.pdf}
+
+    As before, the sample 0 and 1, and 2 and 3 coalesce quickly within their
+own populations. However, because the migration rate between the
+populations is zero these lineages are isolated and would never coalesce
+without some change in demography. The migration rate change event
+happens at time 20, resulting in node 5 migrating to deme 1 soon
+afterwards. The lineages then coalesce at time 21.44.
+
+\subsubsection{Mass migration}\label{mass-migration}
+
+This class of event allows us to move some proportion of the lineages in
+one deme to another at a particular time. This allows us to model
+population splits and admixture events.
+
+Population splits occur when some fraction of the lineages from a
+population migrate to another population.
+
+\begin{pythoncode}
+ts  = msprime.simulate(
+    population_configurations=[
+        msprime.PopulationConfiguration(sample_size=3),
+        msprime.PopulationConfiguration(sample_size=3)],
+    demographic_events=[
+        msprime.MassMigration(15, source=1, dest=0, proportion=1)],
+    random_seed=20)
+tree = ts.first()
+colour_map = {0:"red", 1:"blue"}
+node_colours = {u: colour_map[tree.population(u)] for u in tree.nodes()}
+node_labels = {
+    u: (str(u) if u < 8 else "{} (t={:.2f})".format(u, tree.time(u)))
+    for u in tree.nodes()}
+SVG(tree.draw(node_colours=node_colours, node_labels=node_labels))
+\end{pythoncode}
+
+
+\begin{wrapfigure}{r}{0.5\textwidth}
+  \begin{center}
+    \includegraphics[width=0.48\textwidth]{images/simulations_37_0.pdf}
+  \end{center}
+\end{wrapfigure}
+% \includenbimage{images/simulations_37_0.pdf}
+
+
+Again, we have two isolated populations which coalesce down to a single
+lineage. The population split at time 15 (which produced all individuals
+in population 1), then results in this lineage migrating back to
+population 0, where it coalesces with the ancestor of the samples 0, 1
+and 2.
+
+Admixture events (i.e., where some fraction of the lineages move to a
+different deme) are specified in the same way:
+
+\begin{pythoncode}
+ts  = msprime.simulate(
+    population_configurations=[
+        msprime.PopulationConfiguration(sample_size=6),
+        msprime.PopulationConfiguration(sample_size=0)],
+    demographic_events=[
+        msprime.MassMigration(0.5, source=0, dest=1, proportion=0.5),
+        msprime.MigrationRateChange(1.1, rate=0.1),
+    ],
+    random_seed=26)
+tree = ts.first()
+colour_map = {0:"red", 1:"blue"}
+node_colours = {u: colour_map[tree.population(u)] for u in tree.nodes()}
+node_labels = {
+    u: (str(u) if u < 8 else "{} (t={:.1f})".format(u, tree.time(u)))
+    for u in tree.nodes()}
+SVG(tree.draw(node_colours=node_colours, node_labels=node_labels))
+\end{pythoncode}
+
+\begin{wrapfigure}{r}{0.4\textwidth}
+  \begin{center}
+    \includegraphics[width=0.38\textwidth]{images/simulations_39_0.pdf}
+  \end{center}
+\end{wrapfigure}
+% \includenbimage{images/simulations_39_0.pdf}
+
+    We begin in this example with 6 lineages sampled in population 0, zero
+samples in population 1, and with no migration between these
+populations. Then, at time 0.5, we have an admixture event where each of
+the 4 extant lineages (5, 7, 0 and 6) has a probability of 1/2 of moving
+to deme 1. Linages 0 and 6 migrate, and subsequently coalesce into node
+8. Further back in time, at \(t=1.1\), another demographic event occurs,
+changing the migration rate between the demes to 0.1, thereby allowing
+lineages to move between them. Eventually, all lineages end up in deme
+1, where they coalesce into the MRCA at time \(t=6.9\).
+
+\subsubsection{Population parameter change}\label{population-parameter-change}
+
+This class of event represents a simple change in the growth rate or
+size of a particular population. Since each population has it's own
+individual size and growth rates, we can change these arbitrarily as we
+go backwards in time. Keeping track of the actual sizes of different
+populations can be a little challenging, and for this reason msprime
+provides a \texttt{DemographyDebugger} class.
+
+To illustrate this we consider a very simple example in which we have a
+single population experiencing an phase of exponential growth from 750
+to 100 generations ago. The size of the population 750 generations ago
+was 2000, and it grew to 20,000 over the next 650 generations. The size
+of the population has been stable at this value for the past 100
+generations. We can encode this model as follows:
+
+\begin{pythoncode}
+N1 = 20000  # Population size at present
+N2 = 2000   # Population size at start (forwards in time) of exponential growth.
+T1 = 100    # End of exponential growth period (forwards in time)
+T2 = 750    # Start of exponential growth period (forwards in time)
+# Calculate growth rate; solve N2 = N1 * exp(-alpha * (T2 - T1))
+growth_rate = -np.log(N2 / N1) / (T2 - T1)
+population_configurations = [
+    msprime.PopulationConfiguration(initial_size=N1)
+]
+demographic_events = [
+    msprime.PopulationParametersChange(time=T1, growth_rate=growth_rate),
+    msprime.PopulationParametersChange(time=T2, growth_rate=0),
+]
+dp = msprime.DemographyDebugger(
+    population_configurations=population_configurations,
+    demographic_events=demographic_events)
+dp.print_history()
+\end{pythoncode}
+
+Gives the following output:
+\begin{footnotesize}
+\begin{verbatim}
+=============================
+Epoch: 0 -- 100.0 generations
+=============================
+     start     end      growth_rate |     0
+   -------- --------       -------- | --------
+0 |  2e+04    2e+04               0 |     0
+
+Events @ generation 100.0
+   - Population parameter change for -1: growth_rate -> 0.0035
+
+=================================
+Epoch: 100.0 -- 750.0 generations
+=================================
+     start     end      growth_rate |     0
+   -------- --------       -------- | --------
+0 |  2e+04    2e+03         0.00354 |     0
+
+Events @ generation 750.0
+   - Population parameter change for -1: growth_rate -> 0
+
+===============================
+Epoch: 750.0 -- inf generations
+===============================
+     start     end      growth_rate |     0
+   -------- --------       -------- | --------
+0 |  2e+03    2e+03               0 |     0
+
+\end{verbatim}
+\end{footnotesize}
+
+    After we set up our model, we use the \texttt{DemographyDebugger} to
+check our calculations. We see that time has been split into three
+``epochs''. From the present until 100 generations ago, we see that the
+population size is constant at 20,000. Then, we have a demographic event
+that changes the growth rate to 0.0035, which applies over the next
+epoch (from 100 to 750 generations ago). Over this time, the population
+grows from 2000 to 20,000, as we specified (note that the "start" and
+"end" of each epoch is looking \emph{backwards} in time, as we consider
+epochs starting from the present and moving backwards). At generation
+750 another event occurs, setting the growth rate for the population to
+0. Then, the population size is constant at 20,000 from generation 750
+until the indefinite past.
+
+A more complex example involving a three population out-of-Africa human
+model is available in the online documentation.
+
+\subsection{Ancient samples}\label{ancient-samples}
+
+Up to this point we have assumed that all samples are taken at the
+present time. However, msprime allows us to specify abitrary sampling
+times and locations, allowing us to simulate (for example) ancient
+samples.
+
+\begin{pythoncode}
+ts = msprime.simulate(
+    samples=[
+        msprime.Sample(0, 0), msprime.Sample(0, 0), msprime.Sample(0, 0),
+        msprime.Sample(1, 0.75), # Ancient sample in deme 1
+    ],
+    population_configurations=[
+        msprime.PopulationConfiguration(),
+        msprime.PopulationConfiguration()],
+    migration_matrix=[
+        [0, 1],
+        [1, 0]],
+    random_seed=22)
+tree = ts.first()
+colour_map = {0:"red", 1:"blue"}
+node_colours = {u: colour_map[tree.population(u)] for u in tree.nodes()}
+node_labels = {
+    u: (str(u) if u != 3 else "{} (t={:.2f})".format(u, tree.time(u)))
+    for u in tree.nodes()}
+SVG(tree.draw(node_colours=node_colours, node_labels=node_labels))
+\end{pythoncode}
+
+\begin{wrapfigure}{r}{0.5\textwidth}
+  \begin{center}
+    \includegraphics[width=0.48\textwidth]{images/simulations_45_0.pdf}
+  \end{center}
+\end{wrapfigure}
+% \includenbimage{images/simulations_45_0.pdf}
+
+All of the trees that we previously considered had leaf nodes at time
+zero. In this case, the sampes 0, 1 and 2 are taken at time 0 in
+population 0, but node 3 is sampled at time 0.75 in population 1. Note
+that in this case we used the \texttt{samples} parameter to
+\texttt{simulate} to specify our samples. This is the most general
+approach to assigning samples, and allows for samples to be assigned to
+arbitrary populations and at arbitrary times.
+
+\subsection{Recombination}\label{recombination}
+
+One of the key innovations of msprime is that it makes simulation of the
+full coalescent with recombination possible at a whole chromosome scale.
+Adding recombination to a simulation is simple, requiring very minor
+changes to the methods given above.
+
+\begin{pythoncode}
+ts = msprime.simulate(
+    10, Ne=1e4, length=1e5, recombination_rate=1e-8, random_seed=3)
+print(ts.num_trees)
+>>> 82
+\end{pythoncode}
+
+    In this case, we provide two extra parameters: \texttt{length}, which
+defines the lengths of the genomic region to be simulated, and
+\texttt{recombination\_rate}, which defines the rate of recombination
+per unit of sequence length, per generation. It is usually useful tp
+think of the length and recombination rate being defined in terms
+base-pairs (but note that these are continuous values, so this
+correspondence should not be taken too literally). For this example, we
+defined a sequence length of 10kb, and a recombination rate of
+\(10^{-8}\) per base per generation. The result of this simulation is a
+\emph{tree sequence} that contains 82 distinct trees.
+
+Up to this point we have assumed that our simulations returned a single
+tree representing the genealogy of our sample. The inclusion of
+recombination, however, means that there may be more than one tree
+relating our samples. The \texttt{TreeSequence} object returned by
+msprime is a very concise and efficient representation of these highly
+correlated trees. To process these trees, we simply need to consider
+them one at a time, using the \texttt{trees()} iterator.
+
+\begin{pythoncode}
+tmrca = np.zeros(ts.num_trees)
+breakpoints = np.zeros(ts.num_trees)
+for tree in ts.trees():
+    tmrca[tree.index] = tree.time(tree.root)
+    breakpoints[tree.index] = tree.interval[0]
+plt.ylabel("T_mrca (Generations)")
+plt.xlabel("Position (kb)")
+plt.plot(breakpoints / 1000, tmrca, "o");
+\end{pythoncode}
+
+% \includenbimage{images/simulations_50_0.pdf}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=\textwidth]{images/simulations_50_0.pdf}
+\end{center}
+\caption{\label{fig:tree_tmrcas}Time to the most recent common ancestor of
+a sample across a 100kb region.}
+\end{figure}
+
+This code generates the plot in Figure~\ref{fig:tree_tmrcas}.
+Here we plot the time of the MRCA of the sample for each tree across the
+sequence. We find the \(T_{MRCA}\) as before, and plot this by the
+position of the left-most position of this tree. A full description of
+tree sequence and the methods for working with them is beyond the scope
+of this document; please see the online documentation for more details.
+
+It is also possible to simulate data with recombination rates varying
+across the genome (e.g., in recombination hotspots). To do this, we
+first create a \texttt{RecombinationMap} instance that describes the
+properties of the recombination landscape that you with to simulate. We
+then supply this value to \texttt{simulate} using the
+\texttt{recombination\_map} argument. In the following example, we
+simulate 100 samples using the human chromosome 22 recombination map
+from the HapMap project~\citep{international2003international}.
+
+\begin{pythoncode}
+# Read in the recombination map and run the simulation.
+infile = "genetic_map_GRCh37_chr22.txt"
+recomb_map = msprime.RecombinationMap.read_hapmap(infile)
+ts = msprime.simulate(
+    sample_size=100,
+    Ne=10**4,
+    recombination_map=recomb_map,
+    random_seed=1)
+\end{pythoncode}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=\textwidth]{images/simulations_53_0.pdf}
+\end{center}
+\caption{\label{fig:variable_recombination}Plot of the HapMap
+genetic map for chromosome 22 and the density of breakpoints for a
+simulated chromosome.}
+\end{figure}
+
+% \includenbimage{images/simulations_53_0.pdf}
+
+Figure~\ref{fig:variable_recombination} shows the
+recombination rate and the locations of breakpoints
+from the simulation, and the density of breakpoints closely follows the
+recombination rate, as expected.
+
+Although coordinates are specified in floating point values, msprime
+uses a discrete loci model when performing simulations. By default, the
+number of loci is very large (\(\sim 2^{32}\)), and the locations of
+breakpoints are translated back into the coordinate system defined by
+the recombination map. However, the number of loci is configurable and
+can be specified if you wish to simulate a specific number of discrete
+loci.
+
+\begin{pythoncode}
+recomb_map = msprime.RecombinationMap.uniform_map(
+    length=10, rate=1, num_loci=10)
+ts = msprime.simulate(2, recombination_map=recomb_map)
+print(list(ts.breakpoints()))
+>>> [0, 1.0, 2.0, 3.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+\end{pythoncode}
+
+    Here we simulate a pairwise sample for a system with 10 loci, each of
+length 1 with recombination rate of 1 between adjacent loci per
+generation. In the output, we see that the breakpoints between trees now
+occur exactly at the integer boundaries bewtween these loci.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Processing results}\label{processing-results}
+
+In the previous section we showed how to run simulations in msprime, and
+how to construct population models and demographic histories. In this
+section we show how to process the results of simulations. This is not a
+comprehensive review of the capabilities of the msprime Python API, but
+concentrates on some useful examples.
+
+Msprime is specifically designed to enable very large simulations, and
+the processing methods be demonstrate below are all very efficient. To
+illustrate this we use a simulation of 200,000 samples of 10 megabases
+from a simple two-population model with human-like parameters:
+
+\begin{pythoncode}
+ts = msprime.simulate(
+    population_configurations=[
+        msprime.PopulationConfiguration(sample_size=10**5),
+        msprime.PopulationConfiguration(sample_size=10**5)],
+    demographic_events=[
+        msprime.MassMigration(time=50000, source=1, destination=0)],
+    Ne=10**4, recombination_rate=1e-8, mutation_rate=1e-8, length=10*10**6,
+    random_seed=3)
+print((ts.num_trees, ts.num_sites))
+
+>>> (93844, 102270)
+\end{pythoncode}
+
+This simulation required about 20 seconds to complete.
+
+
+\subsection{Computing MRCAs}\label{computing-mrcas}
+
+We are often intested in finding the most recent common ancestor (MRCA)
+of a pair (or many pairs) of samples. For example, Identity-by-descent
+(IBD) tracts are defined as contiguous stretches of genome in which the
+MRCA for a pair of samples is the same. Computing IBD segments for a
+pair of samples is very straightforward:
+
+\begin{pythoncode}
+def ibd_segments(ts, a, b):
+    trees_iter = ts.trees()
+    tree = next(trees_iter)
+    last_mrca = tree.mrca(a, b)
+    last_left = 0
+    segment_lengths = []
+    for tree in trees_iter:
+        mrca = tree.mrca(a, b)
+        if mrca != last_mrca:
+            left = tree.interval[0]
+            segment_lengths.append(left - last_left)
+            last_mrca = mrca
+            last_left = left
+    segment_lengths.append(ts.sequence_length - last_left)
+    return np.array(segment_lengths) / ts.sequence_length
+
+sns.distplot(ibd_segments(ts, 0, 1), label="Within population")
+sns.distplot(ibd_segments(ts, 0, 10**5), label="Between populations")
+plt.xlim(-0.0005, 0.01)
+plt.legend()
+plt.xlabel("Fraction of genome length");
+\end{pythoncode}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=\textwidth]{images/processing-results_5_0.pdf}
+\end{center}
+\caption{\label{fig:ibd_segments}Distribution of the length of IBD
+segments within and between populations for a pair of samples.}
+\end{figure}
+% \includenbimage{images/processing-results_5_0.pdf}
+
+In this example we create a function \texttt{ibd\_segments} that returns
+a numpy array of the lengths of IBD segments for a given pair of
+samples, \texttt{a} and \texttt{b}. It works simply by computing the
+MRCA for the samples at the left hand side of the sequence and then,
+moving rightwards, records a segment each time the MRCA changes. We then
+plot the distribution of tract lengths for samples 0 and 1 (which are
+both in the population 0), and also the tract lengths for a pair of
+samples from different populations. The results are shown in
+Figure~\ref{fig:ibd_segments}. As we might expect, the tract
+lengths are shorter for the between population pair.
+
+Of course, we would need to sample many such pairs of samples to get a
+reasonable approximation of the real distribution of block lenghts.
+Because the main cost of this function is in iterating over all the
+trees in the sequence, it is more efficient to keep track of the MRCAs
+for different pairs while doing a single iteration than to repeatedly
+call the above \texttt{ibd\_segments} function.
+
+\subsection{Sample counts}\label{sample-counts}
+
+The msprime API provides a very efficient way to count the number of
+samples that are beneath a particular node in a tree. This can be used,
+for example, to compute allele frequencies efficiently and is the basis
+for many of the fast algorithms in the API. As a simple illustration of
+this technique, consider the following code to compute the number of
+sites with derived allele frequency less than 1\%:
+
+\begin{pythoncode}
+N = ts.num_samples
+threshold = 0.01
+num_rare_derived = 0
+for tree in ts.trees():
+    for site in tree.sites():
+        assert len(site.mutations) == 1
+        mutation = site.mutations[0]
+        if tree.num_samples(mutation.node) / N < threshold:
+            num_rare_derived += 1
+print((num_rare_derived, num_rare_derived / ts.num_sites))
+
+>>> (65258, 0.638095238095238)
+\end{pythoncode}
+
+    In this example we iterate over all the trees in the tree sequence, and
+then iterate over all the sites in each tree. We then find the frequency
+of the derived allele at this site using the \texttt{num\_samples}
+method, which returns the number of samples in the tree beneath a given
+node. The underlying implementation ensures that this operation requires
+constant time, and so it is \emph{very} efficient. After the loop
+completes, we then see that such rare alleles are very common. (This
+code assumes that each site contains only a single mutation, which is
+always true for the simple infinite sites mutations currently output by
+msprime. However, it is possible to have more complex situations such as
+back and recurrent mutations in which this simplistic approach will not
+work.)
+
+A very powerful feature of this sample-counting feature is that we can
+perform the same operation over an arbitrary subset of the samples. For
+example, suppose we wished to count the number of sites that are private
+to a specific population:
+
+\begin{pythoncode}
+def num_private_sites(pop_id):
+    pop_samples = ts.samples(pop_id)
+    num_private = 0
+    for tree in ts.trees(tracked_samples=pop_samples):
+        for site in tree.sites():
+            assert len(site.mutations) == 1
+            mutation = site.mutations[0]
+            total = tree.num_samples(mutation.node)
+            within_pop = tree.num_tracked_samples(mutation.node)
+            if total == within_pop:
+                num_private += 1
+    return num_private
+
+private_0 = num_private_sites(0)
+private_1 = num_private_sites(1)
+print((ts.num_sites, private_0 + private_1, private_0, private_1))
+
+>>> (102270, 101607, 51295, 50312)
+\end{pythoncode}
+
+    This example is very similar, except we provide an extra argument to
+\texttt{ts.trees}. This \texttt{tracked\_samples} argument is a list of
+samples that we are interested in tracking information about, and can be
+any arbitrary subset of the samples in the simulation. Here we indicate
+that we are interested in tracking the set of samples within the
+population in question. Again we iterate over all trees and over all
+sites within these trees. Then, for each infinite sites mutation we
+compute two frequencies: the overall number of samples that inherit from
+the mutation's node, and the number of samples \emph{within the focal
+population} that inherit from this node. Then, if the total count is
+equal to within-population count, we know that this mutation is private
+to the population.
+
+\subsection{Obtaining subsets}\label{obtaining-subsets}
+
+In some situations it is useful to analyse data for different subsets of
+the samples separately. This is possible using the \texttt{simplify}
+method:
+
+\begin{pythoncode}
+samples = [1, 3, 5, 7]
+ts_subset = ts.simplify(samples)
+print((
+    ts_subset.num_sites, ts_subset.num_trees,
+    ts.num_sites, ts.num_trees))
+>>> (11939, 5483, 102270, 93844)
+\end{pythoncode}
+
+Here we extract the tree sequence representing the history of a tiny
+subset of the original samples, with IDs 1, 3, 5 and 7. The subset tree
+sequence contains all the genealogical information relevant to these
+samples, but no more. Hence, coalescences that are not ancestral to the
+subsample are not included, and neither are coalescences that predate
+the MRCA of our subsample. Thus, the number of distinct trees is greatly
+reduced. By default, we also remove any sites that have no mutations
+within these subtrees (i.e., those that are fixed for the ancestral
+state). These can be retained by using the
+\texttt{filter\_zero\_mutation\_sites=False} argument.
+
+Node IDs in the simplified tree sequence are not the same as in the
+original. The \texttt{map\_nodes} argument allows us to obtain the
+mapping from IDs in the original tree sequence to their equivalant nodes
+in the new tree sequence.
+
+\begin{pythoncode}
+ts_subset, node_map = ts.simplify(samples, map_nodes=True)
+tree = ts_subset.first()
+node_labels = {
+    node_map[j]: "{}({})".format(node_map[j], str(j)) for j in
+range(ts.num_nodes)}
+SVG(tree.draw(node_labels=node_labels, width=400))
+\end{pythoncode}
+
+\begin{wrapfigure}{r}{0.5\textwidth}
+  \begin{center}
+    \includegraphics[width=0.48\textwidth]{images/processing-results_15_0.pdf}
+  \end{center}
+\end{wrapfigure}
+% \includenbimage{images/processing-results_15_0.pdf}
+Here we plot the first tree in the subset tree sequence, showing the new
+node IDs along with the IDs from the original tree sequence in
+parentheses. The number of nodes is greatly reduced from the original.
+% This wrapfigure isn't working quite right here.
+
+\subsection{Processing variants}\label{processing-variants}
+
+While it is nearly always more efficient to work with mutations in terms
+of their context within the trees, it is sometimes more convenient to
+work with the allelic states of the samples. This information is
+obtained in msprime using the \texttt{variants()} iterator, which
+returns a \texttt{Variant} object for each site in the tree sequence. A
+\texttt{Variant} consists of: (a) a reference to the site in question;
+(b) the \texttt{alleles} at this site (the strings representing the
+actual states); and (c) the \texttt{genotypes} representing the observed
+state for each sample. The \texttt{genotypes} are encoded in a numpy
+array, such that \texttt{variant.alleles{[}variant.genotypes{[}j{]}{]}}
+gives the allelic state for sample ID \texttt{j}. The values in the
+\texttt{genotypes} array are therefore indexes into the \texttt{alleles}
+list. The ancestral state at a given site is guaranteed to be the first
+element in the \texttt{alleles} list, but no other assumptions about
+ordering of the alleles list should be made.
+
+For biallelic sites, working with genotypes is straightforward as the
+genotypes array can only contain 0 and 1 values, and these correspond to
+the ancestral and derived states, respectively. The \texttt{genotypes}
+values are returned as a numpy array, and so the full numpy library is
+available for efficient processing. As an example, we show here how to
+count the number of sites at which the derived allele is at frequency
+less than 10\%. Using the genotypes in this way is convenient, as
+complex patterns of back and recurrent mutations can be handled without
+difficulty.
+
+\begin{pythoncode}
+%%time
+threshold = 0.1
+num_rare = 0
+for variant in ts.variants():
+    # Will work for any biallelic sites; back/recurrent mutations are fine.
+    assert len(variant.alleles) == 2
+    if np.sum(variant.genotypes) / ts.num_samples < threshold:
+        num_rare += 1
+print(num_rare)
+>>> 83081
+CPU times: user 1min 30s, sys: 4 ms, total: 1min 30s
+\end{pythoncode}
+
+This code is straightforward, as we simply iterate over all variants and
+count the number of 1 values in the genotypes array. Using the \texttt{np.sum}
+function, this operation is efficient. Generating all the genotypes for
+200,000 samples at 100,000 sites, however,
+is an expensive operation and the overall calculation takes about 1.5 minutes
+to complete.
+
+In the case of infinite sites mutations, we can recast this operation
+to use the efficient sample counting methods. This approach is far more
+efficient, requiring less than 2 seconds to compute the same value.
+\begin{pythoncode}
+%%time
+num_rare = 0
+for tree in ts.trees():
+    for site in tree.sites():
+        # Only works for simple infinite sites mutations.
+        assert len(site.mutations) == 1
+        mutation = site.mutations[0]
+        if tree.num_samples(mutation.node) / ts.num_samples < threshold:
+            num_rare += 1
+print(num_rare)
+>>> 83081
+CPU times: user 1.75 s, sys: 36 ms, total: 1.79 s
+\end{pythoncode}
+
+    \subsection{Incremental calculations}\label{incremental-calculations}
+
+A powerful property of the tree sequence representation is that we can
+efficiently find the differences between adjacent trees. This is very
+useful when we have some value that we wish to compute that changes in a
+simple way between trees. The \texttt{edge\_diffs} iterator provides us
+with the information that we need to perform such incremental
+calculations. Here we use it to keep a running track of the total branch
+length of our trees, without needing to perform a full traversal each
+time.
+
+\begin{pythoncode}
+def get_total_branch_length(ts):
+    current = 0
+    total_branch_length = np.zeros(ts.num_trees)
+    for index, (_, edges_out, edges_in) in enumerate(ts.edge_diffs()):
+        for edge in edges_out:
+            current -= ts.node(edge.parent).time - ts.node(edge.child).time
+        for edge in edges_in:
+            current += ts.node(edge.parent).time - ts.node(edge.child).time
+        total_branch_length[index] = current
+    return total_branch_length
+\end{pythoncode}
+
+    This function returns the total branch length value for each tree in the
+sequence as a numpy array. It works by keeping track of the total branch
+length as we proceed from left to right, and storing this value in the
+output array for each tree. The \texttt{edge\_diffs} method returns a
+list of the edges that are removed for each tree transition
+(\texttt{edges\_out}) and a list of edges that are inserted
+(\texttt{edges\_in}). Computing the current value for the total branch
+length is then simply a case of subtracting the branch lengths for all
+outgoing edges and adding the branch lengths for all incoming edges.
+This is extremely efficient because, after the first tree has been
+constructed there is at most four incoming and outgoing edges. Thus,
+each tree transition costs \emph{constant time}.
+
+\begin{pythoncode}
+%%time
+tbl = get_total_branch_length(ts)
+
+CPU times: user 7.67 s, sys: 64 ms, total: 7.74 s
+\end{pythoncode}
+
+On the other hand, if we compute the total branch length by performing a
+full traversal for each tree, each tree transition is very costly for
+large trees. In this example, computing the array of branch lengths
+using the incremental approach given here took 8 seconds. Computing the
+same array using the \texttt{tree.total\_branch\_length} for each tree
+in a straightforward way still had not completed after \emph{twenty
+minutes}. (This is because msprime currently implements this operation
+by a full traversal in Python; in future this may change to using the
+algorithm given here.) Full tree traversals of large trees are
+expensive, and great gains can be made if calculations can be expressed
+in an incremental manner using \texttt{edge\_diffs}.
+
+
+\subsection{Exporting variant data}\label{exporting-variant-data}
+
+If the msprime API doesn't provide methods to easily calculate the
+statistics you are interested in, it's straightforward to export the
+variant data into other libraries using the \texttt{genotype\_matrix()}
+or \texttt{variants()} methods. We recommmend the excellent
+\texttt{scikit-allel}~\citep{miles2017scikit} and
+the \texttt{pylibseq}~\citep{thornton2003libsequence} libraries.
+If you wish to export data to
+external programs, VCF may be best option, which is supported using the
+\texttt{write\_vcf} method. The \texttt{simplify} method is useful here
+is you wish to export data from a subset of the simulated samples.
+
+However, it is worth noting that for large sample sizes, exporting
+genotype data may require a great deal of memory and take some time. One
+of the advantages of the msprime API is that we do not need to
+explicitly generate genotypes in order to compute many interesting
+statistics.
+
+\section{Validating analytical predictions}\label{validating-analytical-predictions}
+
+In this section we show an example of validating some simple analytical
+predictions from coalescent theory using simulations. The number of
+segregating sites is the total number of mutations that occured in the
+history of the sample (assuming the infinite sites mutation model).
+Since mutations happen as a Poisson process along the branches of the
+tree, what we are really interested in is the distribution of the total
+branch length of the tree. The results in this section are well known
+classical results from coalescent theory; this section is intended as a
+demonstration of how one goes about comparing analytical results to
+simulations. We show some idiomatic examples for integrating with
+the state-of-the-art data analysis packages such
+as Pandas~\citep{mckinney2010data} and Seaborn~\citep{michael_waskom_2017_883859}.
+
+\subsection{The number of segregating sites}
+The first properties that we are interested in are the mean and the
+variance of the total branch length of coalescent trees. (Note that, as
+before, we set \texttt{Ne=1/2} to convert between msprime's diploid time
+scaling to the haploid time scaling of these analytical results.)
+
+\begin{pythoncode}
+ns = np.array([5, 10, 15, 20, 25, 30])
+num_reps = 10000
+n_col = np.zeros(ns.shape[0] * num_reps)
+T_total_col = np.zeros(ns.shape[0] * num_reps)
+row = 0
+for n in ns:
+    for ts in msprime.simulate(n, Ne=0.5, num_replicates=num_reps):
+        tree = ts.first()
+        n_col[row] = n
+        T_total_col[row] = tree.total_branch_length
+        row += 1
+df = pd.DataFrame({"n": n_col, "T_total": T_total_col})
+\end{pythoncode}
+
+    We first create a array of the six different \(n\) values that we wish
+to simulate, and the create arrays to hold the results of the
+simulations. Because we are running 10,000 replicates for each sample
+size, we allocate arrays to hold 60,000 values. This approach of storing
+the data in arrays is convenient because it allows us to use Pandas
+dataframes in an idiomatic fashion. After doing this, we then iterate
+over all of our sample sizes and run 10,000 replicates of each. For each
+simulation, we simply store the sample size value and the total branch
+length. Once the simulation is completed, we store the information in a
+Pandas dataframe, which gives us access to many powerful data analysis
+tools (including the Seaborn library, which we use for visualisation
+here).
+
+After we have created our simulation data, we then define our analytical
+predictions and plot the data.
+
+\begin{pythoncode}
+def T_total_mean(n):
+    return 2 * np.sum(1 / np.arange(1, n))
+
+def T_total_var(n):
+    return 4 * np.sum(1 / np.arange(1, n)**2)
+
+mean_T = np.array([T_total_mean(n) for n in ns])
+stddev_T = np.sqrt(np.array([T_total_var(n) for n in ns]))
+ax = sns.violinplot(
+    x="n", y="T_total", data=df, color="grey", inner=None)
+ax.plot(mean_T, "-");
+ax.plot(mean_T - stddev_T, "--", color="black");
+ax.plot(mean_T + stddev_T, "--", color="black");
+group = df.groupby("n")
+mean_sim = group.mean()
+stddev_sim = np.sqrt(group.var())
+x = np.arange(ns.shape[0])
+ax.plot(x, mean_sim, "o")
+line, = ax.plot(x, mean_sim - stddev_sim, "^")
+ax.plot(x, mean_sim + stddev_sim, "^", color=line.get_color());
+\end{pythoncode}
+
+\begin{figure}
+\begin{center}
+    \parbox{5cm}{
+    \includegraphics[width=5cm]{images/segsites-example_5_0.pdf}
+    \begin{center}(A)\end{center}
+    }%
+    \qquad
+    \parbox{5cm}{
+    \includegraphics[width=5cm]{images/segsites-example_7_0.pdf}
+    \begin{center}(B)\end{center}
+    }
+    \caption{Comparisons of the distribution of simulated total branch lengths
+        with analytical results. (A) Show full distribution of simulated
+        values (violin plots) along with observed and predicted mean and
+        standard deviations for a range of sample sizes. (B) The full
+        simulated and predicted distribution of total branch lengths
+        for $n = 20$.}
+    \label{fig:segsites-norecomb}
+\end{center}
+\end{figure}
+
+    The plot in Figure~\ref{fig:segsites-norecomb}A shows the simulated
+distribution of the total branch lengths
+over replicate simulations (each violin is a distribution for a given
+sample size). We also show our analytical prediction for the mean and
+variance of each distrubution (the dashed lines show +/- one standard
+deviation from the mean). Also shown are the observed means and standard
+deviations from the simulations, as green circles and red triangles,
+respectively. We can see that the simulated values match our theoretical
+predictions for mean and variance very well. We can also see, however,
+that these one-dimensional summaries of the distrubution capture some
+essential properties but lose some important aspects of the
+distribution.
+
+    Ideally, we wish to capture the full complexity of the distribution as
+an analytical value. In the following code chunk we define the analytical
+prediction for the distribution of the total branch length, and
+plot the simulated distribution for a sample of size 20 along with
+the analytical prediction. The results are shown in
+Figure~\ref{fig:segsites-norecomb}B. We can see an excellent agreement between
+the smoothed kernel
+density esimate produced by Seaborn and our analytically computed value.
+
+\begin{pythoncode}
+def T_total_density(n, t):
+    e_t2 = np.exp(-t / 2)
+    return 0.5 * (n - 1) * e_t2 * (1 - e_t2)**(n - 2)
+
+n = 20
+T_total_20 = T_total_col[n_col == n]
+ts = np.linspace(0, np.max(T_total_20), 25)
+t_densities = np.array([T_total_density(n, t) for t in ts])
+sns.distplot(T_total_20)
+plt.plot(ts, t_densities, marker="o", label="Analytical")
+plt.xlabel("T_total")
+plt.legend();
+\end{pythoncode}
+
+We cannot directly observe branch lenghts, and so we are usually more
+interested in mutations when working with data. The mutation process is
+intimately related to the distribution of branch lengths, since
+mutations occur randomly along tree branches. One simple summary of the
+mutational process is the number of segregating sites, or the number of
+sites at which we observe variation. We can obtain this information very
+easily from simulations simply by specifying a mutation rate parameter.
+(Note again that we set \(N_e=1/2\) and our mutation rate
+\(= \theta / 2\) in order to convert to msprime's time scales.)
+
+\begin{pythoncode}
+def S_dist(n, theta, k):
+    S = 0
+    for i in range(2, n + 1):
+        S += ((-1)**i * binom(n - 1, i - 1)
+              * (i - 1) / (theta + i - 1) * (theta / (theta + i - 1))**k)
+    return S
+
+n = 20
+theta = 5
+num_replicates = 1000
+simulation = np.zeros(num_replicates)
+replicates = msprime.simulate(
+    n, Ne=0.5, mutation_rate=theta / 2, num_replicates=num_replicates)
+for j, ts in enumerate(replicates):
+    simulation[j] = ts.num_sites  # number of seg. sites
+ks = np.arange(np.max(simulation))
+analytical = np.array([S_dist(n, theta, k) for k in ks])
+sns.distplot(simulation)
+plt.plot(ks, analytical, marker='o', label="Analytical")
+plt.xlabel("Segregating sites")
+plt.legend();
+\end{pythoncode}
+
+\begin{figure}
+\begin{center}
+    \parbox{5cm}{
+    \includegraphics[width=5cm]{images/segsites-example_9_0.pdf}
+    \begin{center}(A)\end{center}
+    }%
+    \qquad
+    \parbox{5cm}{
+    \includegraphics[width=5cm]{images/segsites-example_12_0.pdf}
+    \begin{center}(B)\end{center}
+    }
+    \caption{Simulations of the number of segregating sites, and
+    comparisons with analytical predictions.
+    (A) The distribution of the number
+    of segregating sites for $n=20$, $\theta=5$ and no recombination
+    over 1000 simulation replicates, along with analytical prediction.
+    (B) The mean and variance of the number of segregating sites
+    over 10000 simulation replicates with $n=2$, $\theta=2$ and
+    varying recombination rate, along with analytical predictions.}
+    \label{fig:segsites}
+\end{center}
+\end{figure}
+
+Here we take 1000 replicate simulations, store the number of infinite
+sites mutations for each one and then plot this distribution in
+Figure~\ref{fig:segsites}A. Also plotted is the analytical prediction,
+and we see an excellent fit.
+
 
 \subsection{Recombination}
-\label{sec:sim-recombination}
 
-[Include a paragraph about variable recombination via recombination maps here.]
+In the previous section we saw how to run simulations to generate trees
+under the assumptions of the single-locus coalescent and compare these
+with analytical predictions. This assumes that our data is not affected
+by recombination, which is often unrealistic. Here we show how to
+compute empirical distrubutions of equivalent quantities, and compare
+these with classical results from the literature. Since analytical
+results are not known in general for many quantites under recombination,
+we limit ourselves to the pairwise case.
 
-\subsection{Mutations}
-\label{sec:sim-mutations}
+\begin{pythoncode}
+theta = 2
+num_replicates = 10000
+rhos = np.arange(1, 10)
+N = rhos.shape[0] * num_replicates
+rho_col = np.zeros(N)
+s_col = np.zeros(N)
+row = 0
+for rho in rhos:
+    replicates = msprime.simulate(
+        sample_size=2, Ne=0.5, mutation_rate=theta / 2,
+        recombination_rate=rho / 2, num_replicates=num_replicates)
+    for ts in replicates:
+        rho_col[row] = rho
+        s_col[row] = ts.num_sites
+        row += 1
+df = pd.DataFrame({"rho": rho_col, "s": s_col})
+\end{pythoncode}
 
-\subsection{Historical samples}
-\label{sec:sim-historical-samples}
+In this code chunk we again run $10^4$ replicate simulations for a range
+of input parameters, and store the results in a Pandas data frame. We
+are interested in the effects of recombination rate in this example,
+and so the parameter that we vary is the scaled recombination rate
+$\rho$ (noting, again, that we set \texttt{Ne} = 1/2 and
+\texttt{recombination\_rate} = $\rho / 2$ to convert to msprime's
+time scales).
 
-\subsection{Population structure}
-\label{sec:sim-population-structure}
+\begin{pythoncode}
+def pairwise_S_mean(theta):
+    return theta
 
-\subsection{Demographic events}
-\label{sec:sim-demographic-events}
+def f2(rho):
+    return (rho + 18) / (rho**2 + 13 * rho + 18)
 
+def pairwise_S_var(theta, rho):
+    integral = scipy.integrate.quad(lambda x: (rho - x) * f2(x), 0, rho)
+    return theta + 2 * theta**2 * integral[0] / rho**2
 
-\section{Analysing simulation results}
-\label{sec:analysing}
-In the previous section we saw how to run simulations of various biological models
-using \msprime. A major advantage of \msprime\ over simulators that are structured
-as a command line program is that we can analyse our data in the same script
-as we generated it. This facilitates reproduciblility as well as being much
-more efficient (parsing the text output by simulators is inefficient). In this
-section we show some examples of how to use the \msprime\ API to analyse the
-data produced by simulations.
+group = df.groupby("rho")
+plt.plot(group.mean(), "o", label="simulated mean")
+plt.plot(group.var(), "^", label="simulated variance")
+plt.plot(
+    rhos, [pairwise_S_mean(theta) for rho in rhos], "-",
+    label="Analytical mean")
+plt.plot(rhos, [pairwise_S_var(theta, rho) for rho in rhos], "--",
+label="Analytical variance")
+plt.xlabel("rho")
+plt.legend();
+\end{pythoncode}
 
-\subsection{Tree Sequences}
-\label{sec:tree-sequences}
-In this subsection we describe the basic data structure that underlies all of
-\msprime's APIs.
-
-\subsection{Tree traversals}
-\label{sec:tree-traversals}
-
-
-\subsection{Genotype data}
-\label{sec:sequence-data}
-For many tasks we wish to have direct access to the observed sequence
-data, i.e., the sample genotypes. The most efficient way to access this
-information in \msprime\ is to use the \apiref{variants} iterator.
-
-[Example of using the variants iterator]
-
-The \msprime\ API is not currently a complete solution for calculating
-statistics of interest in population genetics [mention ongoing work
-with Peter Ralph here?]. However, there are two excellent Python
-libraries for efficiently working with sequence data that can efficiently
-accept data from \msprime. We briefly illustrate their usage here.
-
-The \texttt{scikit-allel}\citep{miles2017scikit} package provides a
-comprehensive suite of utilities for working with data.
-[Short example using scikit-allel]
-
-Another option is to use the \texttt{pylibseq} package, which is a
-Python interface to the powerful \texttt{libsequence}
-library~\citep{thornton2003libsequence}. [Short example using pylibseq]
-
-
-\section{Data examples}
-\label{sec:data-examples}
-
-In this section we apply the tools developed in sections~\ref{sec:simulations}
-and~\ref{sec:analysing} to some real data examples.
+After defining our analytical predictions for the mean and variance of the
+number of segregating sites, we then plot the observed and predicted values
+in Figure~\ref{fig:segsites}B.
+Comparing the simulated results to analytical predictions we see
+excellent agreement. The mean number of segregating sites is not
+affected by recombination, but recombination does substantially reduce
+the variance.
 
 
 \bibliography{references}
-
-
-\clearpage
-\appendix
-\section{Stuff from template}
-\label{sec:1}
-Use the template \emph{chapter.tex} together with the Springer document class SVMono (monograph-type books) or SVMult (edited books) to style the various elements of your chapter content in the Springer layout.
-
-Instead of simply listing headings of different levels we recommend to
-let every heading be followed by at least a short passage of text.
-Further on please use the \LaTeX\ automatism for all your
-cross-references and citations. And please note that the first line of
-text that follows a heading is not indented, whereas the first lines of
-all subsequent paragraphs are.
-
-\section{Section Heading}
-\label{sec:2}
-% Always give a unique label
-% and use \ref{<label>} for cross-references
-% and \cite{<label>} for bibliographic references
-% use \sectionmark{}
-% to alter or adjust the section heading in the running head
-Instead of simply listing headings of different levels we recommend to
-let every heading be followed by at least a short passage of text.
-Further on please use the \LaTeX\ automatism for all your
-cross-references and citations.
-
-Please note that the first line of text that follows a heading is not indented, whereas the first lines of all subsequent paragraphs are.
-
-Use the standard \verb|equation| environment to typeset your equations, e.g.
-%
-\begin{equation}
-a \times b = c\;,
-\end{equation}
-%
-however, for multiline equations we recommend to use the \verb|eqnarray| environment\footnote{In physics texts please activate the class option \texttt{vecphys} to depict your vectors in \textbf{\itshape boldface-italic} type - as is customary for a wide range of physical subjects}.
-\begin{eqnarray}
-a \times b = c \nonumber\\
-\vec{a} \cdot \vec{b}=\vec{c}
-\label{eq:01}
-\end{eqnarray}
-
-\subsection{Subsection Heading}
-\label{subsec:2}
-Instead of simply listing headings of different levels we recommend to
-let every heading be followed by at least a short passage of text.
-Further on please use the \LaTeX\ automatism for all your
-cross-references\index{cross-references} and citations\index{citations}
-as has already been described in Sect.~\ref{sec:2}.
-
-\begin{quotation}
-Please do not use quotation marks when quoting texts! Simply use the \verb|quotation| environment -- it will automatically render Springer's preferred layout.
-\end{quotation}
-
-
-\subsubsection{Subsubsection Heading}
-Instead of simply listing headings of different levels we recommend to
-let every heading be followed by at least a short passage of text.
-Further on please use the \LaTeX\ automatism for all your
-cross-references and citations as has already been described in
-Sect.~\ref{subsec:2}, see also Fig.~\ref{fig:1}\footnote{If you copy
-text passages, figures, or tables from other works, you must obtain
-\textit{permission} from the copyright holder (usually the original
-publisher). Please enclose the signed permission with the manucript. The
-sources\index{permission to print} must be acknowledged either in the
-captions, as footnotes or in a separate section of the book.}
-
-Please note that the first line of text that follows a heading is not indented, whereas the first lines of all subsequent paragraphs are.
-
-% For figures use
-%
-\begin{figure}[b]
-\sidecaption
-% Use the relevant command for your figure-insertion program
-% to insert the figure file.
-% For example, with the graphicx style use
-\includegraphics[scale=.65]{figure}
-%
-% If no graphics program available, insert a blank space i.e. use
-%\picplace{5cm}{2cm} % Give the correct figure height and width in cm
-%
-\caption{If the width of the figure is less than 7.8 cm use the \texttt{sidecapion} command to flush the caption on the left side of the page. If the figure is positioned at the top of the page, align the sidecaption with the top of the figure -- to achieve this you simply need to use the optional argument \texttt{[t]} with the \texttt{sidecaption} command}
-\label{fig:1}       % Give a unique label
-\end{figure}
-
-
-\paragraph{Paragraph Heading} %
-Instead of simply listing headings of different levels we recommend to
-let every heading be followed by at least a short passage of text.
-Further on please use the \LaTeX\ automatism for all your
-cross-references and citations as has already been described in
-Sect.~\ref{sec:2}.
-
-Please note that the first line of text that follows a heading is not indented, whereas the first lines of all subsequent paragraphs are.
-
-For typesetting numbered lists we recommend to use the \verb|enumerate| environment -- it will automatically render Springer's preferred layout.
-
-\begin{enumerate}
-\item{Livelihood and survival mobility are oftentimes coutcomes of uneven socioeconomic development.}
-\begin{enumerate}
-\item{Livelihood and survival mobility are oftentimes coutcomes of uneven socioeconomic development.}
-\item{Livelihood and survival mobility are oftentimes coutcomes of uneven socioeconomic development.}
-\end{enumerate}
-\item{Livelihood and survival mobility are oftentimes coutcomes of uneven socioeconomic development.}
-\end{enumerate}
-
-
-\subparagraph{Subparagraph Heading} In order to avoid simply listing headings of different levels we recommend to let every heading be followed by at least a short passage of text. Use the \LaTeX\ automatism for all your cross-references and citations as has already been described in Sect.~\ref{sec:2}, see also Fig.~\ref{fig:2}.
-
-For unnumbered list we recommend to use the \verb|itemize| environment -- it will automatically render Springer's preferred layout.
-
-\begin{itemize}
-\item{Livelihood and survival mobility are oftentimes coutcomes of uneven socioeconomic development, cf. Table~\ref{tab:1}.}
-\begin{itemize}
-\item{Livelihood and survival mobility are oftentimes coutcomes of uneven socioeconomic development.}
-\item{Livelihood and survival mobility are oftentimes coutcomes of uneven socioeconomic development.}
-\end{itemize}
-\item{Livelihood and survival mobility are oftentimes coutcomes of uneven socioeconomic development.}
-\end{itemize}
-
-\begin{figure}[t]
-\sidecaption[t]
-% Use the relevant command for your figure-insertion program
-% to insert the figure file.
-% For example, with the option graphics use
-\includegraphics[scale=.65]{figure}
-%
-% If no graphics program available, insert a blank space i.e. use
-%\picplace{5cm}{2cm} % Give the correct figure height and width in cm
-%
-%\caption{Please write your figure caption here}
-\caption{If the width of the figure is less than 7.8 cm use the \texttt{sidecapion} command to flush the caption on the left side of the page. If the figure is positioned at the top of the page, align the sidecaption with the top of the figure -- to achieve this you simply need to use the optional argument \texttt{[t]} with the \texttt{sidecaption} command}
-\label{fig:2}       % Give a unique label
-\end{figure}
-
-\runinhead{Run-in Heading Boldface Version} Use the \LaTeX\ automatism for all your cross-references and citations as has already been described in Sect.~\ref{sec:2}.
-
-\subruninhead{Run-in Heading Italic Version} Use the \LaTeX\ automatism for all your cross-refer\-ences and citations as has already been described in Sect.~\ref{sec:2}\index{paragraph}.
-% Use the \index{} command to code your index words
-%
-% For tables use
-%
-\begin{table}
-\caption{Please write your table caption here}
-\label{tab:1}       % Give a unique label
-%
-% Follow this input for your own table layout
-%
-\begin{tabular}{p{2cm}p{2.4cm}p{2cm}p{4.9cm}}
-\hline\noalign{\smallskip}
-Classes & Subclass & Length & Action Mechanism  \\
-\noalign{\smallskip}\svhline\noalign{\smallskip}
-Translation & mRNA$^a$  & 22 (19--25) & Translation repression, mRNA cleavage\\
-Translation & mRNA cleavage & 21 & mRNA cleavage\\
-Translation & mRNA  & 21--22 & mRNA cleavage\\
-Translation & mRNA  & 24--26 & Histone and DNA Modification\\
-\noalign{\smallskip}\hline\noalign{\smallskip}
-\end{tabular}
-$^a$ Table foot note (with superscript)
-\end{table}
-%
-\section{Section Heading}
-\label{sec:3}
-% Always give a unique label
-% and use \ref{<label>} for cross-references
-% and \cite{<label>} for bibliographic references
-% use \sectionmark{}
-% to alter or adjust the section heading in the running head
-Instead of simply listing headings of different levels we recommend to
-let every heading be followed by at least a short passage of text.
-Further on please use the \LaTeX\ automatism for all your
-cross-references and citations as has already been described in
-Sect.~\ref{sec:2}.
-
-Please note that the first line of text that follows a heading is not indented, whereas the first lines of all subsequent paragraphs are.
-
-If you want to list definitions or the like we recommend to use the Springer-enhanced \verb|description| environment -- it will automatically render Springer's preferred layout.
-
-\begin{description}[Type 1]
-\item[Type 1]{That addresses central themes pertainng to migration, health, and disease. In Sect.~\ref{sec:1}, Wilson discusses the role of human migration in infectious disease distributions and patterns.}
-\item[Type 2]{That addresses central themes pertainng to migration, health, and disease. In Sect.~\ref{subsec:2}, Wilson discusses the role of human migration in infectious disease distributions and patterns.}
-\end{description}
-
-\subsection{Subsection Heading} %
-In order to avoid simply listing headings of different levels we recommend to let every heading be followed by at least a short passage of text. Use the \LaTeX\ automatism for all your cross-references and citations citations as has already been described in Sect.~\ref{sec:2}.
-
-Please note that the first line of text that follows a heading is not indented, whereas the first lines of all subsequent paragraphs are.
-
-\begin{svgraybox}
-If you want to emphasize complete paragraphs of texts we recommend to use the newly defined Springer class option \verb|graybox| and the newly defined environment \verb|svgraybox|. This will produce a 15 percent screened box 'behind' your text.
-
-If you want to emphasize complete paragraphs of texts we recommend to use the newly defined Springer class option and environment \verb|svgraybox|. This will produce a 15 percent screened box 'behind' your text.
-\end{svgraybox}
-
-
-\subsubsection{Subsubsection Heading}
-Instead of simply listing headings of different levels we recommend to
-let every heading be followed by at least a short passage of text.
-Further on please use the \LaTeX\ automatism for all your
-cross-references and citations as has already been described in
-Sect.~\ref{sec:2}.
-
-Please note that the first line of text that follows a heading is not indented, whereas the first lines of all subsequent paragraphs are.
-
-\begin{theorem}
-Theorem text goes here.
-\end{theorem}
-%
-% or
-%
-\begin{definition}
-Definition text goes here.
-\end{definition}
-
-\begin{proof}
-%\smartqed
-Proof text goes here.
-\qed
-\end{proof}
-
-\paragraph{Paragraph Heading} %
-Instead of simply listing headings of different levels we recommend to
-let every heading be followed by at least a short passage of text.
-Further on please use the \LaTeX\ automatism for all your
-cross-references and citations as has already been described in
-Sect.~\ref{sec:2}.
-
-Note that the first line of text that follows a heading is not indented, whereas the first lines of all subsequent paragraphs are.
-%
-% For built-in environments use
-%
-\begin{theorem}
-Theorem text goes here.
-\end{theorem}
-%
-\begin{definition}
-Definition text goes here.
-\end{definition}
-%
-\begin{proof}
-\smartqed
-Proof text goes here.
-\qed
-\end{proof}
-%
-\begin{acknowledgement}
-If you want to include acknowledgments of assistance and the like at the end of an individual chapter please use the \verb|acknowledgement| environment -- it will automatically render Springer's preferred layout.
-\end{acknowledgement}
-%
-\section*{Appendix}
-\addcontentsline{toc}{section}{Appendix}
-%
-%
-When placed at the end of a chapter or contribution (as opposed to at the end of the book), the numbering of tables, figures, and equations in the appendix section continues on from that in the main text. Hence please \textit{do not} use the \verb|appendix| command when writing an appendix at the end of your chapter or contribution. If there is only one the appendix is designated ``Appendix'', or ``Appendix 1'', or ``Appendix 2'', etc. if there is more than one.
-
-\begin{equation}
-a \times b = c
-\end{equation}
 
 \end{document}
