@@ -929,57 +929,352 @@ occur exactly at the integer boundaries bewtween these loci.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Analysing simulation results}
-\label{sec:analysing}
-In the previous section we saw how to run simulations of various biological models
-using \msprime. A major advantage of \msprime\ over simulators that are structured
-as a command line program is that we can analyse our data in the same script
-as we generated it. This facilitates reproduciblility as well as being much
-more efficient (parsing the text output by simulators is inefficient). In this
-section we show some examples of how to use the \msprime\ API to analyse the
-data produced by simulations.
+\section{Processing results}\label{processing-results}
 
-\subsection{Tree Sequences}
-\label{sec:tree-sequences}
-In this subsection we describe the basic data structure that underlies all of
-\msprime's APIs.
+In the previous section we showed how to run simulations in msprime, and
+how to construct population models and demographic histories. In this
+section we show how to process the results of simulations. This is not a
+comprehensive review of the capabilities of the msprime Python API, but
+concentrates on some useful examples.
 
-\subsection{Tree traversals}
-\label{sec:tree-traversals}
+Msprime is specifically designed to enable very large simulations, and
+the processing methods be demonstrate below are all very efficient. To
+illustrate this we use a simulation of 200,000 samples of 10 megabases
+from a simple two-population model with human-like parameters:
 
+\begin{pythoncode}
+ts = msprime.simulate(
+    population_configurations=[
+        msprime.PopulationConfiguration(sample_size=10**5),
+        msprime.PopulationConfiguration(sample_size=10**5)],
+    demographic_events=[
+        msprime.MassMigration(time=50000, source=1, destination=0)],
+    Ne=10**4, recombination_rate=1e-8, mutation_rate=1e-8, length=10*10**6,
+    random_seed=3)
+print((ts.num_trees, ts.num_sites))
 
-\subsection{Genotype data}
-\label{sec:sequence-data}
-For many tasks we wish to have direct access to the observed sequence
-data, i.e., the sample genotypes. The most efficient way to access this
-information in \msprime\ is to use the \apiref{variants} iterator.
+>>> (93844, 102270)
+\end{pythoncode}
 
-[Example of using the variants iterator]
-
-The \msprime\ API is not currently a complete solution for calculating
-statistics of interest in population genetics [mention ongoing work
-with Peter Ralph here?]. However, there are two excellent Python
-libraries for efficiently working with sequence data that can efficiently
-accept data from \msprime. We briefly illustrate their usage here.
-
-The \texttt{scikit-allel}\citep{miles2017scikit} package provides a
-comprehensive suite of utilities for working with data.
-[Short example using scikit-allel]
-
-Another option is to use the \texttt{pylibseq} package, which is a
-Python interface to the powerful \texttt{libsequence}
-library~\citep{thornton2003libsequence}. [Short example using pylibseq]
+This simulation required about 20 seconds to complete.
 
 
-\section{Data examples}
-\label{sec:data-examples}
+\subsection{Computing MRCAs}\label{computing-mrcas}
 
-In this section we apply the tools developed in sections~\ref{sec:simulations}
-and~\ref{sec:analysing} to some real data examples.
+We are often intested in finding the most recent common ancestor (MRCA)
+of a pair (or many pairs) of samples. For example, Identity-by-descent
+(IBD) tracts are defined as contiguous stretches of genome in which the
+MRCA for a pair of samples is the same. Computing IBD segments for a
+pair of samples is very straightforward:
 
+\begin{pythoncode}
+def ibd_segments(ts, a, b):
+    trees_iter = ts.trees()
+    tree = next(trees_iter)
+    last_mrca = tree.mrca(a, b)
+    last_left = 0
+    segment_lengths = []
+    for tree in trees_iter:
+        mrca = tree.mrca(a, b)
+        if mrca != last_mrca:
+            left = tree.interval[0]
+            segment_lengths.append(left - last_left)
+            last_mrca = mrca
+            last_left = left
+    segment_lengths.append(ts.sequence_length - last_left)
+    return np.array(segment_lengths) / ts.sequence_length
+
+sns.distplot(ibd_segments(ts, 0, 1), label="Within population")
+sns.distplot(ibd_segments(ts, 0, 10**5), label="Between populations")
+plt.xlim(-0.0005, 0.01)
+plt.legend()
+plt.xlabel("Fraction of genome length");
+\end{pythoncode}
+
+\includenbimage{images/processing-results_5_0.pdf}
+
+In this example we create a function \texttt{ibd\_segments} that returns
+a numpy array of the lengths of IBD segments for a given pair of
+samples, \texttt{a} and \texttt{b}. It works simply by computing the
+MRCA for the samples at the left hand side of the sequence and then,
+moving rightwards, records a segment each time the MRCA changes. We then
+plot the distribution of tract lengths for samples 0 and 1 (which are
+both in the population 0), and also the tract lengths for a pair of
+samples from different populations. As we might expect, the tract
+lengths are shorter for the between population pair.
+
+Of course, we would need to sample many such pairs of samples to get a
+reasonable approximation of the real distribution of block lenghts.
+Because the main cost of this function is in iterating over all the
+trees in the sequence, it is more efficient to keep track of the MRCAs
+for different pairs while doing a single iteration than to repeatedly
+call the above \texttt{ibd\_segments} function.
+
+\subsection{Sample counts}\label{sample-counts}
+
+The msprime API provides a very efficient way to count the number of
+samples that are beneath a particular node in a tree. This can be used,
+for example, to compute allele frequencies efficiently and is the basis
+for many of the fast algorithms in the API. As a simple illustration of
+this technique, consider the following code to compute the number of
+sites with derived allele frequency less than 1\%:
+
+\begin{pythoncode}
+N = ts.num_samples
+threshold = 0.01
+num_rare_derived = 0
+for tree in ts.trees():
+    for site in tree.sites():
+        assert len(site.mutations) == 1
+        mutation = site.mutations[0]
+        if tree.num_samples(mutation.node) / N < threshold:
+            num_rare_derived += 1
+print((num_rare_derived, num_rare_derived / ts.num_sites))
+
+>>> (65258, 0.638095238095238)
+\end{pythoncode}
+
+    In this example we iterate over all the trees in the tree sequence, and
+then iterate over all the sites in each tree. We then find the frequency
+of the derived allele at this site using the \texttt{num\_samples}
+method, which returns the number of samples in the tree beneath a given
+node. The underlying implementation ensures that this operation requires
+constant time, and so it is \emph{very} efficient. After the loop
+completes, we then see that such rare alleles are very common. (This
+code assumes that each site contains only a single mutation, which is
+always true for the simple infinite sites mutations currently output by
+msprime. However, it is possible to have more complex situations such as
+back and recurrent mutations in which this simplistic approach will not
+work.)
+
+A very powerful feature of this sample-counting feature is that we can
+perform the same operation over an arbitrary subset of the samples. For
+example, suppose we wished to count the number of sites that are private
+to a specific population:
+
+\begin{pythoncode}
+def num_private_sites(pop_id):
+    pop_samples = ts.samples(pop_id)
+    num_private = 0
+    for tree in ts.trees(tracked_samples=pop_samples):
+        for site in tree.sites():
+            assert len(site.mutations) == 1
+            mutation = site.mutations[0]
+            total = tree.num_samples(mutation.node)
+            within_pop = tree.num_tracked_samples(mutation.node)
+            if total == within_pop:
+                num_private += 1
+    return num_private
+
+private_0 = num_private_sites(0)
+private_1 = num_private_sites(1)
+print((ts.num_sites, private_0 + private_1, private_0, private_1))
+
+>>> (102270, 101607, 51295, 50312)
+\end{pythoncode}
+
+    This example is very similar, except we provide an extra argument to
+\texttt{ts.trees}. This \texttt{tracked\_samples} argument is a list of
+samples that we are interested in tracking information about, and can be
+any arbitrary subset of the samples in the simulation. Here we indicate
+that we are interested in tracking the set of samples within the
+population in question. Again we iterate over all trees and over all
+sites within these trees. Then, for each infinite sites mutation we
+compute two frequencies: the overall number of samples that inherit from
+the mutation's node, and the number of samples \emph{within the focal
+population} that inherit from this node. Then, if the total count is
+equal to within-population count, we know that this mutation is private
+to the population.
+
+    \subsection{Obtaining subsets}\label{obtaining-subsets}
+
+In some situations it is useful to analyse data for different subsets of
+the samples separately. This is possible using the \texttt{simplify}
+method:
+
+\begin{pythoncode}
+samples = [1, 3, 5, 7]
+ts_subset = ts.simplify(samples)
+print((ts_subset.num_sites, ts_subset.num_trees, ts.num_sites, ts.num_trees))
+
+>>> (11939, 5483, 102270, 93844)
+\end{pythoncode}
+
+    Here we extract the tree sequence representing the history of a tiny
+subset of the original samples, with IDs 1, 3, 5 and 7. The subset tree
+sequence contains all the genealogical information relevant to these
+samples, but no more. Hence, coalescences that are not ancestral to the
+subsample are not included, and neither are coalescences that predate
+the MRCA of our subsample. Thus, the number of distinct trees is greatly
+reduced. By default, we also remove any sites that have no mutations
+within these subtrees (i.e., those that are fixed for the ancestral
+state). These can be retained by using the
+\texttt{filter\_zero\_mutation\_sites=False} argument.
+
+Node IDs in the simplified tree sequence are not the same as in the
+original. The \texttt{map\_nodes} argument allows us to obtain the
+mapping from IDs in the original tree sequence to their equivalant nodes
+in the new tree sequence.
+
+\begin{pythoncode}
+ts_subset, node_map = ts.simplify(samples, map_nodes=True)
+tree = ts_subset.first()
+node_labels = {
+    node_map[j]: "{}({})".format(node_map[j], str(j)) for j in
+range(ts.num_nodes)}
+SVG(tree.draw(node_labels=node_labels, width=400))
+\end{pythoncode}
+
+\includenbimage{images/processing-results_15_0.pdf}
+
+    Here we plot the first tree in the subset tree sequence, showing the new
+node IDs along with the IDs from the original tree sequence in
+parantheses.
+
+\subsection{Processing variants}\label{processing-variants}
+
+While it is nearly always more efficient to work with mutations in terms
+of their context within the trees, it is sometimes more convenient to
+work with the allelic states of the samples. This information is
+obtained in msprime using the \texttt{variants()} iterator, which
+returns a \texttt{Variant} object for each site in the tree sequence. A
+\texttt{Variant} consists of: (a) a reference to the site in question;
+(b) the \texttt{alleles} at this site (the strings representing the
+actual states); and (c) the \texttt{genotypes} representing the observed
+state for each sample. The \texttt{genotypes} are encoded in a numpy
+array, such that \texttt{variant.alleles{[}variant.genotypes{[}j{]}{]}}
+gives the allelic state for sample ID \texttt{j}. The values in the
+\texttt{genotypes} array are therefore indexes into the \texttt{alleles}
+list. The ancestral state at a given site is guaranteed to be the first
+element in the \texttt{alleles} list, but no other assumptions about
+ordering of the alleles list should be made.
+
+For biallelic sites, working with genotypes is straightforward as the
+genotypes array can only contain 0 and 1 values, and these correspond to
+the ancestral and derived states, respectively. The \texttt{genotypes}
+values are returned as a numpy array, and so the full numpy library is
+available for efficient processing. As an example, we show here how to
+count the number of sites at which the derived allele is at frequency
+less than 10\%. Using the genotypes in this way is convenient, as
+complex patterns of back and recurrent mutations can be handled without
+difficulty.
+
+\begin{pythoncode}
+%%time
+threshold = 0.1
+num_rare = 0
+for variant in ts.variants():
+    # Will work for any biallelic sites; back/recurrent mutations are fine.
+    assert len(variant.alleles) == 2
+    if np.sum(variant.genotypes) / ts.num_samples < threshold:
+        num_rare += 1
+print(num_rare)
+>>> 83081
+CPU times: user 1min 30s, sys: 4 ms, total: 1min 30s
+\end{pythoncode}
+
+This code is straightforward, as we simply iterate over all variants and
+count the number of 1 values in the genotypes array. Using the \texttt{np.sum}
+function, this operation is efficient. Generating all the genotypes for
+200,000 samples at 100,000 sites, however,
+is an expensive operation and the overall calculation takes about 1.5 minutes
+to complete.
+
+In the case of infinite sites mutations, we can recast this operation
+to use the efficient sample counting methods. This approach is far more
+efficient, requiring less than 2 seconds to compute the same value.
+\begin{pythoncode}
+%%time
+num_rare = 0
+for tree in ts.trees():
+    for site in tree.sites():
+        # Only works for simple infinite sites mutations.
+        assert len(site.mutations) == 1
+        mutation = site.mutations[0]
+        if tree.num_samples(mutation.node) / ts.num_samples < threshold:
+            num_rare += 1
+print(num_rare)
+>>> 83081
+CPU times: user 1.75 s, sys: 36 ms, total: 1.79 s
+\end{pythoncode}
+
+    \subsection{Incremental calculations}\label{incremental-calculations}
+
+A powerful property of the tree sequence representation is that we can
+efficiently find the differences between adjacent trees. This is very
+useful when we have some value that we wish to compute that changes in a
+simple way between trees. The \texttt{edge\_diffs} iterator provides us
+with the information that we need to perform such incremental
+calculations. Here we use it to keep a running track of the total branch
+length of our trees, without needing to perform a full traversal each
+time.
+
+\begin{pythoncode}
+def get_total_branch_length(ts):
+    current = 0
+    total_branch_length = np.zeros(ts.num_trees)
+    for index, (_, edges_out, edges_in) in enumerate(ts.edge_diffs()):
+        for edge in edges_out:
+            current -= ts.node(edge.parent).time - ts.node(edge.child).time
+        for edge in edges_in:
+            current += ts.node(edge.parent).time - ts.node(edge.child).time
+        total_branch_length[index] = current
+    return total_branch_length
+\end{pythoncode}
+
+    This function returns the total branch length value for each tree in the
+sequence as a numpy array. It works by keeping track of the total branch
+length as we proceed from left to right, and storing this value in the
+output array for each tree. The \texttt{edge\_diffs} method returns a
+list of the edges that are removed for each tree transition
+(\texttt{edges\_out}) and a list of edges that are inserted
+(\texttt{edges\_in}). Computing the current value for the total branch
+length is then simply a case of subtracting the branch lengths for all
+outgoing edges and adding the branch lengths for all incoming edges.
+This is extremely efficient because, after the first tree has been
+constructed there is at most four incoming and outgoing edges. Thus,
+each tree transition costs \emph{constant time}.
+
+\begin{pythoncode}
+%%time
+tbl = get_total_branch_length(ts)
+
+CPU times: user 7.67 s, sys: 64 ms, total: 7.74 s
+\end{pythoncode}
+
+On the other hand, if we compute the total branch length by performing a
+full traversal for each tree, each tree transition is very costly for
+large trees. In this example, computing the array of branch lengths
+using the incremental approach given here took 8 seconds. Computing the
+same array using the \texttt{tree.total\_branch\_length} for each tree
+in a straightforward way still had not completed after \emph{twenty
+minutes}. (This is because msprime currently implements this operation
+by a full traversal in Python; in future this may change to using the
+algorithm given here.) Full tree traversals of large trees are
+expensive, and great gains can be made if calculations can be expressed
+in an incremental manner using \texttt{edge\_diffs}.
+
+
+\subsection{Exporting variant data}\label{exporting-variant-data}
+
+If the msprime API doesn't provide methods to easily calculate the
+statistics you are interested in, it's straightforward to export the
+variant data into other libraries using the \texttt{genotype\_matrix()}
+or \texttt{variants()} methods. We recommmend the excellent
+\texttt{scikit-allel}~\citep{miles2017scikit} and
+the \texttt{pylibseq}~\citep{thornton2003libsequence} libraries.
+If you wish to export data to
+external programs, VCF may be best option, which is supported using the
+\texttt{write\_vcf} method. The \texttt{simplify} method is useful here
+is you wish to export data from a subset of the simulated samples.
+
+However, it is worth noting that for large sample sizes, exporting
+genotype data may require a great deal of memory and take some time. One
+of the advantages of the msprime API is that we do not need to
+explicitly generate genotypes in order to compute many interesting
+statistics.
 
 \bibliography{references}
-
 
 \clearpage
 \appendix
