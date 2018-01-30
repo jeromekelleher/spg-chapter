@@ -82,21 +82,6 @@ King's Buildings, Edinburgh EH9 3FL, UK. \email{konrad.lohse@ed.ac.uk}}
 \section{Introduction}
 \label{sec:introduction}
 
-This chapter is a tutorial for running and analysing coalescent simulations
-using \msprime~\citep{kelleher2016efficient}.
-
-% Other simulators you might use.
-The \msprime\ simulator is based on the classical \ms\
-program~\citep{hudson2002generating} and the models for population
-structure and demography are directly derived from the approach taken
-in \ms. [Quick round up of other simulators]
-
-We emphasise integration with existing Python data analysis toolkits
-such as NumPy~\citep{walt2011numpy}, SciPy~\citep{jones-2018-scipy},
-Jupyter Notebooks~\citep{perez2007ipython},
-Matplotlib~\citep{hunter2007matplotlib}, Pandas~\citep{mckinney2010data}
-and Seaborn~\citep{michael_waskom_2017_883859}.
-
 Thanks to the rapid advances in sequencing technologies generating
 genome-wide sequence datasets for any species has become routine and
 there is great interest in learning about the demographic and selective
@@ -151,13 +136,78 @@ used to obtain predictions for commonly used data summaries and
 diffferent models of demography. Finally, we show how msprime can be
 used to set up a ABC inference.
 
+This chapter is a tutorial for running and analysing coalescent simulations
+using \msprime~\citep{kelleher2016efficient}.
+There are many other coalescent simulators available---see
+\citep{carvajal2008simulation,liu2008survey,arenas2012simulation,
+yuan2012overview,hoban2012computer} for reviews--- but \msprime\ has
+some distinct advantages. Firstly, \msprime\ is capable of simulating
+sample sizes far larger than any other simulator, and is generally
+extremely efficient. The ability to simulate
+hundreds of thousands of realistic human genomes has already been used
+to perform simulation studies that were hitherto impossible~\citep{martin2017human}.
+Secondly, \msprime\ can simulate the effects of recombination over
+whole chromosomes without resorting to approximations. The
+Sequentially Markov Coalescent (SMC)
+approximation~\citep{mcvean2005approximating} was largely motivated by the
+need to simulate chromosome-length sequences under the effects of
+recombination,
+which was unfeasible using simulators such as \ms~\citep{hudson2002generating}.
+However, for sufficiently large sample size, \msprime\ is significantly
+faster than the most efficient SMC simulator~\citep{staab2014scrm},
+rendering this approximation unnecessary for simulation purposes. (The
+SMC is an important analytical simplification of the coalecent, however, and
+has lead to many important advances inference; see e.g.~\citep{
+li2011inference,
+harris2013inferring,
+schiffels2014inferring,
+rasmussen2014genome}). Thirdly, the data structure that \msprime\ uses
+to represent the results of simulations is extremely concise and
+can be efficiently processed. The data structure is known as a
+\emph{succinct tree sequence} (or tree sequence for brevity),
+and its applications to other areas
+of population genomics is an active research
+topic~\citep{kelleher2018efficient}. The tree sequence data
+structure both reduces the amount of space
+required to store simulations as well as removing the significant
+overhead of loading and parsing gigabytes of text in order to analyse
+simulation data. As we see in Section~\ref{processing-results}, it also
+leads to powerful algorithms for analysing variation data. Finally,
+\msprime's primary interface is through a simple but powerful Python
+API, providing many advantages over command-line based alternatives.
+One of the advantages of this approach is the ease with which we
+can integrate with state-of-the-art analysis tools from the Python
+ecosystem such as NumPy~\citep{walt2011numpy}, SciPy~\citep{jones-2018-scipy},
+Jupyter Notebooks~\citep{perez2007ipython},
+Matplotlib~\citep{hunter2007matplotlib}, Pandas~\citep{mckinney2010data}
+and Seaborn~\citep{michael_waskom_2017_883859}. Part of the goal
+of this tutorial is to provide idiomatic examples for interacting
+with these toolkits.
 
+As the name implies, \msprime\ is heavily indepted to the classical
+\ms\ program~\citep{hudson2002generating}, and largely follows the
+simulation model that it popularised. The methods for representing
+genealogies underlying \msprime\ were based on earlier work on simulating coalescent
+processes in a spatial
+continuum~\citep{kelleher2013coalescent,kelleher2014coalescent}.
+
+The rest of the chapter is organised as follows. We begin in
+Section~\ref{running-simulations} by providing an overview of how
+to run coalescent simulations in \msprime, including the various
+complexities that can be added to the basic model.
+Section~\ref{processing-results} then continues by illustrating
+some examples of how we can efficiently process the results
+of such simulations, with particular emphasis on the methods
+required to work with very large sample sizes. We then provide
+some examples of how to compare simulations with analytical
+predictions in Section~\ref{validating-analytical-predictions},
+emphasising idiomatic ways of interacting with toolkits such as
+Pandas and Seaborn. \textbf{FINISH ME}.
 
 \section{Running simulations}
-\label{sec:simulations}
+\label{running-simulations}
 
-
-\subsection{Trees and replication}\label{running-simulations}
+\subsection{Trees and replication}
     At the simplest level, coalescent simulation is about generating trees.
 These trees represent the simulated history of a sample of individuals
 drawn from an idealised population (in later sections we show how to
@@ -1286,7 +1336,7 @@ print(num_rare)
 CPU times: user 1.75 s, sys: 36 ms, total: 1.79 s
 \end{pythoncode}
 
-    \subsection{Incremental calculations}\label{incremental-calculations}
+\subsection{Incremental calculations}\label{incremental-calculations}
 
 A powerful property of the tree sequence representation is that we can
 efficiently find the differences between adjacent trees. This is very
