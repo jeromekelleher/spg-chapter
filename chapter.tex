@@ -87,6 +87,9 @@ program~\citep{hudson2002generating} and the models for population
 structure and demography are directly derived from the approach taken
 in \ms. [Quick round up of other simulators]
 
+Brief explanation of \msprime\ 's data structure and how it differs from that used by other simulators. Being able to handle recombination efficiently is useful because we can simulate null distributions for genome scale data.
+
+
 \section{Running simulations}
 \label{sec:simulations}
 
@@ -141,7 +144,7 @@ for j, ts in enumerate(msprime.simulate(10, Ne=0.5, num_replicates=N)):
 
 \subsection{Demographic events}
 \label{sec:sim-demographic-events}
-
+Describe a pop size change or bottleneck and a split r admixture event. 
 
 \section{Analysing simulation results}
 \label{sec:analysing}
@@ -190,6 +193,17 @@ library~\citep{thornton2003libsequence}. [Short example using pylibseq]
 
 In this section we apply the tools developed in sections~\ref{sec:simulations}
 and~\ref{sec:analysing} to some real data examples.
+
+Some analysis that is already published would be good here. We have an inference scheme that allows to fit a more or less complex model to real data under simplifying assumptions and we want to measure the goodness of fit of the inferred model to the real data. Possibilities:
+
+\begin{itemize}
+\item 2 pop IM model in Heliconius 2X2 bSFS, could describe a parametric bootstrap. Compare summaries that are insensitive to recombination (jSFS) to summaries that include linkage info.
+\item 2 pop IM model from the distribution of pairwise difference inferred from \textit{Drosophila}
+\item Lynsey's Italian bear bottleneck analysis?
+\item 
+\item Something with a rec map? \textit{Heliconius} human
+\end{itemize}
+
 
 
 \bibliography{references}
