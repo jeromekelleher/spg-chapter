@@ -264,9 +264,9 @@ tuple \texttt{(2,\ 3)} here, as these are the node IDs of the children
 of the root node. Similarly, \texttt{tree.parent(0)} will return
 \texttt{3}.
 
-The height of a tree node is determined by the \emph{time}; at which the corresponding ancestor that corresponds to the node was born. So,
+The height of a tree node is determined by the \emph{time} at which the corresponding was born. So,
 contemporary samples always have a node time of zero, and time values
-increase as we go upwards in the tree (and further back in time). Times
+increase as we go upwards in the tree (i.e.\ further back in time). Times
 in \msprime\ are always measured in \emph{generations}.
 
 When we run a single simulation, the resulting tree is a single random
@@ -913,7 +913,7 @@ tree = ts.first()
 % \includenbimage{images/simulations_45_0.pdf}
 
 All of the trees that we previously considered had leaf nodes at time
-zero. In this case, the sampes 0, 1 and 2 are taken at time 0 in
+zero. In this case, the samples 0, 1 and 2 are taken at time 0 in
 population 0, but node 3 is sampled at time 0.75 in population 1. Note
 that in this case we used the \texttt{samples} parameter to
 \texttt{simulate} to specify our samples. This is the most general
@@ -1047,14 +1047,14 @@ occur exactly at the integer boundaries bewtween these loci.
 
 \section{Processing results}\label{processing-results}
 
-In the previous section we showed how to run simulations in msprime, and
+In the previous section we showed how to run simulations in \msprime, and
 how to construct population models and demographic histories. In this
 section we show how to process the results of simulations. This is not a
-comprehensive review of the capabilities of the msprime Python API, but
+comprehensive review of the capabilities of the \msprime Python API, but
 concentrates on some useful examples.
 
-Msprime is specifically designed to enable very large simulations, and
-the processing methods be demonstrate below are all very efficient. To
+\msprime is specifically designed to enable very large simulations, and
+the processing methods we demonstrate below are all very efficient. To
 illustrate this we use a simulation of 200,000 samples of 10 megabases
 from a simple two-population model with human-like parameters:
 
@@ -1077,7 +1077,7 @@ This simulation required about 20 seconds to complete.
 
 \subsection{Computing MRCAs}\label{computing-mrcas}
 
-We are often intested in finding the most recent common ancestor (MRCA)
+We are often interested in finding the most recent common ancestor (MRCA)
 of a pair (or many pairs) of samples. For example, Identity-by-descent
 (IBD) tracts are defined as contiguous stretches of genome in which the
 MRCA for a pair of samples is the same. Computing IBD segments for a
