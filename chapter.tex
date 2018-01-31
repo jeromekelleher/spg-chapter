@@ -374,7 +374,8 @@ seed in the examples in this tutorial for this reason.
 In the previous section the only parameters we supplied to
 \texttt{simulate} were the \texttt{sample\_size} and
 \texttt{num\_replicates} parameters. This allows us to randomly sample
-trees with a given number of nodes, but as it leaves the population unspecified, has little connection with
+trees with a given number of nodes, but, as it leaves the population
+unspecified, has little connection with
 biological reality. The most fundamental population parameter is the \emph{effective population size}, or
 \(N_e\). This parameter simply rescales time; larger effective
 population sizes mean larger coalescence times:
@@ -398,15 +399,15 @@ print(
 
     Thus, when we specify \(N_e=10\) we get a mean pairwise coalescence time of about
 20 generations, and when \(N_e=100\) the mean coalescence time is about
-200 generations. See Wakeley \citep{Wakeley2009} for details on the biological interpretation of effective population size.
+200 generations. See \cite{Wakeley2009} for details on the biological interpretation of effective population size.
 
 By default, \(N_e = 1\) in \msprime, which is equivalent to measuring
 time in units of \(4N_e\) generations. It is very important to note that
-\(N_e\) in msprime is the \emph{diploid} effective population size,
-which means that all times are scaled by \(4N_e\) (rather than 2Ne for a
+\(N_e\) in \msprime\ is the \emph{diploid} effective population size,
+which means that all times are scaled by \(4N_e\) (rather than $2N_e$ for a
 haploid coalescent). Thus, if we wish to compare the results that are
 given in the literature for a haploid coalescent, then we must set
-\(N_e\) to 1/2 to compensate. For example, we know that the expected
+\(N_e\) to $1/2$ to compensate. For example, we know that the expected
 coalescence time for a sample of size 2 is 1, and this is the value we
 obtain from the \texttt{pairwise\_T\_mrca} function when we have
 \(N_e=0.5\). We will usually assume that we are working in haploid
@@ -422,14 +423,15 @@ When we provide an \(N_e\) parameter, this specifies a fixed effective
 population size. We can also model populations that are exponentially
 growing or contracting at some rate over time. Given a population size
 at the present \(s\) and a growth rate \(\alpha\), the size of the
-population \(t\) generations in the past \(s e^{-\alpha t}\). (Note
+population \(t\) generations in the past is $s e^{-\alpha t}$. (Note
 again that time and rates are measured in units of \emph{generations},
 not coalescent units.)
 
 In \msprime, the initial size and growth rate for a particular population
 are specified using the \texttt{PopulationConfiguration} object. A list
-of these objects (describing the different populations; see the
-Population Structure section) are then provided to the simulate
+of these objects (describing the different populations; see
+Section~\ref{population-structure}) are then provided to the
+\texttt{simulate}
 function. When providing a list of
 \texttt{PopulationConfiguration\ objects}, the \texttt{Ne} parameter to
 \texttt{simulate} is not required, as the \texttt{initial\_size} of the
@@ -472,9 +474,9 @@ indefinitely.)
 
     \subsection{Mutations}\label{mutations}
 
-We cannot directly observe gene genealogies; rather we observe the
+We cannot directly observe gene genealogies; rather, we observe the
 effects of mutations occuring on the branches of these trees. We are
-there very often interesting not just in the genealogies that are
+therefore very often interesting not just in the genealogies that are
 simulated by the coalescent process, but also in the results of
 mutational processes imposed on these trees. Msprime currently supports
 simulating mutations under the infinitely many sites model. This is
@@ -500,7 +502,7 @@ this node will inherit the mutation. The infinite sites mutations used
 here are simple binary mutations, so that the ancestral state is 0 and
 the derived state is 1. One convenient way to access the resulting
 sample genotypes is to use the \texttt{genotype\_matrix()} method, which
-returns an \(m \times n\) numpy array, if we have \(m\) variable sites
+returns an \(m \times n\) NumPy array, if we have \(m\) variable sites
 and \(n\) samples. Thus, if \(G\) is the genotype matrix, \(G[j, k]\) is
 the state of the \(k\)th sample at the \(j\)th site. In our example
 above, the site 0 has a mutation over node 3, and site 1 has a mutation
@@ -515,11 +517,8 @@ print(ts.genotype_matrix())
 
     The genotype matrix is provides a convenient way of accessing this
 information, but will consume a great deal of memory for larger
-simulations. Msprime has an extensive suite of tools for efficiently
-working with sequence data and computing population genetics statistics,
-and a full review of these tools is beyond the scope of this document.
-Please consult the online documentation for more information on
-processing simulated sequences.
+simulations. See Section~\ref{processing-variants} for more information
+on how to access genotype data efficiently.
 
 When comparing with analytical results regarding neutral genetic
 variation, it is very imporant to be aware of the way in which the
@@ -552,34 +551,31 @@ theory.
 
 \subsection{Population structure}\label{population-structure}
 
-Msprime supports a discrete-deme model of population structure in which
+Following \ms~\citep{hudson2002generating}, \msprime\ supports a
+discrete-deme model of population structure in which
 \(d\) panmictic populations exchange migrants according to the rates
 defined in an \(d \times d\) matrix. This approach is very flexible,
 allowing us to simulate island models (in which all populations exchange
 migrants at a fixed rate), one and two dimensional stepping stone models
 (where migrants only move to adjacent demes) and other more complex
-migration patterns.
-
-This population structure is declared in msprime using the
+migration patterns. This population structure is declared in \msprime\ using the
 \texttt{population\_configurations} and \texttt{migration\_matrix}
 parameters to the \texttt{simulate} function. The list of population
 configurations defines the populations; each element of this list must
 be a \texttt{PopulationConfiguration} instance (each population has
 independent initial population size and growth rate parameters). The
-migration matrix is a numpy array (or list of lists) of per-generation
+migration matrix is a NumPy array (or list of lists) of per-generation
 migration rates; \(M[j,k]\) defines the fraction of population \(j\)
 that consists of migrants from population \(k\) in each generation.
 
 \begin{pythoncode}
 pop_configs = [
     msprime.PopulationConfiguration(sample_size=2),
-    msprime.PopulationConfiguration(sample_size=2)
-]
+    msprime.PopulationConfiguration(sample_size=2)]
 M = np.array([
     [0, 0.1],
-    [0, 0]
-])
-ts  = msprime.simulate(
+    [0, 0]])
+ts = msprime.simulate(
     population_configurations=pop_configs, migration_matrix=M,
     random_seed=2)
 tree = ts.first()
@@ -603,9 +599,9 @@ the \texttt{sample\_size} argument to these objects to state that we
 wish to have two samples from each population. This results in samples
 being allocated sequentially to the populations when \texttt{simulate}
 is called: 0 and 1 are placed in population 0, and samples 2 and 3 are
-place in population 1. We then declare our migration matrix, which is
-asymmetric in this example. Because \texttt{M{[}0,1{]}\ =\ 0.1} and
-\texttt{M{[}0,1{]}\ =\ 0}, forwards in time, individuals can migrate
+placed in population 1. We then declare our migration matrix, which is
+asymmetric in this example. Because ${M{[}0,1{]} = 0.1}$ and
+${M{[}1, 0{]} = 0}$, forwards in time, individuals can migrate
 from population 1 to population 0 but not vice-versa. This is shown in
 the tree for this simulation, where each node has been coloured by its
 population (red is population 0 and blue population 1). Thus, the leaf
@@ -652,9 +648,9 @@ SVG(tree.draw(node_colours=node_colours))
 of migration the locations of coalescences are quite random. For
 example, the first coalescence occurs in deme 2 (green), after node zero
 has migrated in. To see the details of these migration events, we can
-examine the "migration records" that are stored by msprime. (These are
-not stored by default, as they may require a substantial amount of
-memory to store. The \texttt{record\_migrations} parameter must be
+examine the ``migration records'' that are stored by \msprime. (These are
+not stored by default, as they may consume a substantial amount.
+The \texttt{record\_migrations} parameter must be
 supplied to \texttt{simulate} to turn on this feature.) Migration
 records store complete information about the time, source and
 destination demes and the genomic interval in question. Here we are
@@ -674,7 +670,7 @@ We can see that node zero experienced very few migrations before it
 ended up in deme 2, where it coalesced with 4 (which never migrated).
 Node 2, on the other hand migrated 30 times before it finally coalesced
 with 7 in deme 0. Note that there are many more migrations events than
-nodes there, implying that most migration events are not identifiable
+nodes here, implying that most migration events are not identifiable
 from a genealogy in real data~\citep{sousa2011nonidentifiability}.
 
 \begin{figure}
@@ -692,7 +688,7 @@ event, which are dealt with in the next section.
 \subsection{Demographic events}\label{demographic-events}
 
 Demographic events allow us to model more complex histories involving
-changes to the population structure over time. These are specified using
+changes to the population structure over time, and are specified using
 the \texttt{demographic\_events} parameter to \texttt{simulate}. Each
 demographic event occurs at a specific time, and the list of events must
 be supplied in the order they occur (backwards in time). There are a
@@ -713,13 +709,7 @@ ts  = msprime.simulate(
         msprime.MigrationRateChange(20, rate=1.0, matrix_index=(0, 1))],
     random_seed=2)
 tree = ts.first()
-colour_map = {0:"red", 1:"blue"}
-node_colours = {u: colour_map[tree.population(u)] for u in tree.nodes()}
-node_labels = {
-    u: (str(u) if tree.is_sample(u) else "{} (t={:.1f})".format(u,
-tree.time(u)))
-    for u in tree.nodes()}
-SVG(tree.draw(node_colours=node_colours, node_labels=node_labels))
+# Tree drawing code omitted.
 \end{pythoncode}
 
 \begin{wrapfigure}{r}{0.5\textwidth}
@@ -740,10 +730,9 @@ afterwards. The lineages then coalesce at time 21.44.
 
 This class of event allows us to move some proportion of the lineages in
 one deme to another at a particular time. This allows us to model
-population splits and admixture events.
-
-Population splits occur when some fraction of the lineages from a
-population migrate to another population.
+population splits and admixture events. Population splits occur
+when (backwards in time) all the lineages in one population migrate to
+another.
 
 \begin{pythoncode}
 ts  = msprime.simulate(
@@ -754,12 +743,7 @@ ts  = msprime.simulate(
         msprime.MassMigration(15, source=1, dest=0, proportion=1)],
     random_seed=20)
 tree = ts.first()
-colour_map = {0:"red", 1:"blue"}
-node_colours = {u: colour_map[tree.population(u)] for u in tree.nodes()}
-node_labels = {
-    u: (str(u) if u < 8 else "{} (t={:.2f})".format(u, tree.time(u)))
-    for u in tree.nodes()}
-SVG(tree.draw(node_colours=node_colours, node_labels=node_labels))
+# Tree drawing code omitted.
 \end{pythoncode}
 
 
@@ -772,14 +756,16 @@ SVG(tree.draw(node_colours=node_colours, node_labels=node_labels))
 
 
 Again, we have two isolated populations which coalesce down to a single
-lineage. The population split at time 15 (which produced all individuals
-in population 1), then results in this lineage migrating back to
+lineage. The population split at time 15 (which, forwards in time
+produced all the individuals in population 1),
+results in this lineage migrating back to
 population 0, where it coalesces with the ancestor of the samples 0, 1
 and 2.
 
 Admixture events (i.e., where some fraction of the lineages move to a
 different deme) are specified in the same way:
 
+\clearpage
 \begin{pythoncode}
 ts  = msprime.simulate(
     population_configurations=[
@@ -791,20 +777,14 @@ ts  = msprime.simulate(
     ],
     random_seed=26)
 tree = ts.first()
-colour_map = {0:"red", 1:"blue"}
-node_colours = {u: colour_map[tree.population(u)] for u in tree.nodes()}
-node_labels = {
-    u: (str(u) if u < 8 else "{} (t={:.1f})".format(u, tree.time(u)))
-    for u in tree.nodes()}
-SVG(tree.draw(node_colours=node_colours, node_labels=node_labels))
+# Tree drawing code omitted.
 \end{pythoncode}
 
-\begin{wrapfigure}{r}{0.4\textwidth}
+\begin{wrapfigure}[13]{hr}{0.4\textwidth}
   \begin{center}
     \includegraphics[width=0.38\textwidth]{images/simulations_39_0.pdf}
   \end{center}
 \end{wrapfigure}
-% \includenbimage{images/simulations_39_0.pdf}
 
     We begin in this example with 6 lineages sampled in population 0, zero
 samples in population 1, and with no migration between these
@@ -818,15 +798,15 @@ lineages to move between them. Eventually, all lineages end up in deme
 
 \subsubsection{Population parameter change}\label{population-parameter-change}
 
-This class of event represents a simple change in the growth rate or
-size of a particular population. Since each population has it's own
+This class of event represents a change in the growth rate or
+size of a particular population. Since each population has its own
 individual size and growth rates, we can change these arbitrarily as we
 go backwards in time. Keeping track of the actual sizes of different
-populations can be a little challenging, and for this reason msprime
+populations can be a little challenging, and for this reason \msprime\
 provides a \texttt{DemographyDebugger} class.
 
 To illustrate this we consider a very simple example in which we have a
-single population experiencing an phase of exponential growth from 750
+single population experiencing a phase of exponential growth from 750
 to 100 generations ago. The size of the population 750 generations ago
 was 2000, and it grew to 20,000 over the next 650 generations. The size
 of the population has been stable at this value for the past 100
@@ -846,10 +826,10 @@ demographic_events = [
     msprime.PopulationParametersChange(time=T1, growth_rate=growth_rate),
     msprime.PopulationParametersChange(time=T2, growth_rate=0),
 ]
-dp = msprime.DemographyDebugger(
+dd = msprime.DemographyDebugger(
     population_configurations=population_configurations,
     demographic_events=demographic_events)
-dp.print_history()
+dd.print_history()
 \end{pythoncode}
 
 Gives the following output:
@@ -891,8 +871,8 @@ check our calculations. We see that time has been split into three
 population size is constant at 20,000. Then, we have a demographic event
 that changes the growth rate to 0.0035, which applies over the next
 epoch (from 100 to 750 generations ago). Over this time, the population
-grows from 2000 to 20,000, as we specified (note that the "start" and
-"end" of each epoch is looking \emph{backwards} in time, as we consider
+grows from 2000 to 20,000, as we specified (note that the ``start'' and
+``end'' of each epoch is looking \emph{backwards} in time, as we consider
 epochs starting from the present and moving backwards). At generation
 750 another event occurs, setting the growth rate for the population to
 0. Then, the population size is constant at 20,000 from generation 750
@@ -911,7 +891,8 @@ samples.
 \begin{pythoncode}
 ts = msprime.simulate(
     samples=[
-        msprime.Sample(0, 0), msprime.Sample(0, 0), msprime.Sample(0, 0),
+        msprime.Sample(0, 0), msprime.Sample(0, 0),
+        msprime.Sample(0, 0),
         msprime.Sample(1, 0.75), # Ancient sample in deme 1
     ],
     population_configurations=[
@@ -922,15 +903,10 @@ ts = msprime.simulate(
         [1, 0]],
     random_seed=22)
 tree = ts.first()
-colour_map = {0:"red", 1:"blue"}
-node_colours = {u: colour_map[tree.population(u)] for u in tree.nodes()}
-node_labels = {
-    u: (str(u) if u != 3 else "{} (t={:.2f})".format(u, tree.time(u)))
-    for u in tree.nodes()}
-SVG(tree.draw(node_colours=node_colours, node_labels=node_labels))
+# Tree drawing code omitted.
 \end{pythoncode}
 
-\begin{wrapfigure}{r}{0.5\textwidth}
+\begin{wrapfigure}[12]{r}{0.5\textwidth}
   \begin{center}
     \includegraphics[width=0.48\textwidth]{images/simulations_45_0.pdf}
   \end{center}
@@ -947,7 +923,7 @@ arbitrary populations and at arbitrary times.
 
 \subsection{Recombination}\label{recombination}
 
-One of the key innovations of \msprime is that it makes simulation of the
+One of the key innovations of \msprime\ is that it makes simulation of the
 full coalescent with recombination possible at a whole chromosome scale.
 Adding recombination to a simulation is simple, requiring very minor
 changes to the methods given above.
@@ -960,12 +936,16 @@ print(ts.num_trees)
 \end{pythoncode}
 
     In this case, we provide two extra parameters: \texttt{length}, which
-defines the lengths of the genomic region to be simulated, and
+defines the length of the genomic region to be simulated, and
 \texttt{recombination\_rate}, which defines the rate of recombination
-per unit of sequence length, per generation. It is usually useful tp
+per unit of sequence length, per generation. It is usually useful to
 think of the length and recombination rate being defined in terms
 base-pairs (but note that these are continuous values, so this
-correspondence should not be taken too literally). For this example, we
+correspondence should not be taken too literally. Note also that
+the \texttt{length} parameter is not connected to the number
+of mutational \emph{sites}; any number of mutations can occur on a
+given sequence length, depending on the mutation rate that is specified.)
+For this example, we
 defined a sequence length of 10kb, and a recombination rate of
 \(10^{-8}\) per base per generation. The result of this simulation is a
 \emph{tree sequence} that contains 82 distinct trees.
@@ -1138,7 +1118,7 @@ segments within and between populations for a pair of samples.}
 % \includenbimage{images/processing-results_5_0.pdf}
 
 In this example we create a function \texttt{ibd\_segments} that returns
-a numpy array of the lengths of IBD segments for a given pair of
+a NumPy array of the lengths of IBD segments for a given pair of
 samples, \texttt{a} and \texttt{b}. It works simply by computing the
 MRCA for the samples at the left hand side of the sequence and then,
 moving rightwards, records a segment each time the MRCA changes. We then
@@ -1292,7 +1272,7 @@ returns a \texttt{Variant} object for each site in the tree sequence. A
 \texttt{Variant} consists of: (a) a reference to the site in question;
 (b) the \texttt{alleles} at this site (the strings representing the
 actual states); and (c) the \texttt{genotypes} representing the observed
-state for each sample. The \texttt{genotypes} are encoded in a numpy
+state for each sample. The \texttt{genotypes} are encoded in a NumPy
 array, such that \texttt{variant.alleles{[}variant.genotypes{[}j{]}{]}}
 gives the allelic state for sample ID \texttt{j}. The values in the
 \texttt{genotypes} array are therefore indexes into the \texttt{alleles}
@@ -1303,7 +1283,7 @@ ordering of the alleles list should be made.
 For biallelic sites, working with genotypes is straightforward as the
 genotypes array can only contain 0 and 1 values, and these correspond to
 the ancestral and derived states, respectively. The \texttt{genotypes}
-values are returned as a numpy array, and so the full numpy library is
+values are returned as a NumPy array, and so the full NumPy library is
 available for efficient processing. As an example, we show here how to
 count the number of sites at which the derived allele is at frequency
 less than 10\%. Using the genotypes in this way is convenient, as
@@ -1374,7 +1354,7 @@ def get_total_branch_length(ts):
 \end{pythoncode}
 
     This function returns the total branch length value for each tree in the
-sequence as a numpy array. It works by keeping track of the total branch
+sequence as a NumPy array. It works by keeping track of the total branch
 length as we proceed from left to right, and storing this value in the
 output array for each tree. The \texttt{edge\_diffs} method returns a
 list of the edges that are removed for each tree transition
