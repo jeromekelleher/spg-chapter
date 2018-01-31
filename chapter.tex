@@ -105,7 +105,7 @@ extremely challenging and we still lack a full analytic description of
 genetic drift and recombination even under the simplest null models (in
 the absence of demography and selection). Thus, inference methods that
 incorporate linkage information generally rely on drastic simplifying
-assumptions about recombination \citep{mcvean2005approximating, }.
+assumptions about recombination \citep{mcvean2005approximating}.
 
 Given the severe limitations of relating sequence variation to
 mechanistic models analytically, coalescent simulations have become an
@@ -174,8 +174,8 @@ processes in a spatial
 continuum~\citep{kelleher2013coalescent,kelleher2014coalescent}.
 
 \textbf{TODO:} Paragraph explaining the knowledge expected
-in terms of coalescent theory and Python. Recommendations 
-for other reading (coalescent: Wakeley, other background 
+in terms of coalescent theory and Python. Recommendations
+for other reading (coalescent: Wakeley, other background
 Charlesworth and Charlesworth). Python: Python tutorial. Unless otherwise
 stated, all analytical results used are taken from Wakeley.
 
@@ -192,7 +192,7 @@ predictions in Section~\ref{validating-analytical-predictions},
 emphasising idiomatic ways of interacting with toolkits such as
 Pandas and Seaborn. Finally, we show how \msprime can be
 used to set up a simple ABC inference. From the perspective of the user,
-inference tools are generally implemented with a command line or graphical 
+inference tools are generally implemented with a command line or graphical
 user interface and are designed for a more or less narrow set of inference
 problems. Thus the aim of Section~\ref{inference} is to illustrate how
 \msprime~\citep{kelleher2016efficient} and its flexible API can be used to build inference tools for arbitrary demographic histories.
@@ -1670,6 +1670,193 @@ excellent agreement. The mean number of segregating sites is not
 affected by recombination, but recombination does substantially reduce
 the variance.
 
+\section{Example inference scheme}\label{sec:inference}
+
+    The analytical challenges of deriving likelihood functions even under
+highly idealized models of population structure and history have led to
+the development of likelihood-free inference methods, in particular
+Approximate Bayesian Computation (ABC) (Beaumont 2002). ABC approximates
+the posterior distribution of model parameters by drawing from
+simulations. Because of its flexibility ABC has become a standard
+inference tool in statistical population genetics.
+
+We will demonstrate how msprime can be used to set up an ABC inference
+by means of a simple toy example. We stress that this is meant as an
+illustration rather than a inference tool for practical use. However,
+given the flexibility of msprime, we hope to that it should be
+relatively straighforward to implement more realistic framework focussed
+on specific inference applications.
+
+We assume that data for 200 loci or sequence blocks (these could be RAD
+loci in practice) for a single diploid individual have been generated
+from each of two populations. We would like to infer the amount of gene
+flow between the two populations. For the sake of simplicity we will
+assume the simplest possible model of population structure; that is two
+populations, each of the same effective size that exchange migrants at a
+constant rate of \(M=4 N_e m\) migrants per generation.
+
+The function \texttt{run\_sims} simulates a dataset consisting of a
+specified number of loci (\texttt{num\_loci}) given a migration rate
+\(m\). We generate a single dataset of 50 loci assuming a migration rate
+\(m=0.3\), which we will use as a (pseudo)observed dataset in the ABC
+implementation.
+
+\begin{pythoncode}
+nsamp = 2
+theta = 2
+true_m = 0.3
+num_loci = 200
+
+def run_sims(m, num_loci=1,theta=0):
+    return msprime.simulate(
+        Ne=1/2,
+        population_configurations=[
+            msprime.PopulationConfiguration(sample_size=nsamp),
+            msprime.PopulationConfiguration(sample_size=nsamp)],
+        migration_matrix=[[0, m], [m, 0]],
+        num_replicates=num_loci,
+        mutation_rate=theta / 2)
+
+def get_joint_site_frequency_spectra(reps):
+    data = np.zeros((num_loci, nsamp + 1, nsamp + 1))
+    for rep_index, ts in enumerate(reps):
+        # Track the samples from population 0.
+        for tree in ts.trees(tracked_samples=[0, 1]):
+            for site in tree.sites():
+                assert len(site.mutations) == 1
+                mutation = site.mutations[0]
+                nleaves0 = tree.num_tracked_samples(mutation.node)
+                nleaves1 = tree.num_samples(mutation.node) - nleaves0
+                data[rep_index, nleaves0, nleaves1] += 1
+    return data
+
+truth = get_joint_site_frequency_spectra(
+    run_sims(true_m, num_loci=num_loci, theta=2))
+\end{pythoncode}
+
+    The \texttt{run\_sims} function returns an iterator with the complete
+tree sequence and mutational information of each locus. We use the
+function \texttt{get\_joint\_site\_frequency\_spectra} to summarize the
+polymorphism information as the joint site frequency spectrum (jSFS) of
+each locus, i.e. the blockwise site frequency spectrum bSFS (sensu Lohse
+et al 2016). Note that higher level population genetic summaries, e.g.~pairwise
+measures of divergence and diversity such as \(D_{XY}\) (Nei 1987) and
+\(F_{ST}\) (Wright 1950) or multi-population \(F\) statistics (Durand et
+al 2011, Patterson 2012) which are often used in ABC inference are just
+further (and lossy) summaries of the jSFS.
+
+Since msprime simulates rooted trees, the columns and rows
+of the unfolded jSFS correspond to the frequency of derived mutations in
+each population and the entries of the jSFS are simply mutation counts.
+E.g. for the first locus we have:
+\begin{pythoncode}
+print(truth[0])
+
+>>> [[ 0.  1.  4.]
+     [ 5.  0.  7.]
+     [ 0.  0.  0.]]
+\end{pythoncode}
+
+    One could base inference on the bSFS (Lohse 2016 et al, Beeravolou et al
+2017), but we will for the sake of simplicity use a simpler (and lossy)
+summary of the data: the average jSFS across loci. For analyses based on
+SNPs it is convient to normalize the jSFS by the total number of
+mutations:
+\begin{pythoncode}
+truth_mean = np.mean(truth, axis=0)
+truth_mean /= np.sum(truth_mean)
+print(truth_mean)
+
+>>> [[ 0.          0.22099954  0.16139386]
+     [ 0.25630445  0.03255387  0.08482348]
+     [ 0.16093535  0.08298945  0.        ]]
+\end{pythoncode}
+
+    To illustrate a simple ABC inference scheme, we will focus on a single
+parameter of interest, the migration rate \(m\).
+ABC measures the fit of data simulated under the prior to the observed
+data via a vector of summary statistics. We will use the jSFS as a
+summary statistic and approximate the jSFS for each \(m\) value as the
+mean length of genealogical branches (as in the bottleneck section
+above) across 100 simulation replicates (\texttt{num\_reps}). Below we
+draw 10,000 \(m\) values from the prior and use the function
+\texttt{run\_sims} and \texttt{approx\_jSFS} to approximate the jSFS for
+each. We assume an exponential distribution, a common choice of prior
+(Hey \& Wakeley 2002).
+
+\begin{pythoncode}
+num_reps = 100
+num_prior_draws = 10000
+prior_m = np.random.exponential(0.1, num_prior_draws)
+
+def approx_jSFS(m):
+    reps = run_sims(m, num_loci=num_reps)
+    B = np.zeros((num_reps, nsamp + 1, nsamp + 1))
+    for rep_index, ts in enumerate(reps):
+        samp1 = ts.samples(population_id=0)
+        for tree in ts.trees(tracked_samples=samp1):
+            # Note that this will be inefficient if we have lots of trees.
+            # Should use an incremental update strategy using edge_diffs
+            # in this case.
+            for u in tree.nodes():
+                nleaves1 = tree.num_tracked_samples(u)
+                nleaves2 = tree.num_samples(u) - nleaves1
+                if tree.parent(u) != msprime.NULL_NODE:
+                    B[rep_index, nleaves1, nleaves2] += tree.branch_length(u)
+    data = np.mean(B, axis=0)
+    return data / np.sum(data)
+
+with multiprocessing.Pool() as pool:
+    prior_jSFS = pool.map(approx_jSFS, prior_m)
+\end{pythoncode}
+
+Here we run 100 simulation replicates for each of the 10,000 prior
+$m$ values, giving a total of 1 million individual simulations.
+We use the \texttt{multiprocessing} module to distribute these
+computations over the available CPU cores.
+
+Once this has completed, we compute the Euclidean distance between the estimated jSFS for each
+draw from the prior (\texttt{prior\_jSFS}) and the jSFS in the (pseudo)observed
+data (\texttt{truth\_mean}):
+\begin{pythoncode}
+distances = np.zeros(num_prior_draws)
+for j in range(num_prior_draws):
+    distances[j] = np.sqrt(np.sum((prior_jSFS[j] - truth_mean)**2))
+\end{pythoncode}
+
+
+\begin{figure}
+    \begin{center}
+    \includegraphics[width=\textwidth]{images/inference-example_13_0.pdf}
+    \end{center}
+    \caption{\label{fig:abc-posterior}Prior and posterior ABC distributions
+    and estimated 95\% approximate credible interval.}
+\end{figure}
+
+    In its simplest form, ABC approximates the posterior by sampling from
+the simulated data via an acceptance threshold. Here we approximate the
+posterior distribution of \(m\) from the 5\% of simulation replicates
+that most closely match the jSFS of the observed data.
+Figure~\ref{fig:abc-posterior} shows that the  posterior
+distribution (shown in green) is centred around \(m=0.25\).
+\begin{pythoncode}
+cutoff = np.percentile(distances, 5)
+keep = np.where(distances < cutoff)
+post_m = prior_m[keep]
+mean_m = np.mean(post_m)
+ci_m = np.percentile(post_m, 2.5), np.percentile(post_m, 95.75)
+sns.distplot(prior_m, label="Prior")
+sns.distplot(post_m, label="Posterior")
+# Plotting code omitted.
+\end{pythoncode}
+
+The mean and the 95\% approximate posterior credible interval for \(m\)
+are:
+\begin{pythoncode}
+print([mean_m, ci_m])
+
+>>> [0.22494687232052613, (0.14574598726102159, 0.32315656482448107)]
+\end{pythoncode}
 
 \bibliography{references}
 
