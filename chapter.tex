@@ -89,7 +89,7 @@ past of populations from sequence variation. The coalescent gives an
 elegant mathematical description of the ancestry of a sample of
 sequences from a more or less idealized population and, given its focus
 on samples, has become the bread and butter of modern population
-genetics.
+genetics \citep{hudson1985the, Wakeley2009}.
 
 However, despite the flood of sequence data and the plethora of
 coalescent-based inference tools now available, many analyses of genome
@@ -99,13 +99,13 @@ analytic results for models of population structure and/or history are
 often restricted to average coalescence times and small (often pairwise)
 samples. Even when it is possible to derive the full distribution of
 genealogies for realistic samples sizes and models, the results are
-cumbersome and generally rely on automation (Lohse 2016). Second, and
+cumbersome and generally rely on automation \citep{Lohse2016}. Second, and
 perhaps more fundamentally, dealing with recombination has proven
 extremely challenging and we still lack a full analytic description of
 genetic drift and recombination even under the simplest null models (in
 the absence of demography and selection). Thus, inference methods that
 incorporate linkage information generally rely on drastic simplifying
-assumptions about recombination (cite SMC papers and Song).
+assumptions about recombination \citep{mcvean2005approximating, }.
 
 Given the severe limitations of relating sequence variation to
 mechanistic models analytically, coalescent simulations have become an
@@ -113,28 +113,11 @@ integral part of inference in a number of ways: First, comparisons
 between analytic results against simulations serve as an important
 sanity check for both. Second, while it is often possible to use
 analytic approaches to obtain unbiased point estimates of demographic
-parameters by ignoring linkage (cite dadi and ), quantifying the
-uncertainty and potential biases in such estimates requires simulating
+parameters by ignoring linkage \citep{gutenkunst2009inferring}, quantifying the uncertainty and potential biases in such estimates requires simulating
 data with linkage to conduct parametric bootstrapping. Finally, a range
-of inference approaches that rely on coalescent simulations directly to
+of inference approaches rely on coalescent simulations directly to
 approximate the likelihood or - in a Bayesian setting - the posterior,
-of parameters under arbitrarily complex models of demography:
-Approximate Bayesian computation (ABC) (cite DIYABC, msBayes) has
-evolved ii) Approximate likelihood methods either based on SNPs (cite
-Excoffier) or blockwise data (cite ABLE).
-
-From the perspective of the user, inference tools are generally
-implemented with a command line or graphical user interface and are
-designed for a more or less narrow set of inference problems. Moreover,
-curent inference methods are based on a variety of coalescent simulators
-which are often. The aim of this chapter is to illustrate that how
-msprime (and its API) provides a flexible way to run and use coalescent
-simulations under under any model. We first explain the basic
-datastruture and methods msprimes for coalescent simulations and then
-show by the way of a set of simple practical examples how msprime can be
-used to obtain predictions for commonly used data summaries and
-diffferent models of demography. Finally, we show how msprime can be
-used to set up a ABC inference.
+of parameters under arbitrarily complex models of demography. Inference based approximate Bayesian computation (ABC) \citep{Beaumont2002, Cornuet2008} and approximate likelihood methods either based on SNPs \citep{excoffier2013} or multilocus of blockwise data \citep{becquet2007new, Beeravolu2017}.
 
 This chapter is a tutorial for running and analysing coalescent simulations
 using \msprime~\citep{kelleher2016efficient}.
@@ -156,8 +139,7 @@ which was unfeasible using simulators such as \ms~\citep{hudson2002generating}.
 However, for sufficiently large sample size, \msprime\ is significantly
 faster than the most efficient SMC simulator~\citep{staab2014scrm},
 rendering this approximation unnecessary for simulation purposes. (The
-SMC is an important analytical simplification of the coalecent, however, and
-has lead to many important advances inference; see e.g.~\citep{
+SMC is an important analytical simplification of the coalecent, however, and has lead to many important advances inference; see e.g.~\citep{
 li2011inference,
 harris2013inferring,
 schiffels2014inferring,
@@ -191,6 +173,12 @@ genealogies underlying \msprime\ were based on earlier work on simulating coales
 processes in a spatial
 continuum~\citep{kelleher2013coalescent,kelleher2014coalescent}.
 
+\textbf{TODO:} Paragraph explaining the knowledge expected
+in terms of coalescent theory and Python. Recommendations 
+for other reading (coalescent: Wakeley, other background 
+Charlesworth and Charlesworth). Python: Python tutorial. Unless otherwise
+stated, all analytical results used are taken from Wakeley.
+
 The rest of the chapter is organised as follows. We begin in
 Section~\ref{running-simulations} by providing an overview of how
 to run coalescent simulations in \msprime, including the various
@@ -199,10 +187,15 @@ Section~\ref{processing-results} then continues by illustrating
 some examples of how we can efficiently process the results
 of such simulations, with particular emphasis on the methods
 required to work with very large sample sizes. We then provide
-some examples of how to compare simulations with analytical
+some examples of how to compare simulations with analytic
 predictions in Section~\ref{validating-analytical-predictions},
 emphasising idiomatic ways of interacting with toolkits such as
-Pandas and Seaborn. \textbf{FINISH ME}.
+Pandas and Seaborn. Finally, we show how \msprime can be
+used to set up a simple ABC inference. From the perspective of the user,
+inference tools are generally implemented with a command line or graphical 
+user interface and are designed for a more or less narrow set of inference
+problems. Thus the aim of Section~\ref{inference} is to illustrate how
+\msprime~\citep{kelleher2016efficient} and its flexible API can be used to build inference tools for arbitrary demographic histories.
 
 \section{Running simulations}
 \label{running-simulations}
