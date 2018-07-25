@@ -1,4 +1,4 @@
-%%%%%%%%%%%%%%%%%%%% author.tex %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%% author.tex %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % sample root file for your "contribution" to a contributed volume
 %
@@ -16,7 +16,7 @@
 \usepackage{mathptmx}       % selects Times Roman as basic font
 \usepackage{helvet}         % selects Helvetica as sans-serif font
 \usepackage{courier}        % selects Courier as typewriter font
-\usepackage{type1cm}        % activate if the above 3 fonts are
+%\usepackage{type1cm}        % activate if the above 3 fonts are
                             % not available on your system
 %
 \usepackage{makeidx}         % allows index generation
@@ -37,8 +37,8 @@
 %%%%%%%%%%%%%%%%%%%%
 \usepackage{minted}
 \usepackage{wrapfig}
-\usepackage{natbib}
-\bibliographystyle{abbrvnat}
+\usepackage[numbers]{natbib}
+\bibliographystyle{unsrtnat}
 
 \newminted{python}{fontsize=\footnotesize}
 
@@ -57,6 +57,7 @@
 \begin{document}
 
 \title*{Coalescent simulation with msprime}
+\titlerunning{Coalescent simulation with msprime}
 % Use \titlerunning{Short Title} for an abbreviated version of
 % your contribution title if the original one is too long
 \author{Jerome Kelleher and Konrad Lohse}
@@ -87,8 +88,11 @@ constructed using a simple Python API, as well as how we can process
 the results of such simulations to efficiently calculate statistics of
 interest. We illustrate \msprime's flexibility by implementing
 a simple (but functional) approximate Bayesian computation inference method in
-just a few tens of lines of code.
+just a few tens of lines of code.\\
+\textbf{Key words} Population genetics, coalescent theory, simulation, Python
 }
+
+
 \section{TODO}
 
 Migration rates are confusing! Are they fractions or rates? If they're fractions, why can we have values
@@ -123,8 +127,8 @@ Thus, inference methods that
 incorporate linkage information~\citep{li2011inference,harris2013inferring} generally rely on substantial simplifying
 assumptions about recombination~\citep{mcvean2005approximating}.
 
-Because analytical approaches relating sequence variation to mechanistic models 
-of population structure and history are severely limited, simulations---in particular, coalescent 
+Because analytical approaches relating sequence variation to mechanistic models
+of population structure and history are severely limited, simulations---in particular, coalescent
 simulations---have become an integral part of inference in a number of ways.
 First, comparisons between analytical results and simulations serve as an important
 sanity check for both. Second, while it is often possible to use analytical
@@ -230,11 +234,11 @@ These trees (which are always rooted) represent the simulated history of a sampl
 drawn from an idealised population (in later sections we show how to
 vary the properties of this idealised population). The function
 \texttt{msprime.simulate} runs these simulations and the parameters
-that we provide to define the simulation that is  
+that we provide to define the simulation that is
 run. It returns a \texttt{TreeSequence} object, which represents the
 full coalescent history of the sample. In later sections we discuss the
 effects of recombination, when this \texttt{TreeSequence} contains a
-sequence of correlated trees. For now, we focus on non-recombining sequences and 
+sequence of correlated trees. For now, we focus on non-recombining sequences and
 use the method \texttt{first()} to obtain the
 tree object from this tree sequence. (In general, we can use the \texttt{trees()} iterator
 to get all trees; see Section~\ref{recombination}.) For example, here we simulate a
@@ -269,7 +273,7 @@ tuple \texttt{(2,\ 3)} here, as these are the node IDs of the children
 of the root node. Similarly, \texttt{tree.parent(0)} will return
 \texttt{3}.
 
-The height of a tree node is determined by the \emph{time} at which the corresponding 
+The height of a tree node is determined by the \emph{time} at which the corresponding
 ancestor was born. So,
 contemporary samples always have a node time of zero, and time values
 increase as we go upwards in the tree (i.e.\ further back in time). Times
@@ -338,7 +342,7 @@ type of approach throughout.
 
 It is usually more convenient to use the \texttt{num\_replicates}
 argument to perform replication, but there are situations in which it is
-desirable the specify random seeds manually. For example, if simulations
+desirable to specify random seeds manually. For example, if simulations
 require a long time to run, we may wish to use multiple processes to
 run these simulations. To ensure that the seeds used in these different
 processes are unique, it is best to manually specify them. For example,
@@ -475,7 +479,7 @@ slower coalescence rate. (Care must be taken with negative growth rates,
 however, as it is possible to specify models in which the MRCA is never
 reached. In some cases this will lead to an error being raised, but it
 is also possible that the simulator will keep generating events
-indefinitely. This is particularly important in simulation base 
+indefinitely. This is particularly important in simulation base
 approaches to inference from real data.)
 
     \subsection{Mutations}\label{mutations}
@@ -1163,8 +1167,8 @@ of the derived allele at each site using the \texttt{num\_samples}
 method, which returns the number of samples subtending a given
 node. The underlying implementation ensures that this operation requires
 constant time, and so it is \emph{very} efficient. After the loop
-completes, we then see that such rare alleles are very common. (We reiterate that \msprime\ 
-generates mutations under the infinitely many sites model so that each mutation occurs at a 
+completes, we then see that such rare alleles are very common. (We reiterate that \msprime\
+generates mutations under the infinitely many sites model so that each mutation occurs at a
 unique site. In more complex situations where we have back or recurrent mutations
 this simple approach will not work.)
 
@@ -1241,7 +1245,7 @@ in the new tree sequence.
 ts_subset, node_map = ts.simplify(samples, map_nodes=True)
 tree = ts_subset.first()
 node_labels = {
-    node_map[j]: "{}({})".format(node_map[j], str(j)) 
+    node_map[j]: "{}({})".format(node_map[j], str(j))
     for j in range(ts.num_nodes)}
 SVG(tree.draw(node_labels=node_labels, width=400))
 \end{pythoncode}
@@ -1369,7 +1373,7 @@ CPU times: user 7.67 s, sys: 64 ms, total: 7.74 s
 \end{pythoncode}
 
 On the other hand, if we compute the total branch length by performing a
-full traversal for each tree, each tree transition is very costly 
+full traversal for each tree, each tree transition is very costly
 when we have a large sample size. In this example, computing the array of branch lengths
 using the incremental approach given here took 8 seconds. Computing the
 same array using the \texttt{tree.total\_branch\_length} for each tree
@@ -1389,7 +1393,7 @@ variant data into other libraries using the \texttt{genotype\_matrix()}
 or \texttt{variants()} methods. We recommend the excellent
 \texttt{scikit-allel}~\citep{miles2017scikit} and
 \texttt{pylibseq} [\url{https://pypi.python.org/pypi/pylibseq}],
-libraries (\texttt{pylibseq} is a Python interface to 
+libraries (\texttt{pylibseq} is a Python interface to
 \texttt{libsequence}~\citep{thornton2003libsequence}). If you wish to export data to
 external programs, VCF may be best option, which is supported using the
 \texttt{write\_vcf} method. The \texttt{simplify} method is useful here
@@ -1411,7 +1415,7 @@ Since mutations happen as a Poisson process along the branches of the
 tree, what we are really interested in is the distribution of the total
 branch length of the tree. The results in this section are well known
 classical results from coalescent theory; this section is intended as a
-demonstration of to proceed when comparing analytical results to
+demonstration of how to proceed when comparing analytical results to
 simulations. We show some idiomatic examples for integrating with
 the state-of-the-art data analysis packages such
 as Pandas~\citep{mckinney2010data} and Seaborn~\citep{michael_waskom_2017_883859}.
@@ -1502,12 +1506,12 @@ ax.plot(x, mean_sim + stddev_sim, "^", color=line.get_color());
 distribution of the total branch lengths
 over replicate simulations (each violin is a distribution for a given
 sample size). We also show our analytical prediction for the mean and
-variance of each distrubution (the dashed lines show +/- one standard
+variance of each distribution (the dashed lines show +/- one standard
 deviation from the mean). Also shown are the observed means and standard
 deviations from the simulations, as green circles and red triangles,
 respectively. We can see that the simulated values match our theoretical
 predictions for mean and variance very well. We can also see, however,
-that these one-dimensional summaries of the distrubution capture some
+that these one-dimensional summaries of the distribution capture some
 essential properties but lose some important aspects of the
 distribution.
 
@@ -1518,7 +1522,7 @@ plot the simulated distribution for a sample of size 20 along with
 this prediction. The results are shown in
 Figure~\ref{fig:segsites-norecomb}B. We can see an excellent agreement between
 the smoothed kernel
-density esimate produced by Seaborn and our analytically computed value.
+density estimate produced by Seaborn and our analytically computed value.
 
 \begin{pythoncode}
 def T_total_density(n, t):
@@ -1789,8 +1793,8 @@ def approx_jSFS(m):
     for rep_index, ts in enumerate(reps):
         samp1 = ts.samples(population_id=0)
         for tree in ts.trees(tracked_samples=samp1):
-            # Note that this will be inefficient if we have 
-            # lots of trees. Should use an incremental update 
+            # Note that this will be inefficient if we have
+            # lots of trees. Should use an incremental update
             # strategy using edge_diffs in this case.
             for u in tree.nodes():
                 n1 = tree.num_tracked_samples(u)
@@ -1915,7 +1919,7 @@ using these APIs and data structures will emerge.
 
 \section*{Acknowledgments}
 
-We would like to thank Simon Aeschbacher for comments on the ABC inference example, 
+We would like to thank Simon Aeschbacher for comments on the ABC inference example,
 and to thank Yan Wong and Joseph Marcus for detailed and insightful feedback.
 JK is supported by Wellcome Trust grant 100956/Z/13/Z to Gil McVean.
 KL is supported by an Independent Research fellowship from the Natural Environment Research Council (NE/L011522/1).
