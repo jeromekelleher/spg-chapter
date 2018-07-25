@@ -89,12 +89,16 @@ interest. We illustrate \msprime's flexibility by implementing
 a simple (but functional) approximate Bayesian computation inference method in
 just a few tens of lines of code.
 }
+\section{TODO}
+
+Migration rates are confusing! Are they fractions or rates? If they're fractions, why can we have values
+bigger than 1?
 
 \section{Introduction}
 \label{sec:introduction}
 
 Thanks to the rapid advances in sequencing technology, generating
-genome-wide sequence datasets for any species has become routine and
+genome-wide sequence datasets for many species has become routine and
 there is great interest in learning about the history of
 populations from sequence variation. The
 coalescent~\citep{hudson1983testing,kingman1982coalescent,Tajima1983Evolutionary}
@@ -111,7 +115,7 @@ First, analytical results for models of population structure and/or history are
 often restricted to average coalescence times and small (often pairwise)
 samples. Even when it is possible to derive the full distribution of
 genealogies for realistic models and samples sizes, the results are
-cumbersome and generally rely on automation~\citep{Lohse2016}. Second, and
+cumbersome and generally rely on automation using symbolic mathematics software~\citep{Lohse2016}. Second, and
 perhaps more fundamentally, dealing with recombination has proven
 extremely challenging and we still lack a full analytical description of
 genetic drift and recombination even under the simplest of null models.
@@ -119,10 +123,10 @@ Thus, inference methods that
 incorporate linkage information~\citep{li2011inference,harris2013inferring} generally rely on substantial simplifying
 assumptions about recombination~\citep{mcvean2005approximating}.
 
-Given the severe limitations of relating sequence variation to mechanistic
-models of population structure and history analytically, coalescent simulations
-have become an integral part of inference in a number of ways. First,
-comparisons between analytical results and simulations serve as an important
+Because analytical approaches relating sequence variation to mechanistic models 
+of population structure and history are severely limited, simulations---in particular, coalescent 
+simulations---have become an integral part of inference in a number of ways.
+First, comparisons between analytical results and simulations serve as an important
 sanity check for both. Second, while it is often possible to use analytical
 approaches to obtain unbiased point estimates of demographic parameters by
 ignoring linkage~\citep{gutenkunst2009inferring}, quantifying the uncertainty
@@ -222,16 +226,18 @@ intersperse code chunks and their results freely within the text.
 
 \subsection{Trees and replication}
 At the simplest level, coalescent simulation is about generating trees (or genealogies).
-These trees represent the simulated history of a sample of individuals
+These trees (which are always rooted) represent the simulated history of a sample of individuals
 drawn from an idealised population (in later sections we show how to
 vary the properties of this idealised population). The function
-\texttt{msprime.simulate} runs these simulations, and the parameters
-that we provide to this function determine the exact simulation that we
+\texttt{msprime.simulate} runs these simulations and the parameters
+that we provide to define the simulation that is  
 run. It returns a \texttt{TreeSequence} object, which represents the
-full simulated history of the sample. In later sections we discuss the
+full coalescent history of the sample. In later sections we discuss the
 effects of recombination, when this \texttt{TreeSequence} contains a
-sequence of correlated trees. For now, we focus on non-recombining sequences, and use the method \texttt{first()} to obtain the
-tree object from this tree sequence. For example, here we simulate a
+sequence of correlated trees. For now, we focus on non-recombining sequences and 
+use the method \texttt{first()} to obtain the
+tree object from this tree sequence. (In general, we can use the \texttt{trees()} iterator
+to get all trees; see Section~\ref{recombination}.) For example, here we simulate a
 history for a sample of three chromosomes:
 
 \begin{pythoncode}
@@ -263,7 +269,8 @@ tuple \texttt{(2,\ 3)} here, as these are the node IDs of the children
 of the root node. Similarly, \texttt{tree.parent(0)} will return
 \texttt{3}.
 
-The height of a tree node is determined by the \emph{time} at which the corresponding was born. So,
+The height of a tree node is determined by the \emph{time} at which the corresponding 
+ancestor was born. So,
 contemporary samples always have a node time of zero, and time values
 increase as we go upwards in the tree (i.e.\ further back in time). Times
 in \msprime\ are always measured in \emph{generations}.
@@ -376,7 +383,7 @@ trees with a given number of nodes, but, as it leaves the population
 unspecified, has little connection with
 biological reality. The most fundamental population parameter is the \emph{effective population size}, or
 \(N_e\). This parameter simply rescales time; larger effective
-population sizes mean older coalescence times:
+population sizes correspond to older coalescence times:
 
 \begin{pythoncode}
 def pairwise_T_mrca(Ne):
@@ -468,15 +475,17 @@ slower coalescence rate. (Care must be taken with negative growth rates,
 however, as it is possible to specify models in which the MRCA is never
 reached. In some cases this will lead to an error being raised, but it
 is also possible that the simulator will keep generating events
-indefinitely.)
+indefinitely. This is particularly important in simulation base 
+approaches to inference from real data.)
 
     \subsection{Mutations}\label{mutations}
 
 We cannot directly observe gene genealogies; rather, we observe mutations in a sample of sequences which ultimately have occurred on genealogical branches. We are
 therefore very often interested not just in the genealogies that are
 simulated by the coalescent process, but also in the results of
-mutational processes imposed on these trees. \msprime currently supports
-simulating mutations under the infinitely many sites model. This is
+mutational processes imposed on these trees. \msprime\ currently supports
+simulating mutations under the infinitely many sites model (arbitrarily complex
+mutations are supported by the underlying data model, however). This is
 accessed by the \texttt{mutation\_rate} parameter to the
 \texttt{simulate} function. As usual, this rate is the per-generation
 rate.
@@ -517,14 +526,14 @@ information, but will consume a great deal of memory for larger
 simulations. See Section~\ref{processing-variants} for more information
 on how to access genotype data efficiently.
 
-When comparing simulations to analytical results regarding, it is very important to be aware of the way in which the
+When comparing simulations to analytical results, it is very important to be aware of the way in which the
 mutation rates are defined in coalescent theory. For historical reasons,
 the scaled mutation rate \(\theta\) is defined as \(2N_e \mu\), where
 \(\mu\) is the per-generation mutation rate. Since all times and rates
 are specified in units of generations in \msprime, we must divide by a
 factor of two if we are to compare with analytical predictions. For
 example, the mean number of segregating sites for a sample of two is
-\(\theta\); to run this in \msprime we do the following:
+\(\theta\); to run this in \msprime\ we do the following:
 
 \begin{pythoncode}
 N = 10000
@@ -720,7 +729,7 @@ own populations. However, because the migration rate between the
 populations is zero these lineages are isolated and would never coalesce
 without some change in demography. The migration rate change event
 happens at time 20, resulting in node 5 migrating to deme 1 soon
-afterwards. The lineages then coalesce at time 21.44.
+afterwards. The lineages then coalesce at time 21.4.
 
 \subsubsection{Mass migration}\label{mass-migration}
 
@@ -880,7 +889,7 @@ model is available in the online documentation.
 \subsection{Ancient samples}\label{ancient-samples}
 
 Up to this point we have assumed that all samples are taken at the
-present time. However, \msprime allows us to specify arbitrary sampling
+present time. However, \msprime\ allows us to specify arbitrary sampling
 times and locations, allowing us to simulate (for example) ancient
 samples.
 
@@ -936,7 +945,7 @@ defines the length of the genomic region to be simulated, and
 \texttt{recombination\_rate}, which defines the rate of recombination
 per unit of sequence length, per generation. It is often useful to
 think of both sequence lengths and recombination rates as defined in units of base-pairs. (Note, however, that these are continuous values, so this
-correspondence should not be taken too literally. Note also that because \msprime assumes an infinite sites mutation model
+correspondence should not be taken too literally. Note also that because \msprime\ assumes an infinite sites mutation model
 the \texttt{length} parameter is not connected to the number
 of mutational \emph{sites}. Thus any number of mutations can occur on a
 given sequence length, depending on the mutation rate specified.)
@@ -1043,7 +1052,7 @@ how to construct population models and demographic histories. In this
 section we show how to process the results of simulations. This is not a
 comprehensive review of the capabilities of the \msprime\ Python API, but
 concentrates on some useful examples.
-\msprime is specifically designed to enable very large simulations, and
+\msprime\ is specifically designed to enable very large simulations, and
 the processing methods we demonstrate below are all very efficient. To
 illustrate this we use a simulation of 200,000 samples of 10 megabases
 from a simple two-population model with human-like parameters:
@@ -1120,7 +1129,7 @@ lengths are shorter for the between population pair.
 Of course, we would need to sample many such pairs of samples to get a
 reasonable approximation of the real distribution of block lengths.
 Because the main cost of this function is in iterating over all the
-trees in the sequence, it is more efficient to keep track of the MRCAs
+trees in the sequence, would be more efficient to keep track of the MRCAs
 for different pairs while doing a single iteration than to repeatedly
 call the above \texttt{ibd\_segments} function.
 
@@ -1154,11 +1163,12 @@ of the derived allele at each site using the \texttt{num\_samples}
 method, which returns the number of samples subtending a given
 node. The underlying implementation ensures that this operation requires
 constant time, and so it is \emph{very} efficient. After the loop
-completes, we then see that such rare alleles are very common. (We reiterate that \msprime assumes a simple infinite sites mutation model that each mutation occurs at a unique site. However, it is possible to have more complex situations such as
-back and recurrent mutations in which this simplistic approach will not
-work.)
+completes, we then see that such rare alleles are very common. (We reiterate that \msprime\ 
+generates mutations under the infinitely many sites model so that each mutation occurs at a 
+unique site. In more complex situations where we have back or recurrent mutations
+this simple approach will not work.)
 
-A very powerful feature of this sample-counting feature is that we can
+A very powerful feature of this sample-counting approach is that we can
 perform the same operation over an arbitrary subset of the samples. For
 example, suppose we wished to count the number of sites that are private
 to a specific population:
@@ -1378,8 +1388,9 @@ statistics you are interested in, it's straightforward to export the
 variant data into other libraries using the \texttt{genotype\_matrix()}
 or \texttt{variants()} methods. We recommend the excellent
 \texttt{scikit-allel}~\citep{miles2017scikit} and
-\texttt{pylibseq}~\citep{thornton2003libsequence} libraries.
-If you wish to export data to
+\texttt{pylibseq} [\url{https://pypi.python.org/pypi/pylibseq}],
+libraries (\texttt{pylibseq} is a Python interface to 
+\texttt{libsequence}~\citep{thornton2003libsequence}). If you wish to export data to
 external programs, VCF may be best option, which is supported using the
 \texttt{write\_vcf} method. The \texttt{simplify} method is useful here
 is you wish to export data from a subset of the simulated samples.
@@ -1904,7 +1915,8 @@ using these APIs and data structures will emerge.
 
 \section*{Acknowledgments}
 
-We would like to thank Simon Aeschbacher for comments on the ABC inference example. 
+We would like to thank Simon Aeschbacher for comments on the ABC inference example, 
+and to thank Yan Wong and Joseph Marcus for detailed and insightful feedback.
 JK is supported by Wellcome Trust grant 100956/Z/13/Z to Gil McVean.
 KL is supported by an Independent Research fellowship from the Natural Environment Research Council (NE/L011522/1).
 
