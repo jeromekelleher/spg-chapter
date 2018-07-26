@@ -240,7 +240,7 @@ history for a sample of three chromosomes:
 
 \begin{figure}[t]
 \begin{center}
-\includegraphics[width=0.4\textwidth]{images/simulations_5_0.pdf}
+\includegraphics[width=0.4\textwidth]{images/plot_1.pdf}
 \end{center}
 \caption{\label{fig-simple-tree} Coalescent tree with mutations.
 using the \texttt{tree.draw()} method.}
@@ -251,12 +251,6 @@ ts = msprime.simulate(3)
 tree = ts.first()
 SVG(tree.draw())
 \end{pythoncode}
-
-% \begin{wrapfigure}{r}{0.4\textwidth}
-%   \begin{center}
-%     \includegraphics[width=0.38\textwidth]{images/simulations_5_0.pdf}
-%   \end{center}
-% \end{wrapfigure}
 
 This code chunk illustrates the basic approach required to draw a tree
 in a Jupyter notebook. We first generate a tree sequence object (\texttt{ts}),
@@ -501,7 +495,7 @@ rate.
 
 \begin{figure}[t]
 \begin{center}
-\includegraphics[width=0.4\textwidth]{images/simulations_19_0.pdf}
+\includegraphics[width=0.4\textwidth]{images/plot_2.pdf}
 \end{center}
 \caption{\label{fig-tree-mutations} Coalescent tree with mutations}
 \end{figure}
@@ -511,13 +505,6 @@ ts = msprime.simulate(3, mutation_rate=1, random_seed=7)
 tree = ts.first()
 SVG(tree.draw())
 \end{pythoncode}
-
-% \begin{wrapfigure}[10]{r}{0.4\textwidth}
-%   \begin{center}
-%     \includegraphics[width=0.38\textwidth]{images/simulations_19_0.pdf}
-%   \end{center}
-% \end{wrapfigure}
-% \includenbimage{images/simulations_19_0.pdf}
 
 The tree produced by this code chunk is shown in
 Figure~\ref{fig-tree-mutations}. Here we have two mutations, shown by the red squares.
@@ -608,14 +595,6 @@ node_colours = {
 SVG(tree.draw(node_colours=node_colours))
 \end{pythoncode}
 
-% \begin{wrapfigure}[14]{r}{0.4\textwidth}
-%   \begin{center}
-%     \includegraphics[width=0.38\textwidth]{images/simulations_26_0.pdf}
-%   \end{center}
-% \end{wrapfigure}
-%
-% \includenbimage{images/simulations_26_0.pdf}
-
 We create our model by first making a list of two
 \texttt{PopulationConfiguration} objects. For convenience here, we use
 the \texttt{sample\_size} argument to these objects to state that we
@@ -641,11 +620,11 @@ within deme 1.
 \begin{figure}[t]
 \centering
 \subfloat[][Two populations with asymmetric migration]{
-\includegraphics[width=0.3\textwidth]{images/simulations_26_0.pdf}
+\includegraphics[width=0.3\textwidth]{images/plot_3.pdf}
 \label{fig-trees-migration-asymmetric}}
 \qquad\qquad
 \subfloat[][Three population island model]{
-\includegraphics[width=0.3\textwidth]{images/simulations_28_0.pdf}
+\includegraphics[width=0.3\textwidth]{images/plot_4.pdf}
 \label{fig-trees-island-model}}
 \caption{\label{fig-trees-migration} Example trees produced in models with multiple
 populations and migration. Nodes are coloured by population.}
@@ -674,13 +653,6 @@ node_colours = {
 SVG(tree.draw(node_colours=node_colours))
 \end{pythoncode}
 
-% \begin{wrapfigure}{r}{0.4\textwidth}
-%   \begin{center}
-%     \includegraphics[width=0.38\textwidth]{images/simulations_28_0.pdf}
-%     \end{center}
-% \end{wrapfigure}
-% % \includenbimage{images/simulations_28_0.pdf}
-
 Figure~\ref{fig-trees-island-model} shows tree produced by this code
 chunk. Here we sample three nodes from population 0, but because there is a lot
 of migration the locations of coalescences are quite random. For
@@ -705,7 +677,7 @@ plt.ylabel("Number of migrations");
 
 \begin{figure}[t]
 \begin{center}
-\includegraphics[width=\textwidth]{images/simulations_30_0.pdf}
+\includegraphics[width=\textwidth]{images/plot_5.pdf}
 \end{center}
 \caption{\label{fig:migration_counts} Number of migration events for
 each tree node in a simulation with migration.}
@@ -749,13 +721,6 @@ ts  = msprime.simulate(
 tree = ts.first()
 \end{pythoncode}
 
-% \begin{wrapfigure}{r}{0.5\textwidth}
-%   \begin{center}
-%     \includegraphics[width=0.48\textwidth]{images/simulations_34_0.pdf}
-%   \end{center}
-% \end{wrapfigure}
-% % \includenbimage{images/simulations_34_0.pdf}
-
 The tree produced by this code chunk is shown in
 Figure~\ref{fig-trees-migration-rate-change} (in this example and those
 following we have omitted the code required to draw the tree).
@@ -769,15 +734,15 @@ afterwards. The lineages then coalesce at time 21.4.
 \begin{figure}[t]
 \centering
 \subfloat[][Migration rate change]{
-\includegraphics[width=0.3\textwidth]{images/simulations_34_0.pdf}
+\includegraphics[width=0.3\textwidth]{images/plot_6.pdf}
 \label{fig-trees-migration-rate-change}}
 % \qquad
 \subfloat[][Mass migration]{
-\includegraphics[width=0.3\textwidth]{images/simulations_37_0.pdf}
+\includegraphics[width=0.3\textwidth]{images/plot_7.pdf}
 \label{fig-trees-mass-migration}}
 % \qquad
 \subfloat[][Admixture]{
-\includegraphics[width=0.3\textwidth]{images/simulations_39_0.pdf}
+\includegraphics[width=0.3\textwidth]{images/plot_8.pdf}
 \label{fig-trees-admixture}}
 \caption{\label{fig-trees-demographic-events} Example trees produced in models
 with demographic events. Nodes are coloured by population.}
@@ -803,13 +768,6 @@ ts  = msprime.simulate(
 tree = ts.first()
 \end{pythoncode}
 
-% \begin{wrapfigure}{r}{0.5\textwidth}
-%   \begin{center}
-%     \includegraphics[width=0.48\textwidth]{images/simulations_37_0.pdf}
-%   \end{center}
-% \end{wrapfigure}
-% \includenbimage{images/simulations_37_0.pdf}
-
 The tree produced by this code chunk is shown in
 Figure~\ref{fig-trees-mass-migration}. In this case we also have two isolated
 populations which coalesce down to a single lineage. The population split at
@@ -833,12 +791,6 @@ ts  = msprime.simulate(
     random_seed=26)
 tree = ts.first()
 \end{pythoncode}
-
-% \begin{wrapfigure}[13]{hr}{0.4\textwidth}
-%   \begin{center}
-%     \includegraphics[width=0.38\textwidth]{images/simulations_39_0.pdf}
-%   \end{center}
-% \end{wrapfigure}
 
 The tree produced by this code chunk is shown in
 Figure~\ref{fig-trees-admixture}.
@@ -963,17 +915,10 @@ tree = ts.first()
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.48\textwidth]{images/simulations_45_0.pdf}
+\includegraphics[width=0.48\textwidth]{images/plot_9.pdf}
 \caption{\label{fig-tree-ancient-samples} Example tree produced by simulation
 with ancient samples.}
 \end{figure}
-
-% \begin{wrapfigure}[12]{r}{0.5\textwidth}
-%   \begin{center}
-%     \includegraphics[width=0.48\textwidth]{images/simulations_45_0.pdf}
-%   \end{center}
-% \end{wrapfigure}
-% % \includenbimage{images/simulations_45_0.pdf}
 
 The tree produced by this code chunk is shown in Figure~\ref{fig-tree-ancient-samples}.
 All of the trees that we previously considered had leaf nodes at time
@@ -1008,9 +953,11 @@ the \texttt{length} parameter is not connected to the number
 of mutational \emph{sites}. Thus any number of mutations can occur on a
 given sequence length, depending on the mutation rate specified.)
 For this example, we
-defined a sequence length of 10kb, and a recombination rate of
-\(10^{-8}\) per base per generation. The result of this simulation is a
-\emph{tree sequence} that contains 82 distinct trees.
+defined a sequence length of 100kb, and a recombination rate of
+\(10^{-8}\) per base per generation. The result of this particular simulation is a
+\emph{tree sequence} that contains 82 distinct trees. Other replicate
+simulations with different random seeds will usually result in different
+numbers of trees.
 
 Up to this point we have assumed that our simulations returned a single
 tree representing the genealogy of our sample. The inclusion of
@@ -1031,11 +978,9 @@ plt.xlabel("Position (kb)")
 plt.plot(breakpoints / 1000, tmrca, "o");
 \end{pythoncode}
 
-% \includenbimage{images/simulations_50_0.pdf}
-
 \begin{figure}
 \begin{center}
-\includegraphics[width=\textwidth]{images/simulations_50_0.pdf}
+\includegraphics[width=\textwidth]{images/plot_10.pdf}
 \end{center}
 \caption{\label{fig:tree_tmrcas}Time to the most recent common ancestor of
 a sample across a 100kb region.}
@@ -1072,11 +1017,11 @@ ts = msprime.simulate(
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=\textwidth]{images/simulations_53_0.pdf}
+\includegraphics[width=\textwidth]{images/plot_11.pdf}
 \end{center}
 \caption{\label{fig:variable_recombination}Plot of the HapMap
-genetic map for chromosome 22 and the density of breakpoints for a
-simulated chromosome.}
+genetic map for chromosome 22 (blue) and the density of breakpoints for a
+simulated chromosome (green).}
 \end{figure}
 
 Although coordinates are specified in floating point values, \msprime\
@@ -1159,19 +1104,19 @@ def ibd_segments(ts, a, b):
 
 sns.distplot(ibd_segments(ts, 0, 1), label="Within population")
 sns.distplot(ibd_segments(ts, 0, 10**5), label="Between populations")
-plt.xlim(-0.0005, 0.01)
+plt.xlim(-0.0001, 0.003)
 plt.legend()
 plt.xlabel("Fraction of genome length");
+plt.ylable("Count")
 \end{pythoncode}
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=\textwidth]{images/processing-results_5_0.pdf}
+\includegraphics[width=\textwidth]{images/plot_12.pdf}
 \end{center}
 \caption{\label{fig:ibd_segments}Distribution of the length of IBD
 segments within and between populations for a pair of samples.}
 \end{figure}
-% \includenbimage{images/processing-results_5_0.pdf}
 
 In this example we create a function \texttt{ibd\_segments} that returns
 a NumPy array of the lengths of IBD segments for a given pair of
@@ -1193,7 +1138,7 @@ call the above \texttt{ibd\_segments} function.
 
 \subsection{Sample counts}\label{sample-counts}
 
-The \msprime\ API provides a very efficient way to count the number of
+The \msprime\ API provides an extremely efficient way to count the number of
 samples that are beneath a particular node in a tree. This can be used,
 for example, to compute allele frequencies efficiently and is the basis
 for many of the fast algorithms in the API. As a simple illustration of
@@ -1221,12 +1166,12 @@ of the derived allele at each site using the \texttt{num\_samples}
 method, which returns the number of samples subtending a given
 node. The underlying implementation ensures that this operation requires
 constant time, and so it is \emph{very} efficient. After the loop
-completes, we then see that such rare alleles are very common. (We reiterate that \msprime\
+completes, we then see that such rare alleles are common. (We reiterate that \msprime\
 generates mutations under the infinitely many sites model so that each mutation occurs at a
 unique site. In more complex situations where we have back or recurrent mutations
 this simple approach will not work.)
 
-A very powerful feature of this sample-counting approach is that we can
+A powerful feature of this sample-counting approach is that we can
 perform the same operation over an arbitrary subset of the samples. For
 example, suppose we wished to count the number of sites that are private
 to a specific population:
@@ -1306,17 +1251,11 @@ SVG(tree.draw(node_labels=node_labels, width=400))
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.48\textwidth]{images/processing-results_15_0.pdf}
+\includegraphics[width=0.48\textwidth]{images/plot_13.pdf}
 \caption{\label{fig-tree-subset} Tree of a subset of the samples in a large
 simulation. Node IDs in the subset and full tree sequences are shown.}
 \end{figure}
 
-% \begin{wrapfigure}[6]{r}{0.5\textwidth}
-%   \begin{center}
-%     \includegraphics[width=0.48\textwidth]{images/processing-results_15_0.pdf}
-%   \end{center}
-% \end{wrapfigure}
-% \includenbimage{images/processing-results_15_0.pdf}
 The result of running this code chunk is show in Figure~\ref{fig-tree-subset}.
 Here we draw the first tree in the subset tree sequence, showing the new
 node IDs along with the IDs from the original tree sequence in
@@ -1372,7 +1311,8 @@ is an expensive operation and the overall calculation takes about 1.5 minutes
 to complete.
 
 In the case of infinite sites mutations, we can recast this operation
-to use the efficient sample counting methods. This approach is far more
+to use the efficient sample counting methods describe in
+Section~\ref{sample-counts}. This approach is far more
 efficient, requiring less than 2 seconds to compute the same value.
 \begin{pythoncode}
 %%time
@@ -1542,28 +1482,49 @@ line, = ax.plot(x, mean_sim - stddev_sim, "^")
 ax.plot(x, mean_sim + stddev_sim, "^", color=line.get_color());
 \end{pythoncode}
 
-\begin{figure}
-\begin{center}
-    \parbox{5cm}{
-    \includegraphics[width=5cm]{images/segsites-example_5_0.pdf}
-    \begin{center}(A)\end{center}
-    }%
-    \qquad
-    \parbox{5cm}{
-    \includegraphics[width=5cm]{images/segsites-example_7_0.pdf}
-    \begin{center}(B)\end{center}
-    }
-    \caption{Comparisons of the distribution of simulated total branch lengths
-        with analytical results. (A) The full distribution of simulated
-        values (violin plots) along with observed and predicted mean and
-        standard deviations for a range of sample sizes. (B) The full
-        simulated and predicted distribution of total branch lengths
-        for $n = 20$.}
-    \label{fig:segsites-norecomb}
-\end{center}
+% \begin{figure}
+% \begin{center}
+%     \parbox{5cm}{
+%     \includegraphics[width=5cm]{images/plot_14.pdf}
+%     \begin{center}(A)\end{center}
+%     }%
+%     \qquad
+%     \parbox{5cm}{
+%     \includegraphics[width=5cm]{images/plot_15.pdf}
+%     \begin{center}(B)\end{center}
+%     }
+%     \caption{Comparisons of the distribution of simulated total branch lengths
+%         with analytical results. (A) The full distribution of simulated
+%         values (violin plots) along with observed and predicted mean and
+%         standard deviations for a range of sample sizes. (B) The full
+%         simulated and predicted distribution of total branch lengths
+%         for $n = 20$.}
+%     \label{fig:segsites-norecomb}
+% \end{center}
+% \end{figure}
+
+\begin{figure}[t]
+\centering
+\subfloat[][
+The full distribution of simulated
+values (violin plots) along with observed and predicted mean and
+standard deviations for a range of sample sizes.
+]{
+\includegraphics[width=0.75\textwidth]{images/plot_14.pdf}
+\label{fig-segsites-norecomb-a}}
+\qquad\qquad
+\subfloat[][
+The full simulated and predicted distribution of total branch lengths for $n = 20$.
+]{
+\includegraphics[width=0.75\textwidth]{images/plot_15.pdf}
+\label{fig-segsites-norecomb-b}}
+\caption{\label{fig-segsites-norecomb}
+Comparisons of the distribution of simulated total branch lengths
+with analytical results.
+}
 \end{figure}
 
-    The plot in Figure~\ref{fig:segsites-norecomb}A shows the simulated
+    The plot in Figure~\ref{fig-segsites-norecomb-a} shows the simulated
 distribution of the total branch lengths
 over replicate simulations (each violin is a distribution for a given
 sample size). We also show our analytical prediction for the mean and
@@ -1581,7 +1542,7 @@ an analytical expression. In the following code chunk we define the analytical
 prediction for the total branch length distribution, and
 plot the simulated distribution for a sample of size 20 along with
 this prediction. The results are shown in
-Figure~\ref{fig:segsites-norecomb}B. We can see an excellent agreement between
+Figure~\ref{fig-segsites-norecomb-b}. We can see an excellent agreement between
 the smoothed kernel
 density estimate produced by Seaborn and our analytically computed value.
 
@@ -1614,8 +1575,9 @@ easily from simulations simply by specifying a mutation rate parameter.
 def S_dist(n, theta, k):
     S = 0
     for i in range(2, n + 1):
-        S += ((-1)**i * binom(n - 1, i - 1)
-              * (i - 1) / (theta + i - 1) * (theta / (theta + i - 1))**k)
+        S += ((-1)**i * scipy.special.binom(n - 1, i - 1)
+              * (i - 1) / (theta + i - 1)
+              * (theta / (theta + i - 1))**k)
     return S
 
 n = 20
@@ -1634,32 +1596,30 @@ plt.xlabel("Segregating sites")
 plt.legend();
 \end{pythoncode}
 
-\begin{figure}
-\begin{center}
-    \parbox{5cm}{
-    \includegraphics[width=5cm]{images/segsites-example_9_0.pdf}
-    \begin{center}(A)\end{center}
-    }%
-    \qquad
-    \parbox{5cm}{
-    \includegraphics[width=5cm]{images/segsites-example_12_0.pdf}
-    \begin{center}(B)\end{center}
-    }
-    \caption{Simulations of the number of segregating sites, and
-    comparisons with analytical predictions.
-    (A) The distribution of the number
+\begin{figure}[t]
+\centering
+\subfloat[][
+    The distribution of the number
     of segregating sites for $n=20$, $\theta=5$ and no recombination
-    over 1000 simulation replicates, along with analytical prediction.
-    (B) The mean and variance of the number of segregating sites
+    over 1000 simulation replicates, along with analytical prediction.]{
+\includegraphics[width=0.75\textwidth]{images/plot_16.pdf}
+\label{fig-segsites-a}}
+\qquad\qquad
+\subfloat[][
+    The mean and variance of the number of segregating sites
     over 10000 simulation replicates with $n=2$, $\theta=2$ and
-    varying recombination rate, along with analytical predictions.}
-    \label{fig:segsites}
-\end{center}
+    varying recombination rate, along with analytical predictions.]{
+\includegraphics[width=0.75\textwidth]{images/plot_17.pdf}
+\label{fig-segsites-b}}
+\caption{\label{fig-segsites}
+Simulations of the number of segregating sites, and
+comparisons with analytical predictions.
+}
 \end{figure}
 
 Here we take 1000 replicate simulations, store the number of infinite
 sites mutations for each one and then plot this distribution in
-Figure~\ref{fig:segsites}A. Also plotted is the analytical prediction,
+Figure~\ref{fig-segsites-a}. Also plotted is the analytical prediction,
 and we see an excellent fit.
 
 
@@ -1726,7 +1686,7 @@ plt.legend();
 
 After defining our analytical predictions for the mean and variance of the
 number of segregating sites, we then plot the observed and predicted values
-in Figure~\ref{fig:segsites}B.
+in Figure~\ref{fig-segsites-b}.
 Comparing the simulated results to analytical predictions we see
 excellent agreement. The mean number of segregating sites is not
 affected by recombination, but recombination does substantially reduce
@@ -1882,30 +1842,47 @@ for j in range(num_prior_draws):
     distances[j] = np.sqrt(np.sum((prior_jSFS[j] - truth_mean)**2))
 \end{pythoncode}
 
-
-\begin{figure}
-\begin{center}
-    \parbox{5cm}{
-    \includegraphics[width=5cm]{images/inference-example_13_0.pdf}
-    \begin{center}(A)\end{center}
-    }%
-    \qquad
-    \parbox{5cm}{
-    \includegraphics[width=5cm]{images/inference-example_25_0.pdf}
-    \begin{center}(B)\end{center}
-    }
-    \caption{ABC results. (A)  Prior and posterior ABC distributions
-    and estimated 95\% approximate credible interval.
-    (B) Mean and root-mean-square-error of
-    migration rate estimates computed from pseudo-observed data sets.}
-    \label{fig:abc}
-\end{center}
+\begin{figure}[t]
+\centering
+\subfloat[][
+Prior and posterior ABC distributions
+and estimated 95\% approximate credible interval.
+]{
+\includegraphics[width=0.75\textwidth]{images/plot_18.pdf}
+\label{fig-abc-a}}
+\qquad\qquad
+\subfloat[][
+Mean and root-mean-square-error of migration rate estimates computed
+from pseudo-observed data sets.]{
+\includegraphics[width=0.75\textwidth]{images/plot_20.pdf}
+\label{fig-abc-b}}
+\caption{\label{fig-abc}ABC results.}
 \end{figure}
+
+% \begin{figure}
+% \begin{center}
+%     \parbox{5cm}{
+%     \includegraphics[width=5cm]{images/plot_18.pdf}
+%     \begin{center}(A)\end{center}
+%     }%
+%     \qquad
+%     \parbox{5cm}{
+%     \includegraphics[width=5cm]{images/plot_20.pdf}
+%     \begin{center}(B)\end{center}
+%     }
+%     \caption{ABC results. (A)  Prior and posterior ABC distributions
+%     and estimated 95\% approximate credible interval.
+%     (B) Mean and root-mean-square-error of
+%     migration rate estimates computed from pseudo-observed data sets.}
+%     \label{fig:abc}
+% \end{center}
+% \end{figure}
+
     In its simplest form, ABC approximates the posterior by sampling from
 the simulated data via an acceptance threshold. Here we approximate the
 posterior distribution of \(m\) using the 5\% of simulation replicates
 that most closely match the average jSFS of the observed data.
-Figure~\ref{fig:abc}A shows that the posterior
+Figure~\ref{fig-abc-a} shows that the posterior
 distribution (shown in green) is centred around \(m=0.25\).
 \begin{pythoncode}
 cutoff = np.percentile(distances, 5)
@@ -1929,7 +1906,7 @@ print([mean_m, ci_m])
 
 Although the true value of \(m=0.3\) is contained within the 95 \% credible interval, the posterior distribution is clearly downwardly biased. This bias is in fact expected given that our prior is also strongly biased towards low \(m\). We can check the effect the acceptance threshold on the inference and get a sense of the expected information about \(m\) using a cross-validation procedure: we repeat the inference on pseudo-observed data sets (PODS) simulated under a known truth. Since we can use re-use the same set of replicates simulated under the prior for inference, such cross-validation is computationally efficient.
 
-Figure~\ref{fig:abc}B shows the mean and the RMSE of \(m\) estimates (across 100 PODS) against the acceptance threshold and confirms that both the downward bias in \(m\) estimates and the associated RMSE increase with larger acceptance tresholds. However, while this toy example illustrates the principle of ABC inference, sampling only a small fraction of simulations generated under the prior is clearly computationally inefficient and more efficient sampling strategies for ABC inference have been developed \citep{Beaumont2002}. In practice, we are generally interested in fitting parameter-rich models and it would be straightforward to implement ABC inference for complex model of population structure and demography in \msprime.
+Figure~\ref{fig-abc-b} shows the mean and the RMSE of \(m\) estimates (across 100 PODS) against the acceptance threshold and confirms that both the downward bias in \(m\) estimates and the associated RMSE increase with larger acceptance tresholds. However, while this toy example illustrates the principle of ABC inference, sampling only a small fraction of simulations generated under the prior is clearly computationally inefficient and more efficient sampling strategies for ABC inference have been developed \citep{Beaumont2002}. In practice, we are generally interested in fitting parameter-rich models and it would be straightforward to implement ABC inference for complex model of population structure and demography in \msprime.
 
 \section{Discussion}
 \label{sec:discussion}
@@ -1981,7 +1958,8 @@ using these APIs and data structures will emerge.
 \section*{Acknowledgments}
 
 We would like to thank Simon Aeschbacher for comments on the ABC inference example,
-and to thank Yan Wong and Joseph Marcus for detailed and insightful feedback.
+and to thank Yan Wong, Joseph Marcus and Julien Dutheil for
+detailed and insightful feedback.
 JK is supported by Wellcome Trust grant 100956/Z/13/Z to Gil McVean.
 KL is supported by an Independent Research fellowship from the Natural Environment Research Council (NE/L011522/1).
 
