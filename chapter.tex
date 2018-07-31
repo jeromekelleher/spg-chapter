@@ -83,14 +83,7 @@ the results of such simulations to efficiently calculate statistics of
 interest. We illustrate \msprime's flexibility by implementing
 a simple (but functional) approximate Bayesian computation inference method in
 just a few tens of lines of code.\\
-\textbf{Key words} Population genetics, coalescent theory, simulation, Python
-}
-
-
-\section{TODO}
-
-Migration rates are confusing! Are they fractions or rates? If they're fractions, why can we have values
-bigger than 1?
+\textbf{Key words} Population genetics, coalescent theory, simulation, Python}
 
 \section{Introduction}
 \label{sec:introduction}
@@ -108,24 +101,23 @@ genetics~\citep{hudson1990gene,wakely2008coalescent}.
 However, despite the flood of sequence data and the plethora of
 coalescent-based inference tools now available, many analyses of genome
 wide variation remain superficial or entirely descriptive. Progress on
-developing efficient inference methods has been slow for two reasons.
-First, analytical results for models of population structure and/or history are
+developing efficient inference methods has been hindered in two ways.
+First, analytic results for models of population structure and/or history are
 often restricted to average coalescence times and small (often pairwise)
 samples. Even when it is possible to derive the full distribution of
 genealogies for realistic models and samples sizes, the results are
 cumbersome and generally rely on automation using symbolic mathematics software~\citep{Lohse2016}. Second, and
 perhaps more fundamentally, dealing with recombination has proven
-extremely challenging and we still lack a full analytical description of
-genetic drift and recombination even under the simplest of null models.
-Thus, inference methods that
+extremely challenging and we still lack analytic results for basic population genetic quantities for a linear sequence with recombination even under the simplest null models of 
+genetic drift. Thus, inference methods that
 incorporate linkage information~\citep{li2011inference,harris2013inferring} generally rely on substantial simplifying
 assumptions about recombination~\citep{mcvean2005approximating}.
 
-Because analytical approaches relating sequence variation to mechanistic models
+Because analytic approaches relating sequence variation to mechanistic models
 of population structure and history are severely limited, simulations---in particular, coalescent
 simulations---have become an integral part of inference in a number of ways.
-First, comparisons between analytical results and simulations serve as an important
-sanity check for both. Second, while it is often possible to use analytical
+First, comparisons between analytic results and simulations serve as an important
+sanity check for both. Second, while it is often possible to use analytic
 approaches to obtain unbiased point estimates of demographic parameters by
 ignoring linkage~\citep{gutenkunst2009inferring}, quantifying the uncertainty
 and potential biases in such estimates requires parametric bootstrapping on
@@ -150,18 +142,18 @@ some distinct advantages. Firstly, \msprime\ is capable of simulating
 sample sizes far larger than any other simulator, and is generally
 extremely efficient. The ability to simulate
 hundreds of thousands of realistic human genomes has already enabled simulation studies that were hitherto impossible~\citep{martin2017human}.
-Secondly, \msprime\ can simulate the effects of recombination over
+Secondly, \msprime\ can simulate realistic models of recombination over
 whole chromosomes without resorting to approximations. The
 Sequentially Markov Coalescent (SMC)
 approximation~\citep{mcvean2005approximating} was largely motivated by the
 need to efficiently simulate chromosome-length sequences under the effects of
 recombination,
 which was unfeasible with simulators such as \ms~\citep{hudson2002generating}.
-However, for sufficiently large sample size, \msprime\ is significantly
+However, for large sample sizes, \msprime\ is significantly
 faster than the most efficient SMC simulator~\citep{staab2014scrm},
 rendering this approximation unnecessary for simulation
 purposes~\citep{kelleher2016efficient}.
-(The SMC is an important analytical approximation, however, and has lead to many important advances in inference; see e.g.~\citep{
+(The SMC is an important analytic approximation, however, and has lead to many important advances in inference; see e.g.~\citep{
 li2011inference,
 harris2013inferring,
 schiffels2014inferring,
@@ -198,20 +190,19 @@ We also assume a basic knowledge of coalescent theory;
 \cite{wakely2008coalescent} is an excellent introduction.
 
 The chapter is organised as follows.
-Section~\ref{running-simulations} provides an overview of how to run coalescent simulations in \msprime, including the various
-complexities that can be added to the basic model.
+Section~\ref{running-simulations} provides an overview of how to run coalescent simulations in \msprime, including some of the most important extensions to the basic model.
 Section~\ref{processing-results} illustrates by way of simple examples how we can efficiently process the results
 of such simulations, with particular emphasis on the methods
 required to work with large sample sizes. We then provide
-some examples of how to compare simulations with analytical
+some examples of how to compare simulations with analytic
 predictions in Section~\ref{validating-analytical-predictions},
 emphasising idiomatic ways of interacting with toolkits such as
-Pandas and Seaborn. In Section~\ref{sec:inference}, we then show
+Pandas and Seaborn. In Section~\ref{sec:inference}, we show
 how \msprime\ can be used to set up a simple ABC inference.
 Inference tools are generally implemented with a command line or graphical
 user interface and designed for a more or less narrow set of inference
 problems. Thus the aim of Section~\ref{sec:inference} is to illustrate how
-\msprime's flexible Python API can be used to build inference tools for arbitrary demographic histories.
+\msprime's flexible Python API can be used to build inference tools for arbitrary demographic histories from first principle.
 Finally, we outline some future plans for \msprime\ in Section~\ref{sec:discussion}.
 
 \section{Running simulations}
@@ -219,7 +210,7 @@ Finally, we outline some future plans for \msprime\ in Section~\ref{sec:discussi
 In the following subsections we examine some basic examples of running
 simulations with \msprime, starting with the simplest possible models
 and adding the various complexities required to model biological populations.
-We use a notebook-like approach throughout this document, where we
+We use a notebook-like approach throughout, where we
 intersperse code chunks and their results freely within the text.
 
 \subsection{Trees and replication}
@@ -228,7 +219,7 @@ These trees (which are always rooted) represent the simulated history of a sampl
 drawn from an idealised population (in later sections we show how to
 vary the properties of this idealised population). The function
 \texttt{msprime.simulate} runs these simulations and the parameters
-that we provide to define the simulation that is
+that we provide define the simulation that is
 run. It returns a \texttt{TreeSequence} object, which represents the
 full coalescent history of the sample. In later sections we discuss the
 effects of recombination, when this \texttt{TreeSequence} contains a
@@ -261,8 +252,7 @@ by default returns a depiction of the tree rendered in SVG. (The
 \texttt{tree.draw()} method also supports rendering trees in plain text.)
 
 The output of one random realisation of this process is shown in
-Figure~\ref{fig-simple-tree}, where we can see that
-the resulting tree has 5 nodes: nodes 0, 1 and 2 are \emph{leaves}, and
+Figure~\ref{fig-simple-tree}. The resulting tree has 5 nodes: nodes 0, 1 and 2 are \emph{leaves}, and
 represent our samples. Node 3 is an \emph{internal} node, and is the
 parent of 0 and 1. Node 4 is also an internal node, and is the root of
 the tree. In \msprime, we always refer to nodes by their integer IDs and
@@ -298,8 +288,7 @@ print(mean_T_mrca)
 \end{pythoncode}
 
     In this example we run 1000 independent replicates of the coalescent for
-a sample of 10 chromosomes, and compute the mean time to the most recent
-common ancestor of the entire sample, i.e., the root of the
+a sample of 10 chromosomes, and compute the mean time to the MRCA of the entire sample, i.e., the root of the
 tree. The value of 3.7 generations in the past we obtain is of course highly unrealistic. However, by default, time is measured in units of \(4 N_e\) generations (see the next section for details on how to
 specify population models and interpret times). The
 \texttt{simulate} function behaves slightly differently when it is
@@ -329,8 +318,7 @@ print([np.mean(T_mrca), np.var(T_mrca)])
 >>> [3.6690718290544053, 4.8541533617765706]
 \end{pythoncode}
 
-    Here we simulate 1000 replicates, storing the time to the most recent
-common ancestor for each replicate in the array \texttt{T\_mrca}.  We use the Python \texttt{enumerate} function to simplify the process of efficiently inserting values into this
+    Here we simulate 1000 replicates, storing the time to the MRCA for each replicate in the array \texttt{T\_mrca}.  We use the Python \texttt{enumerate} function to simplify the process of efficiently inserting values into this
 array, which simply ensures that \texttt{j} is \texttt{0} for the first replicate,
 \texttt{1} for the second, and so on. Thus, by the time we finish the
 loop, the array has been filled with $T_{MRCA}$ values generated
@@ -406,7 +394,7 @@ print(
 \end{pythoncode}
 
     Thus, when we specify \(N_e=10\) we get a mean pairwise coalescence time of about
-20 generations, and when \(N_e=100\) the mean coalescence time is about
+20 generations, and with \(N_e=100\), the mean coalescence time is about
 200 generations. See \cite{wakely2008coalescent} for details on the biological interpretation of effective population size.
 
 By default, \(N_e = 1\) in \msprime, which is equivalent to measuring
@@ -420,7 +408,7 @@ coalescence time for a sample of size 2 is 1, and this is the value we
 obtain from the \texttt{pairwise\_T\_mrca} function when we have
 \(N_e=0.5\). We will usually assume that we are working in haploid
 coalescent time units from here on, and so set \(N_e=0.5\) in most
-examples. However, when running simulations of a specific organism, it
+examples. However, when running simulations of a specific organism and/or population, it
 is substantially more convenient to use an appropriate estimated value
 for \(N_e\) so that times are directly interpretable.
 
@@ -478,14 +466,13 @@ slower coalescence rate. (Care must be taken with negative growth rates,
 however, as it is possible to specify models in which the MRCA is never
 reached. In some cases this will lead to an error being raised, but it
 is also possible that the simulator will keep generating events
-indefinitely. This is particularly important in simulation base
+indefinitely. This is particularly important in simulation based
 approaches to inference from real data.)
 
     \subsection{Mutations}\label{mutations}
 
 We cannot directly observe gene genealogies; rather, we observe mutations in a sample of sequences which ultimately have occurred on genealogical branches. We are
-therefore very often interested not just in the genealogies that are
-simulated by the coalescent process, but also in the results of
+therefore very often interested not just in the genealogies generated by the coalescent process, but also in the results of
 mutational processes imposed on these trees. \msprime\ currently supports
 simulating mutations under the infinitely many sites model (arbitrarily complex
 mutations are supported by the underlying data model, however). This is
@@ -510,7 +497,7 @@ The tree produced by this code chunk is shown in
 Figure~\ref{fig-tree-mutations}. Here we have two mutations, shown by the red squares.
 Mutations occur above a given node in the tree, and all samples beneath
 this node will inherit the mutation. The infinite sites mutations used
-here are simple binary mutations, so that the ancestral state is 0 and
+here are simple binary mutations, that is, the ancestral state is 0 and
 the derived state is 1. One convenient way to access the resulting
 sample genotypes is to use the \texttt{genotype\_matrix()} method, which
 returns an \(m \times n\) NumPy array, if we have \(m\) variable sites
@@ -531,12 +518,12 @@ information, but will consume a great deal of memory for larger
 simulations. See Section~\ref{processing-variants} for more information
 on how to access genotype data efficiently.
 
-When comparing simulations to analytical results, it is very important to be aware of the way in which the
+When comparing simulations to analytic results, it is very important to be aware of the way in which the
 mutation rates are defined in coalescent theory. For historical reasons,
 the scaled mutation rate \(\theta\) is defined as \(2N_e \mu\), where
 \(\mu\) is the per-generation mutation rate. Since all times and rates
 are specified in units of generations in \msprime, we must divide by a
-factor of two if we are to compare with analytical predictions. For
+factor of two if we are to compare with analytic predictions. For
 example, the mean number of segregating sites for a sample of two is
 \(\theta\); to run this in \msprime\ we do the following:
 
@@ -575,8 +562,8 @@ configurations defines the populations; each element of this list must
 be a \texttt{PopulationConfiguration} instance (each population has
 independent initial population size and growth rate parameters). The
 migration matrix is a NumPy array (or list of lists) of per-generation
-migration rates; \(M[j,k]\) defines the fraction of population \(j\)
-that consists of migrants from population \(k\) in each generation.
+migration rates; \(m[j,k]\) defines the fraction of population \(j\)
+that consists of migrants from population \(k\) in each generation. (Note that when running simulations on the coalescence scale, i.e.\ setting \(N_e=1/2\), this is equivalent to the number of migrants per deme and generation \(M[j,k]=2 N_e m[j,k]\).)
 
 \begin{pythoncode}
 pop_configs = [
@@ -614,7 +601,7 @@ that occurs is 2 and 3 coalescing in population 1, creating node 4.
 After this, 4 coalesces with with node 0, which has at some point before
 this migrated into deme 1, creating node 5. Node 1 also migrates into
 deme 1, where it coalesces with 5. Because migration is asymmetric here,
-the most recent common ancestor of the four samples \emph{must} occur
+the MRCA of the four samples \emph{must} occur
 within deme 1.
 
 \begin{figure}[t]
@@ -653,10 +640,9 @@ node_colours = {
 SVG(tree.draw(node_colours=node_colours))
 \end{pythoncode}
 
-Figure~\ref{fig-trees-island-model} shows tree produced by this code
-chunk. Here we sample three nodes from population 0, but because there is a lot
-of migration the locations of coalescences are quite random. For
-example, the first coalescence occurs in deme 2 (green), after node zero
+Figure~\ref{fig-trees-island-model} shows the tree produced by this code
+chunk. Here we sample three nodes from population 0, but because there is a lot of migration, the locations of coalescences are quite random. For
+example, the first coalescence occurs in deme 2 (green), after node 0
 has migrated in. To see the details of these migration events, we can
 examine the ``migration records'' that are stored by \msprime. (These are
 not stored by default, as they may consume a substantial amount of memory.
@@ -684,7 +670,7 @@ each tree node in a simulation with migration.}
 \end{figure}
 
 This code produces the plot in Figure~\ref{fig:migration_counts}.
-We can see that node zero experienced very few migration events before it
+We can see that node 0 experienced very few migration events before it
 ended up in deme 2, where it coalesced with 4 (which never migrated).
 Node 2, on the other hand migrated 30 times before it finally coalesced
 with 7 in deme 0. Note that there are many more migrations events than
@@ -692,8 +678,7 @@ nodes here, implying that most migration events are not identifiable
 from a genealogy in real data~\citep{sousa2011nonidentifiability}.
 
 Other forms of migration are also possible between specific demes at
-specific times. These are one of a number of different demographic
-event, which are dealt with in the next section.
+specific times. These different demographic events are dealt with in the next section.
 
 \subsection{Demographic events}\label{demographic-events}
 
@@ -796,7 +781,7 @@ The tree produced by this code chunk is shown in
 Figure~\ref{fig-trees-admixture}.
 We begin in this example with 6 lineages sampled in population 0, zero
 samples in population 1, and with no migration between these
-populations. Then, at time 0.5, we have an admixture event where each of
+populations. At time 0.5, we specify an admixture event where each of
 the 4 extant lineages (5, 7, 0 and 6) has a probability of 1/2 of moving
 to deme 1. Linages 0 and 6 migrate, and subsequently coalesce into node
 8. Further back in time, at \(t=1.1\), another demographic event occurs,
@@ -813,12 +798,12 @@ go backwards in time. Keeping track of the actual sizes of different
 populations can be a little challenging, and for this reason \msprime\
 provides a \texttt{DemographyDebugger} class.
 
-To illustrate this we consider a very simple example in which we have a
+To illustrate this, we consider a very simple example in which we have a
 single population experiencing a phase of exponential growth from 750
 to 100 generations ago. The size of the population 750 generations ago
 was 2000, and it grew to 20,000 over the next 650 generations. The size
 of the population has been stable at this value for the past 100
-generations. We can encode this model as follows:
+generations. We encode this model as follows:
 
 \begin{pythoncode}
 N1 = 20000  # Population size at present
@@ -875,14 +860,14 @@ Epoch: 750.0 -- inf generations
 
     After we set up our model, we use the \texttt{DemographyDebugger} to
 check our calculations. We see that time has been split into three
-``epochs''. From the present until 100 generations ago, we see that the
+``epochs''. From the present until 100 generations ago, the
 population size is constant at 20,000. Then, we have a demographic event
 that changes the growth rate to 0.0035, which applies over the next
 epoch (from 100 to 750 generations ago). Over this time, the population
-grows from 2000 to 20,000, as we specified (note that the ``start'' and
+grows from 2000 to 20,000 (note that the ``start'' and
 ``end'' of each epoch is looking \emph{backwards} in time, as we consider
 epochs starting from the present and moving backwards). At generation
-750 another event occurs, setting the growth rate for the population to
+750, another event occurs, setting the growth rate for the population to
 0. Then, the population size is constant at 20,000 from generation 750
 until the indefinite past.
 
@@ -926,7 +911,7 @@ zero. In this case, the samples 0, 1 and 2 are taken at time 0 in
 population 0, but node 3 is sampled at time 0.75 in population 1. Note
 that in this case we used the \texttt{samples} parameter to
 \texttt{simulate} to specify our samples. This is the most general
-approach to assigning samples, and allows for samples to be assigned to
+approach to assigning samples, and allows samples to be assigned to
 arbitrary populations and at arbitrary times.
 
 \subsection{Recombination}\label{recombination}
@@ -959,12 +944,12 @@ defined a sequence length of 100kb, and a recombination rate of
 simulations with different random seeds will usually result in different
 numbers of trees.
 
-Up to this point we have assumed that our simulations returned a single
-tree representing the genealogy of our sample. The inclusion of
+Up to this point we have focused on simulations that returned a single
+tree representing the genealogy of a sample. The inclusion of
 recombination, however, means that there may be more than one tree
 relating our samples. The \texttt{TreeSequence} object returned by
 \msprime\ is a very concise and efficient representation of these highly
-correlated trees. To process the trees, we simply need to consider
+correlated trees. To process the trees, we simply consider
 them one at a time, using the \texttt{trees()} iterator.
 
 \begin{pythoncode}
@@ -982,7 +967,7 @@ plt.plot(breakpoints / 1000, tmrca, "o");
 \begin{center}
 \includegraphics[width=\textwidth]{images/plot_10.pdf}
 \end{center}
-\caption{\label{fig:tree_tmrcas}Time to the most recent common ancestor of
+\caption{\label{fig:tree_tmrcas}Time to the MRCA of
 a sample across a 100kb region.}
 \end{figure}
 
@@ -1019,9 +1004,8 @@ ts = msprime.simulate(
 \begin{center}
 \includegraphics[width=\textwidth]{images/plot_11.pdf}
 \end{center}
-\caption{\label{fig:variable_recombination}Plot of the HapMap
-genetic map for chromosome 22 (blue) and the density of breakpoints for a
-simulated chromosome (green).}
+\caption{\label{fig:variable_recombination} The HapMap
+genetic map for chromosome 22 (blue) matches the density of breakpoints for a simulated chromosome (green) well.}
 \end{figure}
 
 Although coordinates are specified in floating point values, \msprime\
@@ -1057,7 +1041,7 @@ comprehensive review of the capabilities of the \msprime\ Python API, but
 concentrates on some useful examples.
 \msprime\ is specifically designed to enable very large simulations, and
 the processing methods we demonstrate below are all very efficient. To
-illustrate this we use a simulation of 200,000 samples of 10 megabases
+illustrate this, we consider a simulation of 200,000 samples of 10 megabases
 from a simple two-population model with human-like parameters:
 
 \begin{pythoncode}
@@ -1114,8 +1098,8 @@ plt.ylable("Count")
 \begin{center}
 \includegraphics[width=\textwidth]{images/plot_12.pdf}
 \end{center}
-\caption{\label{fig:ibd_segments}Distribution of the length of IBD
-segments within and between populations for a pair of samples.}
+\caption{\label{fig:ibd_segments} The distribution of the length of IBD
+segments for a pair of samples taken from the same or different populations.}
 \end{figure}
 
 In this example we create a function \texttt{ibd\_segments} that returns
@@ -1124,22 +1108,20 @@ samples, \texttt{a} and \texttt{b}. It works simply by computing the
 MRCA for the samples at the left hand side of the sequence and then,
 moving rightwards, records a segment each time the MRCA changes. We then
 plot the distribution of tract lengths for samples 0 and 1 (which are
-both in the population 0), and also the tract lengths for a pair of
+both in population 0), and also the tract lengths for a pair of
 samples from different populations. The results are shown in
 Figure~\ref{fig:ibd_segments}. As we might expect, the tract
 lengths are shorter for the between population pair.
 
-Of course, we would need to sample many such pairs of samples to get a
-reasonable approximation of the real distribution of block lengths.
-Because the main cost of this function is in iterating over all the
-trees in the sequence, would be more efficient to keep track of the MRCAs
-for different pairs while doing a single iteration than to repeatedly
+Of course, we would need to sample many such pairs of samples or longer sequences to get a reasonable approximation of the real distribution of block lengths.
+Because the main cost of this function is the iteration over all the
+trees in the sequence, it would be more efficient to keep track of the MRCAs
+for different pairs in a single iteration rather than repeatedly
 call the above \texttt{ibd\_segments} function.
 
 \subsection{Sample counts}\label{sample-counts}
 
-The \msprime\ API provides an extremely efficient way to count the number of
-samples that are beneath a particular node in a tree. This can be used,
+The \msprime\ API provides an extremely efficient way to count the number of samples that are beneath a particular node in a tree. This can be used,
 for example, to compute allele frequencies efficiently and is the basis
 for many of the fast algorithms in the API. As a simple illustration of
 this technique, consider the following code to compute the number of
@@ -1165,11 +1147,9 @@ then iterate over all the sites in each tree. We find the frequency
 of the derived allele at each site using the \texttt{num\_samples}
 method, which returns the number of samples subtending a given
 node. The underlying implementation ensures that this operation requires
-constant time, and so it is \emph{very} efficient. After the loop
-completes, we then see that such rare alleles are common. (We reiterate that \msprime\
+constant time, and so it is \emph{very} efficient. We see that such rare alleles are common. (We reiterate that \msprime\
 generates mutations under the infinitely many sites model so that each mutation occurs at a
-unique site. In more complex situations where we have back or recurrent mutations
-this simple approach will not work.)
+unique site. In more complex situations where we have back or recurrent mutations, this simple approach will not work.)
 
 A powerful feature of this sample-counting approach is that we can
 perform the same operation over an arbitrary subset of the samples. For
@@ -1205,9 +1185,8 @@ population in question. Again, we iterate over all trees and over all
 sites within trees. Then, for each infinite sites mutation we
 compute two frequencies: the overall number of samples that inherit from
 the mutation's node, and the number of tracked samples \emph{within the focal
-population} that inherit from this node. Then, if the total count is
-equal to the within-population count, we know that this mutation is private
-to the population.
+population} that inherit from this node. If the total count is
+equal to the within-population count, we know that this mutation is private to the population.
 
 \subsection{Obtaining subsets}\label{obtaining-subsets}
 
@@ -1226,10 +1205,10 @@ print((
 
 Here we extract the tree sequence representing the history of a tiny
 subset of the original samples, with IDs 1, 3, 5 and 7. The subset tree
-sequence contains all the genealogical information relevant to these
-samples, but no more. Hence, coalescences that are not ancestral to the
-subsample are not included, and neither are coalescences that predate
-the MRCA of our subsample. Thus, the number of distinct trees is greatly
+sequence contains all the genealogical information relevant to the
+subsamples, but no more. Concretely, both coalescences that are not ancestral to the
+subsample and coalescences that predate
+the MRCA of the subsample are excluded. Thus, the number of distinct trees is greatly
 reduced. By default, we also remove any sites that have no mutations
 within these subtrees (i.e., those that are fixed for the ancestral
 state). These can be retained by using the
@@ -1280,7 +1259,7 @@ element in the \texttt{alleles} list, but no other assumptions about
 ordering of the alleles list should be made.
 
 For biallelic sites, working with genotypes is straightforward as the
-genotypes array can only contain 0 and 1 values, and these correspond to
+genotypes array can only contain 0 and 1 values, which correspond to
 the ancestral and derived states, respectively. The \texttt{genotypes}
 values are returned as a NumPy array, and so the full NumPy library is
 available for efficient processing. As an example, we show here how to
@@ -1373,7 +1352,7 @@ tbl = get_total_branch_length(ts)
 CPU times: user 7.67 s, sys: 64 ms, total: 7.74 s
 \end{pythoncode}
 
-On the other hand, if we compute the total branch length by performing a
+In contrast, if we compute the total branch length by performing a
 full traversal for each tree, each tree transition is very costly
 when we have a large sample size. In this example, computing the array of branch lengths
 using the incremental approach given here took 8 seconds. Computing the
@@ -1398,17 +1377,17 @@ libraries (\texttt{pylibseq} is a Python interface to
 \texttt{libsequence}~\citep{thornton2003libsequence}). If you wish to export data to
 external programs, VCF may be best option, which is supported using the
 \texttt{write\_vcf} method. The \texttt{simplify} method is useful here
-is you wish to export data from a subset of the simulated samples.
+if you wish to export data from a subset of the simulated samples.
 
 However, it is worth noting that for large sample sizes, exporting
 genotype data may require a great deal of memory and take some time. One
 of the advantages of the \msprime\ API is that we do not need to
-explicitly generate genotypes in order to compute many interesting
-statistics.
+explicitly generate genotypes in order to compute many
+statistics of interest.
 
-\section{Validating analytical predictions}\label{validating-analytical-predictions}
+\section{Validating analytic predictions}\label{validating-analytical-predictions}
 
-In this section we show some examples of validating simple analytical
+In this section we show some examples of validating simple analytic
 predictions from coalescent theory using simulations. The number of
 segregating sites is the total number of mutations that occurred in the
 history of the sample (assuming the infinite sites mutation model).
@@ -1416,17 +1395,17 @@ Since mutations happen as a Poisson process along the branches of the
 tree, what we are really interested in is the distribution of the total
 branch length of the tree. The results in this section are well known
 classical results from coalescent theory; this section is intended as a
-demonstration of how to proceed when comparing analytical results to
+demonstration of how to proceed when comparing analytic results to
 simulations. We show some idiomatic examples for integrating with
 the state-of-the-art data analysis packages such
 as Pandas~\citep{mckinney2010data} and Seaborn~\citep{michael_waskom_2017_883859}.
-All analytical predictions are taken from \cite{wakely2008coalescent}.
+All analytic predictions are taken from \cite{wakely2008coalescent}.
 
 \subsection{Total branch length and segregating sites}
-The first properties that we are interested in are the mean and the
+The first properties we are interested in are the mean and the
 variance of the total branch length of coalescent trees. (Note that, as
 before, we set \(N_e=1/2\) to convert between \msprime's diploid time
-scaling to the haploid time scaling of these analytical results.)
+scaling to the haploid time scaling of these analytic results.)
 
 \begin{pythoncode}
 ns = np.array([5, 10, 15, 20, 25, 30])
@@ -1443,20 +1422,16 @@ for n in ns:
 df = pd.DataFrame({"n": n_col, "T_total": T_total_col})
 \end{pythoncode}
 
-    We first create a array of the six different \(n\) values that we wish
-to simulate, and the create arrays to hold the results of the
+    We first create an array of the six different \(n\) values that we wish to simulate, and then create arrays to hold the results of the
 simulations. Because we are running 10,000 replicates for each sample
 size, we allocate arrays to hold 60,000 values. This approach of storing
 the data in arrays is convenient because it allows us to use Pandas
-dataframes in an idiomatic fashion. After doing this, we then iterate
+dataframes in an idiomatic fashion. We then iterate
 over all of our sample sizes and run 10,000 replicates of each. For each
 simulation, we simply store the sample size value and the total branch
-length. Once the simulation is completed, we store the information in a
-Pandas dataframe, which gives us access to many powerful data analysis
-tools (including the Seaborn library, which we use for visualisation
-here).
+length in a Pandas dataframe. This gives us access to many powerful data analysis tools (including the Seaborn library, which we use for visualisation here).
 
-After we have created our simulation data, we then define our analytical
+After we have created our simulation data, we define our analytic
 predictions and plot the data.
 
 \begin{pythoncode}
@@ -1494,7 +1469,7 @@ ax.plot(x, mean_sim + stddev_sim, "^", color=line.get_color());
 %     \begin{center}(B)\end{center}
 %     }
 %     \caption{Comparisons of the distribution of simulated total branch lengths
-%         with analytical results. (A) The full distribution of simulated
+%         with analytic results. (A) The full distribution of simulated
 %         values (violin plots) along with observed and predicted mean and
 %         standard deviations for a range of sample sizes. (B) The full
 %         simulated and predicted distribution of total branch lengths
@@ -1514,20 +1489,20 @@ standard deviations for a range of sample sizes.
 \label{fig-segsites-norecomb-a}}
 \qquad\qquad
 \subfloat[][
-The full simulated and predicted distribution of total branch lengths for $n = 20$.
+The full simulated and predicted distribution of total branch length for $n = 20$.
 ]{
 \includegraphics[width=0.75\textwidth]{images/plot_15.pdf}
 \label{fig-segsites-norecomb-b}}
 \caption{\label{fig-segsites-norecomb}
 Comparisons of the distribution of simulated total branch lengths
-with analytical results.
+with analytic results.
 }
 \end{figure}
 
     The plot in Figure~\ref{fig-segsites-norecomb-a} shows the simulated
-distribution of the total branch lengths
+distribution of the total branch length
 over replicate simulations (each violin is a distribution for a given
-sample size). We also show our analytical prediction for the mean and
+sample size). We also show our analytic prediction for the mean and
 variance of each distribution (the dashed lines show +/- one standard
 deviation from the mean). Also shown are the observed means and standard
 deviations from the simulations, as green circles and red triangles,
@@ -1537,14 +1512,11 @@ that these one-dimensional summaries of the distribution capture some
 essential properties but lose some important aspects of the
 distribution.
 
-    Ideally, we wish to capture the full complexity of the distribution as
-an analytical expression. In the following code chunk we define the analytical
-prediction for the total branch length distribution, and
-plot the simulated distribution for a sample of size 20 along with
-this prediction. The results are shown in
+    Ideally, we wish to capture the full distribution analytically. In the following code chunk we define the analytic
+prediction for the total branch length distribution, and compare it with the simulated distribution for a sample of size 20. The results are shown in
 Figure~\ref{fig-segsites-norecomb-b}. We can see an excellent agreement between
 the smoothed kernel
-density estimate produced by Seaborn and our analytically computed value.
+density estimate produced by Seaborn and the theoretical prediction.
 
 \begin{pythoncode}
 def T_total_density(n, t):
@@ -1561,15 +1533,15 @@ plt.xlabel("T_total")
 plt.legend();
 \end{pythoncode}
 
-We cannot directly observe branch lengths, and so we are usually more
+Since we cannot directly observe branch lengths, we are usually more
 interested in mutations when working with data. The mutation process is
 intimately related to the distribution of branch lengths, since
 mutations occur randomly along tree branches. One simple summary of the
-mutational process is the number of segregating sites, or the number of
-sites at which we observe variation. We can obtain this information very
+mutational process is the total number of segregating sites, that is, the number of
+sites at which we observe variation. We can obtain this very
 easily from simulations simply by specifying a mutation rate parameter.
 (Note again that we set \(N_e=1/2\) and our mutation rate
-\(= \theta / 2\) in order to convert to msprime's time scales.)
+\(= \theta / 2\) in order to convert to \msprime\'s time scales.)
 
 \begin{pythoncode}
 def S_dist(n, theta, k):
@@ -1601,38 +1573,36 @@ plt.legend();
 \subfloat[][
     The distribution of the number
     of segregating sites for $n=20$, $\theta=5$ and no recombination
-    over 1000 simulation replicates, along with analytical prediction.]{
+    over 1000 simulation replicates, along with analytic prediction.]{
 \includegraphics[width=0.75\textwidth]{images/plot_16.pdf}
 \label{fig-segsites-a}}
 \qquad\qquad
 \subfloat[][
     The mean and variance of the number of segregating sites
     over 10000 simulation replicates with $n=2$, $\theta=2$ and
-    varying recombination rate, along with analytical predictions.]{
+    varying recombination rate, along with analytic predictions.]{
 \includegraphics[width=0.75\textwidth]{images/plot_17.pdf}
 \label{fig-segsites-b}}
 \caption{\label{fig-segsites}
 Simulations of the number of segregating sites, and
-comparisons with analytical predictions.
+comparisons with analytic predictions.
 }
 \end{figure}
 
 Here we take 1000 replicate simulations, store the number of infinite
-sites mutations for each one and then plot this distribution in
-Figure~\ref{fig-segsites-a}. Also plotted is the analytical prediction,
-and we see an excellent fit.
+sites mutations for each and plot this distribution in
+Figure~\ref{fig-segsites-a}. Also plotted is the analytic prediction, which again provides an excellent fit.
 
 
 \subsection{Recombination}
 
 In the previous section we saw how to run simulations to generate trees
 under the assumptions of the single-locus coalescent and compare these
-with analytical predictions. This assumes that our data is not affected
+with analytic predictions. This assumes that our data is not affected
 by recombination, which is often unrealistic. Here we show how to
 compute empirical distributions of equivalent quantities, and compare
-these with classical results from the literature. Since analytical
-results are not known in general for many quantities under recombination,
-we limit ourselves to the pairwise case.
+these with classical results from the literature. Since analytic
+results for many quantities are generally unknown for the case of recombination along a linear sequence, we limit ourselves to the pairwise samples.
 
 \begin{pythoncode}
 theta = 2
@@ -1657,7 +1627,7 @@ In this code chunk we again run $10^4$ replicate simulations for a range
 of input parameters, and store the results in a Pandas data frame. We
 are interested in the effects of recombination rate in this example,
 and so the parameter that we vary is the scaled recombination rate
-$\rho$ (noting, again, that we set \texttt{Ne} = 1/2 and
+$\rho$ (noting, again, that we set $N_e = 1/2$ and
 \texttt{recombination\_rate} = $\rho / 2$ to convert to \msprime's
 time scales).
 
@@ -1684,10 +1654,10 @@ plt.xlabel("rho")
 plt.legend();
 \end{pythoncode}
 
-After defining our analytical predictions for the mean and variance of the
+After defining our analytic predictions for the mean and variance of the
 number of segregating sites, we then plot the observed and predicted values
 in Figure~\ref{fig-segsites-b}.
-Comparing the simulated results to analytical predictions we see
+Comparing the simulated results to analytic predictions we see
 excellent agreement. The mean number of segregating sites is not
 affected by recombination, but recombination does substantially reduce
 the variance.
@@ -1700,7 +1670,7 @@ the development of likelihood-free inference methods, in particular
 Approximate Bayesian Computation (ABC)~\citep{Beaumont2002}.
 ABC approximates the posterior distribution of model parameters by drawing from
 simulations. Because of its flexibility ABC has become a standard
-inference tool in statistical population genetics.
+inference tool in statistical population genetics \citep[see][for a review]{csillery2010approximate}}.
 We will demonstrate how \msprime\ can be used to set up an ABC inference
 by means of a simple toy example. We stress that this is meant as an
 illustration rather than a inference tool for practical use. However,
@@ -1712,20 +1682,20 @@ We assume that data for 200 loci or sequence blocks (these could be RAD
 loci in practice) for a single diploid individual have been generated
 from each of two populations. We would like to infer the amount of gene
 flow between the two populations. For the sake of simplicity we will
-assume the simplest possible model of population structure; that is two
-populations, each of the same effective size that exchange migrants at a
+assume the simplest possible model of population structure; that is, two
+populations, of the same effective size exchanging migrants at a
 constant rate of $m$ migrants per generation.
 
 The function \texttt{run\_sims} simulates a dataset consisting of a
 specified number of loci (\texttt{num\_loci}) given a migration rate
-\(m\). We generate a single dataset of 50 loci assuming a migration rate
-\(m=0.3\), which we will use as a (pseudo)observed dataset in the ABC
+\(M\). We generate a single dataset of 50 loci assuming a migration rate
+\(M=0.3\) migrants per generation, which we will use as a (pseudo)observed dataset in the ABC
 implementation.
 
 \begin{pythoncode}
 nsamp = 2
 theta = 2
-true_m = 0.3
+true_M = 0.3
 num_loci = 200
 
 def run_sims(m, num_loci=1,theta=0):
@@ -1752,7 +1722,7 @@ def get_joint_site_frequency_spectra(reps):
     return data
 
 truth = get_joint_site_frequency_spectra(
-    run_sims(true_m, num_loci=num_loci, theta=2))
+    run_sims(true_M, num_loci=num_loci, theta=2))
 \end{pythoncode}
 
     The \texttt{run\_sims} function returns an iterator with the complete
@@ -1794,19 +1764,19 @@ print(truth_mean)
 \end{pythoncode}
 
     To illustrate a simple ABC inference, we will focus on a single
-parameter of interest, the migration rate \(m\).
+parameter of interest, the migration rate \(M\).
 ABC measures the fit of data simulated under the prior to the observed
 data via a vector of summary statistics. We will use the jSFS as a
-summary statistic and approximate the jSFS for each \(m\) value as the
+summary statistic and approximate the jSFS for each \(M\) value as the
 mean length of genealogical branches across 100 simulation replicates (\texttt{num\_reps}). Below we
-draw 10,000 \(m\) values from the prior and use the functions
+draw 10,000 \(M\) values from the prior and use the functions
 \texttt{run\_sims} and \texttt{approx\_jSFS} to approximate the jSFS for
  replicate. We assume an exponential distribution, a common choice of prior \citep{hey2004multilocus}.
 
 \begin{pythoncode}
 num_reps = 100
 num_prior_draws = 10000
-prior_m = np.random.exponential(0.1, num_prior_draws)
+prior_M = np.random.exponential(0.1, num_prior_draws)
 
 def approx_jSFS(m):
     reps = run_sims(m, num_loci=num_reps)
@@ -1826,7 +1796,7 @@ def approx_jSFS(m):
     return data / np.sum(data)
 
 with multiprocessing.Pool() as pool:
-    prior_jSFS = pool.map(approx_jSFS, prior_m)
+    prior_jSFS = pool.map(approx_jSFS, prior_M)
 \end{pythoncode}
 
 Here we run 100 simulation replicates for each of the 10,000
@@ -1904,16 +1874,15 @@ print([mean_m, ci_m])
 \end{pythoncode}
 
 
-Although the true value of \(m=0.3\) is contained within the 95 \% credible interval, the posterior distribution is clearly downwardly biased. This bias is in fact expected given that our prior is also strongly biased towards low \(m\). We can check the effect the acceptance threshold on the inference and get a sense of the expected information about \(m\) using a cross-validation procedure: we repeat the inference on pseudo-observed data sets (PODS) simulated under a known truth. Since we can use re-use the same set of replicates simulated under the prior for inference, such cross-validation is computationally efficient.
+Although the true value of \(m=0.3\) is contained within the 95 \% credible interval, the posterior distribution is clearly downwardly biased. This bias is in fact expected given that our prior is also strongly biased towards low \(m\). We can check the effect the acceptance threshold on the inference and get a sense of the expected information about \(m\) using a cross-validation procedure: we repeat the inference on pseudo-observed data sets (PODS) simulated under a known truth. Since we can re-use the same set of replicates simulated under the prior for inference, such cross-validation is computationally efficient.
 
-Figure~\ref{fig-abc-b} shows the mean and the RMSE of \(m\) estimates (across 100 PODS) against the acceptance threshold and confirms that both the downward bias in \(m\) estimates and the associated RMSE increase with larger acceptance tresholds. However, while this toy example illustrates the principle of ABC inference, sampling only a small fraction of simulations generated under the prior is clearly computationally inefficient and more efficient sampling strategies for ABC inference have been developed \citep{Beaumont2002}. In practice, we are generally interested in fitting parameter-rich models and it would be straightforward to implement ABC inference for complex model of population structure and demography in \msprime.
+Figure~\ref{fig-abc-b} shows the mean and the root mean square error (RMSE) of \(m\) estimates (across 100 PODS) against the acceptance threshold and confirms that both the downward bias in \(m\) estimates and the associated RMSE increase with larger acceptance tresholds. While this toy example illustrates the principle of ABC inference, sampling only a small fraction of simulations generated under the prior is clearly computationally inefficient and more efficient sampling strategies for ABC inference have been developed \citep{Beaumont2002}. In practice, we are generally interested in fitting parameter-rich models and it would be straightforward to implement ABC inference for complex model of population structure and demography in \msprime.
 
 \section{Discussion}
 \label{sec:discussion}
 In this chapter we have focused on the usage of \msprime\ as a coalescent
 simulator, and illustrated its flexibility through concrete examples.
-While many examples discuss how to create and run the simulations themselves,
-several others were concerned with how we analyse the \emph{output} of
+While many examples discuss how to create and run the simulations themselves, others are concerned with how we analyse the \emph{output} of
 these simulations. We have shown particularly in Section~\ref{processing-results}
 that these methods can be very efficient, allowing us to easily analyse
 chromosome scale data for hundreds of thousands of samples.
