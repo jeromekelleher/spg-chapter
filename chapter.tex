@@ -422,9 +422,9 @@ print(
 200 generations. See \cite{wakely2008coalescent} for details on the biological interpretation of effective population size.
 
 By default, \(N_e = 1\) in \msprime, which is equivalent to measuring
-time in units of \(4N_e\) generations. It is very important to note that
+time in units of \(N_e\) generations. It is very important to note that
 \(N_e\) in \msprime\ is the \emph{diploid} effective population size,
-which means that all times are scaled by \(4N_e\) (rather than $2N_e$ for a
+which means that all times are scaled by \(2N_e\) (rather than $N_e$ for a
 haploid coalescent). Thus, if we wish to compare the results that are
 given in the literature for a haploid coalescent, then we must set
 \(N_e\) to $1/2$ to compensate. For example, we know that the expected
