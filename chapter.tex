@@ -108,7 +108,7 @@ samples. Even when it is possible to derive the full distribution of
 genealogies for realistic models and samples sizes, the results are
 cumbersome and generally rely on automation using symbolic mathematics software~\citep{Lohse2016}. Second, and
 perhaps more fundamentally, dealing with recombination has proven
-extremely challenging and we still lack analytic results for basic population genetic quantities for a linear sequence with recombination even under the simplest null models of 
+extremely challenging and we still lack analytic results for basic population genetic quantities for a linear sequence with recombination even under the simplest null models of
 genetic drift. Thus, inference methods that
 incorporate linkage information~\citep{li2011inference,harris2013inferring} generally rely on substantial simplifying
 assumptions about recombination~\citep{mcvean2005approximating}.
@@ -157,7 +157,9 @@ purposes~\citep{kelleher2016efficient}.
 li2011inference,
 harris2013inferring,
 schiffels2014inferring,
-rasmussen2014genome}). Thirdly, the data structure that \msprime\ uses
+rasmussen2014genome}. See also Chapter 1 in this volume for formal definitions
+of the SMC approximation, and Chapters 7, 8 and 10 for further applications.)
+Thirdly, the data structure that \msprime\ uses
 to represent the results of simulations is extremely concise and
 can be efficiently processed. This data structure is known as a
 \emph{succinct tree sequence} (or tree sequence for brevity),
@@ -174,7 +176,7 @@ API, providing many advantages over command-line or GUI based alternatives.
 One of the advantages of this approach is the ease with which we
 can integrate with state-of-the-art analysis tools from the Python
 ecosystem such as NumPy~\citep{walt2011numpy}, SciPy~\citep{jones-2018-scipy},
-Matplotlib~\citep{hunter2007matplotlib}, Pandas~\citep{mckinney2010data}
+Matplotlib~\citep{hunter2007matplotlib}, Pandas~\citep{mckinney2010data},
 Seaborn~\citep{michael_waskom_2017_883859}, and
 Jupyter Notebooks~\citep{perez2007ipython}. Part of the goal
 of this tutorial is to provide idiomatic examples for interacting
@@ -238,6 +240,7 @@ using the \texttt{tree.draw()} method.}
 \end{figure}
 
 \begin{pythoncode}
+import msprime
 ts = msprime.simulate(3)
 tree = ts.first()
 SVG(tree.draw())
@@ -247,9 +250,15 @@ This code chunk illustrates the basic approach required to draw a tree
 in a Jupyter notebook. We first generate a tree sequence object (\texttt{ts}),
 and we then obtain the tree object representing the first (and only)
 tree in this sequence. Finally, we draw a representation of this tree
-using the IPython SVG function on the \texttt{tree.draw()} method, which
-by default returns a depiction of the tree rendered in SVG. (The
-\texttt{tree.draw()} method also supports rendering trees in plain text.)
+using the IPython SVG function on the output of the \texttt{tree.draw()}
+method. By default, \texttt{tree.draw()} returns a depiction of the tree
+in SVG format, but also supports plain text rendering. For example,
+\texttt{print(tree.draw(format="unicode"))} prints the tree to the console
+using Unicode box-drawing characters. This is a very useful debugging tool.
+We have omitted the \texttt{import} statements required for the \texttt{SVG}
+function here as it is rather specific to the Jupyter notebook environment.
+All code chunks in this chapter are included in the accompanying Jupyter
+notebook and are fully runnable.
 
 The output of one random realisation of this process is shown in
 Figure~\ref{fig-simple-tree}. The resulting tree has 5 nodes: nodes 0, 1 and 2 are \emph{leaves}, and
@@ -276,6 +285,7 @@ obtain useful information. This simplest way to do this in \msprime\ is to
 use the \texttt{num\_replicates} argument.
 
 \begin{pythoncode}
+import msprime
 N = 1000
 mean_T_mrca = 0
 for ts in msprime.simulate(10, num_replicates=N):
@@ -289,8 +299,19 @@ print(mean_T_mrca)
 
     In this example we run 1000 independent replicates of the coalescent for
 a sample of 10 chromosomes, and compute the mean time to the MRCA of the entire sample, i.e., the root of the
-tree. The value of 3.7 generations in the past we obtain is of course highly unrealistic. However, by default, time is measured in units of \(4 N_e\) generations (see the next section for details on how to
-specify population models and interpret times). The
+tree. The value of 3.7 generations in the past we obtain is of course highly unrealistic.
+However, by default, time is measured in units of \(4 N_e\) generations (see the next section for details on how to
+specify population models and interpret times). It is important to note here
+that although time is measured in units of generations, this is of course
+an approximation and we may have fractional values. Internally,
+during a simulation time is scaled into coalescent units
+using the \texttt{Ne} parameter and once the
+simulation is complete, times are scaled back into units of generations
+before being presented to the user. This removes the burden of such
+tedious time scaling calculations from the user. We discuss these time
+scaling issues in more detail in the next section.
+
+The
 \texttt{simulate} function behaves slightly differently when it is
 called with the \texttt{num\_replicates} argument: rather than returning
 a single tree sequence, we return an \emph{iterator} over the individual
@@ -308,6 +329,8 @@ replicate in a NumPy array and analyse the data after the simulations have compl
 For example:
 
 \begin{pythoncode}
+import msprime
+import numpy as np
 N = 1000
 T_mrca = np.zeros(N)
 for j, ts in enumerate(msprime.simulate(10, num_replicates=N)):
@@ -325,7 +348,8 @@ loop, the array has been filled with $T_{MRCA}$ values generated
 under the coalescent. We then use the NumPy library (which has
 an extensive suite of statistical functions) to compute the mean and
 variance of this array. This example is idiomatic, and we will use this
-type of approach throughout.
+type of approach throughout. In the interest of brevity, we will omit all
+further \texttt{import} statements from code chunks.
 
 It is usually more convenient to use the \texttt{num\_replicates}
 argument to perform replication, but there are situations in which it is
@@ -1024,10 +1048,12 @@ print(list(ts.breakpoints()))
 >>> [0, 1.0, 2.0, 3.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
 \end{pythoncode}
 
-    Here we simulate a pairwise sample for a system with 10 loci, each of
+    Here we simulate the history of two samples in a system with 10 loci, each of
 length 1 with recombination rate of 1 between adjacent loci per
 generation. In the output, we see that the breakpoints between trees now
-occur exactly at the integer boundaries between these loci.
+occur exactly at the integer boundaries between these loci. This shows that
+we can also simulate models of recombination with discrete loci models
+in \msprime, as well as the more standard continuous genome.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1133,6 +1159,7 @@ threshold = 0.01
 num_rare_derived = 0
 for tree in ts.trees():
     for site in tree.sites():
+        # Only works for infinite sites mutations.
         assert len(site.mutations) == 1
         mutation = site.mutations[0]
         if tree.num_samples(mutation.node) / N < threshold:
@@ -1147,9 +1174,16 @@ then iterate over all the sites in each tree. We find the frequency
 of the derived allele at each site using the \texttt{num\_samples}
 method, which returns the number of samples subtending a given
 node. The underlying implementation ensures that this operation requires
-constant time, and so it is \emph{very} efficient. We see that such rare alleles are common. (We reiterate that \msprime\
+constant time, and so it is \emph{very} efficient. We see that such rare alleles are common.
+(We reiterate that \msprime\ currently
 generates mutations under the infinitely many sites model so that each mutation occurs at a
-unique site. In more complex situations where we have back or recurrent mutations, this simple approach will not work.)
+unique site. Future versions of \msprime\ or other software packages may produce
+tree sequences with back or recurrent mutations, where
+this simple approach will not work.
+To emphasise this point and to ensure that the above code chunk is not
+accidentally applied in such sitations we have included an
+\texttt{assert} statement. We use asserts in a similar way in later
+code chunks.)
 
 A powerful feature of this sample-counting approach is that we can
 perform the same operation over an arbitrary subset of the samples. For
@@ -1162,6 +1196,7 @@ def num_private_sites(pop_id):
     num_private = 0
     for tree in ts.trees(tracked_samples=pop_samples):
         for site in tree.sites():
+            # Only works for infinite sites mutations.
             assert len(site.mutations) == 1
             mutation = site.mutations[0]
             total = tree.num_samples(mutation.node)
@@ -1298,7 +1333,7 @@ efficient, requiring less than 2 seconds to compute the same value.
 num_rare = 0
 for tree in ts.trees():
     for site in tree.sites():
-        # Only works for simple infinite sites mutations.
+        # Only works for infinite sites mutations.
         assert len(site.mutations) == 1
         mutation = site.mutations[0]
         if tree.num_samples(mutation.node) / ts.num_samples < threshold:
@@ -1541,7 +1576,7 @@ mutational process is the total number of segregating sites, that is, the number
 sites at which we observe variation. We can obtain this very
 easily from simulations simply by specifying a mutation rate parameter.
 (Note again that we set \(N_e=1/2\) and our mutation rate
-\(= \theta / 2\) in order to convert to \msprime\'s time scales.)
+\(= \theta / 2\) in order to convert to \msprime's time scales.)
 
 \begin{pythoncode}
 def S_dist(n, theta, k):
@@ -1670,7 +1705,7 @@ the development of likelihood-free inference methods, in particular
 Approximate Bayesian Computation (ABC)~\citep{Beaumont2002}.
 ABC approximates the posterior distribution of model parameters by drawing from
 simulations. Because of its flexibility ABC has become a standard
-inference tool in statistical population genetics \citep[see][for a review]{csillery2010approximate}}.
+inference tool in statistical population genetics \citep[see][for a review]{csillery2010approximate}.
 We will demonstrate how \msprime\ can be used to set up an ABC inference
 by means of a simple toy example. We stress that this is meant as an
 illustration rather than a inference tool for practical use. However,
@@ -1714,6 +1749,7 @@ def get_joint_site_frequency_spectra(reps):
         # Track the samples from population 0.
         for tree in ts.trees(tracked_samples=[0, 1]):
             for site in tree.sites():
+                # Only works for infinite sites mutations.
                 assert len(site.mutations) == 1
                 mutation = site.mutations[0]
                 nleaves0 = tree.num_tracked_samples(mutation.node)
