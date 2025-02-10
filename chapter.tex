@@ -726,14 +726,17 @@ Migration rate change events allow us to update the migration rate
 matrix at some point in time. We can either update a single cell in the
 matrix or all (non-diagonal) entries at the same time.
 \begin{pythoncode}
-ts  = msprime.simulate(
-    population_configurations=[
-        msprime.PopulationConfiguration(sample_size=2),
-        msprime.PopulationConfiguration(sample_size=2)],
-    demographic_events=[
-        msprime.MigrationRateChange(20, rate=1.0, matrix_index=(0, 1))],
+demography = msprime.Demography.isolated_model([1, 1])
+
+demography.add_migration_rate_change(time=20, rate=1, source=0, dest=1)
+ts  = msprime.sim_ancestry(
+    samples={0:2, 1:2},
+    demography=demography,
+    ploidy=1,
     random_seed=2)
+
 tree = ts.first()
+
 \end{pythoncode}
 
 The tree produced by this code chunk is shown in
@@ -773,12 +776,13 @@ when (backwards in time) all the lineages in one population migrate to
 another.
 
 \begin{pythoncode}
-ts  = msprime.simulate(
-    population_configurations=[
-        msprime.PopulationConfiguration(sample_size=3),
-        msprime.PopulationConfiguration(sample_size=3)],
-    demographic_events=[
-        msprime.MassMigration(15, source=1, dest=0, proportion=1)],
+demography = msprime.Demography.isolated_model([1, 1])
+demography.add_mass_migration(time=15, source=1, dest=0, proportion=1)
+
+ts  = msprime.sim_ancestry(
+    samples={0:3, 1:3},
+    demography=demography,
+    ploidy=1,
     random_seed=20)
 tree = ts.first()
 \end{pythoncode}
@@ -795,15 +799,17 @@ different deme) are specified in the same way:
 
 \clearpage
 \begin{pythoncode}
-ts  = msprime.simulate(
-    population_configurations=[
-        msprime.PopulationConfiguration(sample_size=6),
-        msprime.PopulationConfiguration(sample_size=0)],
-    demographic_events=[
-        msprime.MassMigration(0.5, source=0, dest=1, proportion=0.5),
-        msprime.MigrationRateChange(1.1, rate=0.1),
-    ],
-    random_seed=26)
+demography = msprime.Demography.isolated_model([1, 1])
+
+demography.add_mass_migration(time=0.5, source=0, dest=1, proportion=0.5)
+demography.add_migration_rate_change(time=1.1, rate=0.1)
+
+ts  = msprime.sim_ancestry(
+    samples={0:6, 1:0},
+    demography=demography,
+    ploidy=1,
+    random_seed=5)
+
 tree = ts.first()
 \end{pythoncode}
 
@@ -842,17 +848,12 @@ T1 = 100    # End of exponential growth period (forwards in time)
 T2 = 750    # Start of exponential growth period (forwards in time)
 # Calculate growth rate; solve N2 = N1 * exp(-alpha * (T2 - T1))
 growth_rate = -np.log(N2 / N1) / (T2 - T1)
-population_configurations = [
-    msprime.PopulationConfiguration(initial_size=N1)
-]
-demographic_events = [
-    msprime.PopulationParametersChange(time=T1, growth_rate=growth_rate),
-    msprime.PopulationParametersChange(time=T2, growth_rate=0),
-]
-dd = msprime.DemographyDebugger(
-    population_configurations=population_configurations,
-    demographic_events=demographic_events)
-dd.print_history()
+demography = msprime.Demography.isolated_model([N1])
+demography.add_population_parameters_change(time=T1, growth_rate=growth_rate)
+demography.add_population_parameters_change(time=T2, growth_rate=0)
+
+dp = demography.debug()
+dp.print_history()
 \end{pythoncode}
 
 Gives the following output:
@@ -931,18 +932,17 @@ times and locations, allowing us to simulate (for example) ancient
 samples.
 
 \begin{pythoncode}
-ts = msprime.simulate(
+demography = msprime.Demography.island_model(initial_size=[1, 1], migration_rate=1)
+
+ts = msprime.sim_ancestry(
     samples=[
-        msprime.Sample(0, 0), msprime.Sample(0, 0),
-        msprime.Sample(0, 0),
-        msprime.Sample(1, 0.75), # Ancient sample in deme 1
+        msprime.SampleSet(1, population=0, time=0),
+        msprime.SampleSet(1, population=0, time=0),
+        msprime.SampleSet(1, population=0, time=0),
+        msprime.SampleSet(1, population=1, time=0.75), # Ancient sample in deme 1
     ],
-    population_configurations=[
-        msprime.PopulationConfiguration(),
-        msprime.PopulationConfiguration()],
-    migration_matrix=[
-        [0, 1],
-        [1, 0]],
+    demography=demography,
+    ploidy=1,
     random_seed=22)
 tree = ts.first()
 \end{pythoncode}
