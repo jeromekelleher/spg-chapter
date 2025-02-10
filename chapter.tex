@@ -468,8 +468,8 @@ population configurations performs the same task. For example,
 def pairwise_T_mrca(growth_rate):
     N = 10000
     T_mrca = np.zeros(N)   
-    demography = msprime.Demography() 
-    demography.add_population(initial_size=0.5, growth_rate=growth_rate)
+    demography = msprime.Demography.isolated_model(initial_size=[0.5],
+                                                   growth_rate=[growth_rate])
     replicates = msprime.sim_ancestry(
         samples=2,
         demography=demography, 
@@ -604,13 +604,8 @@ migration rates; \(m[j,k]\) defines the fraction of population \(j\)
 that consists of migrants from population \(k\) in each generation. (Note that when running simulations on the coalescence scale, i.e.\ setting \(N_e=1/2\), this is equivalent to the number of migrants per deme and generation \(M[j,k]=2 N_e m[j,k]\).)
 
 \begin{pythoncode}
-demography = msprime.Demography() 
-demography.add_population(initial_size=2)
-demography.add_population(initial_size=2)
-
+demography =  msprime.Demography.isolated_model([1, 1])
 demography.set_migration_rate(source=0, dest=1, rate=0.1)
-demography.set_migration_rate(source=1, dest=0, rate=0)
-
 
 ts  = msprime.sim_ancestry(
     samples={0:2, 1:2}, ploidy=1, 
@@ -661,21 +656,7 @@ The exact history of migration events is available if we use the
 symmetric island model and track every migration event:
 
 \begin{pythoncode}
-demography = msprime.Demography() 
-demography.add_population(initial_size=3)
-demography.add_population(initial_size=1)
-demography.add_population(initial_size=1)
-
-demography.set_migration_rate(source=0, dest=1, rate=1)
-demography.set_migration_rate(source=0, dest=2, rate=1)
-
-demography.set_migration_rate(source=1, dest=0, rate=1)
-demography.set_migration_rate(source=1, dest=2, rate=1)
-
-demography.set_migration_rate(source=2, dest=0, rate=1)
-demography.set_migration_rate(source=2, dest=1, rate=1)
-
-
+demography =  msprime.Demography.island_model([1, 1, 1], migration_rate=1)
 
 ts  = msprime.sim_ancestry(
     samples={0:3, 1:1, 2:1}, 
