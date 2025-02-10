@@ -246,7 +246,7 @@ using the \texttt{tree.draw()} method.}
 
 \begin{pythoncode}
 import msprime
-ts = msprime.simulate(3)
+ts = msprime.sim_ancestry(3, ploidy=1)
 tree = ts.first()
 SVG(tree.draw())
 \end{pythoncode}
@@ -293,13 +293,13 @@ use the \texttt{num\_replicates} argument.
 import msprime
 N = 1000
 mean_T_mrca = 0
-for ts in msprime.simulate(10, num_replicates=N):
+for ts in msprime.sim_ancestry(10, num_replicates=N, ploidy=1):
     tree = ts.first()
     mean_T_mrca += tree.time(tree.root)
 mean_T_mrca = mean_T_mrca / N
 print(mean_T_mrca)
 
->>> 3.6717548653768133
+>>> 1.7591899369100823
 \end{pythoncode}
 
     In this example we run 1000 independent replicates of the coalescent for
@@ -338,12 +338,12 @@ import msprime
 import numpy as np
 N = 1000
 T_mrca = np.zeros(N)
-for j, ts in enumerate(msprime.simulate(10, num_replicates=N)):
+for j, ts in enumerate(msprime.sim_ancestry(10, num_replicates=N, ploidy=1)):
     tree = ts.first()
     T_mrca[j] = tree.time(tree.root)
 print([np.mean(T_mrca), np.var(T_mrca)])
 
->>> [3.6690718290544053, 4.8541533617765706]
+>>> (np.float64(1.855267280486074), np.float64(1.28673089924668))
 \end{pythoncode}
 
     Here we simulate 1000 replicates, storing the time to the MRCA for each replicate in the array \texttt{T\_mrca}.  We use the Python \texttt{enumerate} function to simplify the process of efficiently inserting values into this
@@ -365,7 +365,7 @@ processes are unique, it is best to manually specify them. For example,
 
 \begin{pythoncode}
 def run_simulation(seed):
-    ts = msprime.simulate(10, random_seed=seed)
+    ts = msprime.sim_ancestry(10, random_seed=seed, ploidy=1)
     tree = ts.first()
     return tree.time(tree.root)
 
@@ -375,7 +375,7 @@ with multiprocessing.Pool(4) as pool:
     T_mrca = np.array(pool.map(run_simulation, seeds))
 print(np.mean(T_mrca))
 
->>> 3.6459775450221832
+>>> np.float64(1.7920618730043976)
 \end{pythoncode}
 
     In this example we create a list of 1000 seeds between 1 and $2^{32} -
@@ -406,11 +406,10 @@ biological reality. The most fundamental population parameter is the \emph{effec
 population sizes correspond to older coalescence times:
 
 \begin{pythoncode}
-def pairwise_T_mrca(Ne):
+def pairwise_T_mrca(population_size):
     N = 10000
     T_mrca = np.zeros(N)
-    for j, ts in enumerate(
-            msprime.simulate(2, Ne=Ne, num_replicates=N)):
+    for j, ts in enumerate(msprime.sim_ancestry(2, population_size=population_size, num_replicates=N, ploidy=1)):
         tree = ts.first()
         T_mrca[j] = tree.time(tree.root)
     return np.mean(T_mrca)
@@ -419,7 +418,10 @@ print(
     pairwise_T_mrca(0.5), pairwise_T_mrca(10),
     pairwise_T_mrca(100))
 
->>> (0.99569690432656333, 19.816809844176138, 196.42125227336615)
+>>> (np.float64(0.4955590279542856),
+     np.float64(10.213697079990956),
+     np.float64(101.4337058054171))
+
 \end{pythoncode}
 
     Thus, when we specify \(N_e=10\) we get a mean pairwise coalescence time of about
@@ -465,13 +467,16 @@ population configurations performs the same task. For example,
 \begin{pythoncode}
 def pairwise_T_mrca(growth_rate):
     N = 10000
-    T_mrca = np.zeros(N)
-    replicates = msprime.simulate(
-        population_configurations=[
-             msprime.PopulationConfiguration(
-                sample_size=2, initial_size=0.5,
-                growth_rate=growth_rate)],
-        num_replicates=N, random_seed=100)
+    T_mrca = np.zeros(N)   
+    demography = msprime.Demography() 
+    demography.add_population(initial_size=0.5, growth_rate=growth_rate)
+    replicates = msprime.sim_ancestry(
+        samples=2,
+        demography=demography, 
+        num_replicates=N,
+        ploidy=1,
+        random_seed=100)
+    
     for j, ts in enumerate(replicates):
         tree = ts.first()
         T_mrca[j] = tree.time(tree.root)
@@ -480,7 +485,9 @@ def pairwise_T_mrca(growth_rate):
 print(
     pairwise_T_mrca(0.05), pairwise_T_mrca(0),
     pairwise_T_mrca(-0.05))
->>> (0.96598072124289924, 1.0124999939843193, 1.0694803236032397)
+>>> (np.float64(0.4775720920641944),
+     np.float64(0.4889637700421355),
+     np.float64(0.5015256860964078))
 \end{pythoncode}
 
     Here we simulate the pairwise \(T_{MRCA}\) for positive, zero and
@@ -517,8 +524,9 @@ rate.
 \end{figure}
 
 \begin{pythoncode}
-ts = msprime.simulate(3, mutation_rate=1, random_seed=7)
-tree = ts.first()
+ts = msprime.sim_ancestry(3, ploidy=1, random_seed=7) #sequence_length=2 to get similar results, or change to non discrete genome
+mutated_ts = msprime.sim_mutations(ts, rate=1, random_seed=7, discrete_genome=False)
+tree = mutated_ts.first()
 SVG(tree.draw())
 \end{pythoncode}
 
@@ -536,10 +544,9 @@ above, the site 0 has a mutation over node 3, and site 1 has a mutation
 over node 1, and so we get the following matrix:
 
 \begin{pythoncode}
-print(ts.genotype_matrix())
-
->>> array([[1, 0, 1],
-           [0, 1, 0]], dtype=uint8)
+mutated_ts.genotype_matrix()
+>>> array([[0, 1, 0],
+           [1, 0, 1]], dtype=int32)
 \end{pythoncode}
 
     The genotype matrix gives a convenient way of accessing genotype
@@ -560,13 +567,15 @@ example, the mean number of segregating sites for a sample of two is
 N = 10000
 theta = 5
 S = np.zeros(N)
-replicates = msprime.simulate(
-    2, Ne=0.5, mutation_rate=theta / 2, num_replicates=N)
+replicates = msprime.sim_ancestry(2, population_size=0.5, num_replicates=N, ploidy=1, discrete_genome=False)
 for j, ts in enumerate(replicates):
-    S[j] = ts.num_sites  # Number of segregrating sites.
+    mutated_replicate = msprime.sim_mutations(ts, rate=theta, discrete_genome=False)
+    S[j] = mutated_replicate.num_sites  # Number of segregrating sites.
+    
 print(np.mean(S))
 
->>> 4.8276000000000003
+>>> np.float64(5.0281)
+
 \end{pythoncode}
 
     Note that here we set the mutation rate to \(\theta / 2\) (to cancel out
@@ -595,19 +604,20 @@ migration rates; \(m[j,k]\) defines the fraction of population \(j\)
 that consists of migrants from population \(k\) in each generation. (Note that when running simulations on the coalescence scale, i.e.\ setting \(N_e=1/2\), this is equivalent to the number of migrants per deme and generation \(M[j,k]=2 N_e m[j,k]\).)
 
 \begin{pythoncode}
-pop_configs = [
-    msprime.PopulationConfiguration(sample_size=2),
-    msprime.PopulationConfiguration(sample_size=2)]
-M = np.array([
-    [0, 0.1],
-    [0, 0]])
-ts = msprime.simulate(
-    population_configurations=pop_configs, migration_matrix=M,
-    random_seed=2)
+demography = msprime.Demography() 
+demography.add_population(initial_size=2)
+demography.add_population(initial_size=2)
+
+demography.set_migration_rate(source=0, dest=1, rate=0.1)
+demography.set_migration_rate(source=1, dest=0, rate=0)
+
+
+ts  = msprime.sim_ancestry(
+    samples={0:2, 1:2}, ploidy=1, 
+    random_seed=2, demography=demography)
 tree = ts.first()
 colour_map = {0:"red", 1:"blue"}
-node_colours = {
-    u: colour_map[tree.population(u)] for u in tree.nodes()}
+node_colours = {u: colour_map[tree.population(u)] for u in tree.nodes()}
 SVG(tree.draw(node_colours=node_colours))
 \end{pythoncode}
 
@@ -651,21 +661,31 @@ The exact history of migration events is available if we use the
 symmetric island model and track every migration event:
 
 \begin{pythoncode}
-pop_configs = [
-    msprime.PopulationConfiguration(sample_size=3),
-    msprime.PopulationConfiguration(sample_size=1),
-    msprime.PopulationConfiguration(sample_size=1)]
-M = [
-    [0, 1, 1],
-    [1, 0, 1],
-    [1, 1, 0]]
-ts  = msprime.simulate(
-    population_configurations=pop_configs, migration_matrix=M,
-    record_migrations=True, random_seed=101)
+demography = msprime.Demography() 
+demography.add_population(initial_size=3)
+demography.add_population(initial_size=1)
+demography.add_population(initial_size=1)
+
+demography.set_migration_rate(source=0, dest=1, rate=1)
+demography.set_migration_rate(source=0, dest=2, rate=1)
+
+demography.set_migration_rate(source=1, dest=0, rate=1)
+demography.set_migration_rate(source=1, dest=2, rate=1)
+
+demography.set_migration_rate(source=2, dest=0, rate=1)
+demography.set_migration_rate(source=2, dest=1, rate=1)
+
+
+
+ts  = msprime.sim_ancestry(
+    samples={0:3, 1:1, 2:1}, 
+    demography=demography,
+    record_migrations=True,
+    ploidy=1,
+    random_seed=101)
 tree = ts.first()
 colour_map = {0:"red", 1:"blue", 2: "green"}
-node_colours = {
-    u: colour_map[tree.population(u)] for u in tree.nodes()}
+node_colours = {u: colour_map[tree.population(u)] for u in tree.nodes()}
 SVG(tree.draw(node_colours=node_colours))
 \end{pythoncode}
 
@@ -857,32 +877,51 @@ dd.print_history()
 Gives the following output:
 \begin{footnotesize}
 \begin{verbatim}
-=============================
-Epoch: 0 -- 100.0 generations
-=============================
-     start     end      growth_rate |     0
-   -------- --------       -------- | --------
-0 |  2e+04    2e+04               0 |     0
-
-Events @ generation 100.0
-   - Population parameter change for -1: growth_rate -> 0.0035
-
-=================================
-Epoch: 100.0 -- 750.0 generations
-=================================
-     start     end      growth_rate |     0
-   -------- --------       -------- | --------
-0 |  2e+04    2e+03         0.00354 |     0
-
-Events @ generation 750.0
-   - Population parameter change for -1: growth_rate -> 0
-
-===============================
-Epoch: 750.0 -- inf generations
-===============================
-     start     end      growth_rate |     0
-   -------- --------       -------- | --------
-0 |  2e+03    2e+03               0 |     0
+DemographyDebugger
+════════════════════════════════╗
+    Epoch[0]: [0, 100) generations 
+════════════════════════════════╝
+    Populations (total=1 active=1)
+    ┌───────────────────────────────────────────┐
+    │       │     start│       end│growth_rate  │
+    ├───────────────────────────────────────────┤
+    │  pop_0│   20000.0│   20000.0│ 0           │
+    └───────────────────────────────────────────┘
+    Events @ generation 100
+    ┌────────────────────────────────────────────────────────────────────────────┐
+    │  time│type        │parameters              │effect                         │
+    ├────────────────────────────────────────────────────────────────────────────┤
+    │   100│Population  │population=-1, growth_  │growth_rate → 0.00354 for all  │
+    │      │parameter   │rate=0.003542438604606  │populations                    │
+    │      │change      │2238                    │                               │
+    └────────────────────────────────────────────────────────────────────────────┘
+══════════════════════════════════╗
+    Epoch[1]: [100, 750) generations 
+══════════════════════════════════╝
+    Populations (total=1 active=1)
+    ┌──────────────────────────────────────────┐
+    │       │     start│      end│growth_rate  │
+    ├──────────────────────────────────────────┤
+    │  pop_0│   20000.0│   2000.0│ 0.00354     │
+    └──────────────────────────────────────────┘
+    Events @ generation 750
+    ┌──────────────────────────────────────────────────────────────────────────┐
+    │  time│type        │parameters      │effect                               │
+    ├──────────────────────────────────────────────────────────────────────────┤
+    │   750│Population  │population=-1,  │growth_rate → 0 for all populations  │
+    │      │parameter   │growth_rate=0   │                                     │
+    │      │change      │                │                                     │
+    └──────────────────────────────────────────────────────────────────────────┘
+══════════════════════════════════╗
+    Epoch[2]: [750, inf) generations 
+══════════════════════════════════╝
+    Populations (total=1 active=1)
+    ┌─────────────────────────────────────────┐
+    │       │    start│      end│growth_rate  │
+    ├─────────────────────────────────────────┤
+    │  pop_0│   2000.0│   2000.0│ 0           │
+    └─────────────────────────────────────────┘
+    
 
 \end{verbatim}
 \end{footnotesize}
@@ -951,10 +990,9 @@ Adding recombination to a simulation is simple, requiring very minor
 changes to the methods given above.
 
 \begin{pythoncode}
-ts = msprime.simulate(
-    10, Ne=1e4, length=1e5, recombination_rate=1e-8, random_seed=3)
+ts = msprime.sim_ancestry(10, population_size=1e4, sequence_length=1e5, recombination_rate=1e-8, random_seed=3)
 print(ts.num_trees)
->>> 82
+>>> 135
 \end{pythoncode}
 
     In this case, we provide two extra parameters: \texttt{length}, which
@@ -985,7 +1023,7 @@ them one at a time, using the \texttt{trees()} iterator.
 tmrca = np.zeros(ts.num_trees)
 breakpoints = np.zeros(ts.num_trees)
 for tree in ts.trees():
-    tmrca[tree.index] = tree.time(tree.root)
+    tmrca[tree.index] = tree.time(tree.root)  
     breakpoints[tree.index] = tree.interval[0]
 plt.ylabel("T_mrca (Generations)")
 plt.xlabel("Position (kb)")
@@ -1021,11 +1059,12 @@ recombination rate, as expected.
 \begin{pythoncode}
 # Read in the recombination map and run the simulation.
 infile = "genetic_map_GRCh37_chr22.txt"
-recomb_map = msprime.RecombinationMap.read_hapmap(infile)
-ts = msprime.simulate(
-    sample_size=100,
-    Ne=10**4,
-    recombination_map=recomb_map,
+recomb_map = msprime.RateMap.read_hapmap(infile)
+ts = msprime.sim_ancestry(
+    samples=100,
+    population_size=10**4,
+    recombination_rate=recomb_map,
+    ploidy=1,
     random_seed=1)
 \end{pythoncode}
 
@@ -1046,9 +1085,8 @@ it is possible to simulate a specific number of discrete
 loci.
 
 \begin{pythoncode}
-recomb_map = msprime.RecombinationMap.uniform_map(
-    length=10, rate=1, num_loci=10)
-ts = msprime.simulate(2, recombination_map=recomb_map)
+recomb_map = msprime.RateMap.uniform(sequence_length=10, rate=1)
+ts = msprime.sim_ancestry(2, recombination_rate=recomb_map)
 print(list(ts.breakpoints()))
 >>> [0, 1.0, 2.0, 3.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
 \end{pythoncode}
