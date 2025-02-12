@@ -467,16 +467,16 @@ population configurations performs the same task. For example,
 \begin{pythoncode}
 def pairwise_T_mrca(growth_rate):
     N = 10000
-    T_mrca = np.zeros(N)   
+    T_mrca = np.zeros(N)
     demography = msprime.Demography.isolated_model(initial_size=[0.5],
                                                    growth_rate=[growth_rate])
     replicates = msprime.sim_ancestry(
         samples=2,
-        demography=demography, 
+        demography=demography,
         num_replicates=N,
         ploidy=1,
         random_seed=100)
-    
+
     for j, ts in enumerate(replicates):
         tree = ts.first()
         T_mrca[j] = tree.time(tree.root)
@@ -571,7 +571,7 @@ replicates = msprime.sim_ancestry(2, population_size=0.5, num_replicates=N, ploi
 for j, ts in enumerate(replicates):
     mutated_replicate = msprime.sim_mutations(ts, rate=theta, discrete_genome=False)
     S[j] = mutated_replicate.num_sites  # Number of segregrating sites.
-    
+
 print(np.mean(S))
 
 >>> np.float64(5.0281)
@@ -608,7 +608,7 @@ demography =  msprime.Demography.isolated_model([1, 1])
 demography.set_migration_rate(source=0, dest=1, rate=0.1)
 
 ts  = msprime.sim_ancestry(
-    samples={0:2, 1:2}, ploidy=1, 
+    samples={0:2, 1:2}, ploidy=1,
     random_seed=2, demography=demography)
 tree = ts.first()
 colour_map = {0:"red", 1:"blue"}
@@ -659,7 +659,7 @@ symmetric island model and track every migration event:
 demography =  msprime.Demography.island_model([1, 1, 1], migration_rate=1)
 
 ts  = msprime.sim_ancestry(
-    samples={0:3, 1:1, 2:1}, 
+    samples={0:3, 1:1, 2:1},
     demography=demography,
     record_migrations=True,
     ploidy=1,
@@ -861,7 +861,7 @@ Gives the following output:
 \begin{verbatim}
 DemographyDebugger
 ════════════════════════════════╗
-    Epoch[0]: [0, 100) generations 
+    Epoch[0]: [0, 100) generations
 ════════════════════════════════╝
     Populations (total=1 active=1)
     ┌───────────────────────────────────────────┐
@@ -878,7 +878,7 @@ DemographyDebugger
     │      │change      │2238                    │                               │
     └────────────────────────────────────────────────────────────────────────────┘
 ══════════════════════════════════╗
-    Epoch[1]: [100, 750) generations 
+    Epoch[1]: [100, 750) generations
 ══════════════════════════════════╝
     Populations (total=1 active=1)
     ┌──────────────────────────────────────────┐
@@ -895,7 +895,7 @@ DemographyDebugger
     │      │change      │                │                                     │
     └──────────────────────────────────────────────────────────────────────────┘
 ══════════════════════════════════╗
-    Epoch[2]: [750, inf) generations 
+    Epoch[2]: [750, inf) generations
 ══════════════════════════════════╝
     Populations (total=1 active=1)
     ┌─────────────────────────────────────────┐
@@ -903,7 +903,7 @@ DemographyDebugger
     ├─────────────────────────────────────────┤
     │  pop_0│   2000.0│   2000.0│ 0           │
     └─────────────────────────────────────────┘
-    
+
 
 \end{verbatim}
 \end{footnotesize}
@@ -1004,7 +1004,7 @@ them one at a time, using the \texttt{trees()} iterator.
 tmrca = np.zeros(ts.num_trees)
 breakpoints = np.zeros(ts.num_trees)
 for tree in ts.trees():
-    tmrca[tree.index] = tree.time(tree.root)  
+    tmrca[tree.index] = tree.time(tree.root)
     breakpoints[tree.index] = tree.interval[0]
 plt.ylabel("T_mrca (Generations)")
 plt.xlabel("Position (kb)")
@@ -1095,14 +1095,16 @@ illustrate this, we consider a simulation of 200,000 samples of 10 megabases
 from a simple two-population model with human-like parameters:
 
 \begin{pythoncode}
-ts = msprime.simulate(
-    population_configurations=[
-        msprime.PopulationConfiguration(sample_size=10**5),
-        msprime.PopulationConfiguration(sample_size=10**5)],
-    demographic_events=[
-        msprime.MassMigration(time=50000, source=1, destination=0)],
-    Ne=10**4, recombination_rate=1e-8, mutation_rate=1e-8, length=10*10**6,
-    random_seed=3)
+demography = msprime.Demography.isolated_model([2*(10**4)]*2)
+demography.add_mass_migration(time=50000, source=1, dest=0, proportion=1.0)
+
+ts = msprime.sim_ancestry(
+    samples={0: 10**5, 1: 10**5},
+    demography=demography, recombination_rate=1e-8,
+    sequence_length=10*10**6, random_seed=3,
+    ploidy=1)
+
+mutated_ts = msprime.sim_mutations(ts, rate=1e-8, random_seed=7, discrete_genome=False)
 print((ts.num_trees, ts.num_sites))
 
 >>> (93844, 102270)
@@ -1136,12 +1138,16 @@ def ibd_segments(ts, a, b):
     segment_lengths.append(ts.sequence_length - last_left)
     return np.array(segment_lengths) / ts.sequence_length
 
-sns.distplot(ibd_segments(ts, 0, 1), label="Within population")
-sns.distplot(ibd_segments(ts, 0, 10**5), label="Between populations")
+sns.histplot(ibd_segments(mutated_ts, 0, 1), label="Within population", kde=True,
+    stat="density", kde_kws=dict(cut=3),
+    alpha=.4, edgecolor=(1, 1, 1, .4), bins=70)
+sns.histplot(ibd_segments(mutated_ts, 0, 10**5), label="Between populations", kde=True,
+    stat="density", kde_kws=dict(cut=3),
+    alpha=.4, edgecolor=(1, 1, 1, .4), bins=70)
 plt.xlim(-0.0001, 0.003)
 plt.legend()
+plt.ylabel("Count")
 plt.xlabel("Fraction of genome length");
-plt.ylable("Count")
 \end{pythoncode}
 
 \begin{figure}
@@ -1178,19 +1184,19 @@ this technique, consider the following code to compute the number of
 sites with derived allele frequency less than 1\%:
 
 \begin{pythoncode}
+ts = mutated_ts
 N = ts.num_samples
 threshold = 0.01
 num_rare_derived = 0
 for tree in ts.trees():
     for site in tree.sites():
-        # Only works for infinite sites mutations.
         assert len(site.mutations) == 1
         mutation = site.mutations[0]
         if tree.num_samples(mutation.node) / N < threshold:
             num_rare_derived += 1
 print((num_rare_derived, num_rare_derived / ts.num_sites))
 
->>> (65258, 0.638095238095238)
+>>> (65292, 0.635241236391232)
 \end{pythoncode}
 
     In this example we iterate over all the trees in the tree sequence, and
@@ -1220,7 +1226,6 @@ def num_private_sites(pop_id):
     num_private = 0
     for tree in ts.trees(tracked_samples=pop_samples):
         for site in tree.sites():
-            # Only works for infinite sites mutations.
             assert len(site.mutations) == 1
             mutation = site.mutations[0]
             total = tree.num_samples(mutation.node)
@@ -1233,7 +1238,7 @@ private_0 = num_private_sites(0)
 private_1 = num_private_sites(1)
 print((ts.num_sites, private_0 + private_1, private_0, private_1))
 
->>> (102270, 101607, 51295, 50312)
+>>> (102783, 102117, 50850, 51267)
 \end{pythoncode}
 
     This example is very similar, except we provide an extra argument to
@@ -1259,7 +1264,7 @@ ts_subset = ts.simplify(samples)
 print((
     ts_subset.num_sites, ts_subset.num_trees,
     ts.num_sites, ts.num_trees))
->>> (11939, 5483, 102270, 93844)
+>>> (11925, 5323, 102783, 93598)
 \end{pythoncode}
 
 Here we extract the tree sequence representing the history of a tiny
@@ -1337,7 +1342,7 @@ for variant in ts.variants():
     if np.sum(variant.genotypes) / ts.num_samples < threshold:
         num_rare += 1
 print(num_rare)
->>> 83081
+>>> 83757
 CPU times: user 1min 30s, sys: 4 ms, total: 1min 30s
 \end{pythoncode}
 
@@ -1363,7 +1368,7 @@ for tree in ts.trees():
         if tree.num_samples(mutation.node) / ts.num_samples < threshold:
             num_rare += 1
 print(num_rare)
->>> 83081
+>>> 83757
 CPU times: user 1.75 s, sys: 36 ms, total: 1.79 s
 \end{pythoncode}
 
@@ -1473,7 +1478,8 @@ n_col = np.zeros(ns.shape[0] * num_reps)
 T_total_col = np.zeros(ns.shape[0] * num_reps)
 row = 0
 for n in ns:
-    for ts in msprime.simulate(n, Ne=0.5, num_replicates=num_reps):
+    for ts in msprime.sim_ancestry(n, population_size=1, num_replicates=num_reps, ploidy=1):
+
         tree = ts.first()
         n_col[row] = n
         T_total_col[row] = tree.total_branch_length
@@ -1586,7 +1592,9 @@ n = 20
 T_total_20 = T_total_col[n_col == n]
 ts = np.linspace(0, np.max(T_total_20), 25)
 t_densities = np.array([T_total_density(n, t) for t in ts])
-sns.distplot(T_total_20)
+sns.histplot(T_total_20, kde=True,
+    stat="density", kde_kws=dict(cut=3),
+    alpha=.4, edgecolor=(1, 1, 1, .4), bins=70)
 plt.plot(ts, t_densities, marker="o", label="Analytical")
 plt.xlabel("T_total")
 plt.legend();
@@ -1621,7 +1629,9 @@ for j, ts in enumerate(replicates):
     simulation[j] = ts.num_sites  # number of seg. sites
 ks = np.arange(np.max(simulation))
 analytical = np.array([S_dist(n, theta, k) for k in ks])
-sns.distplot(simulation)
+sns.histplot(simulation, kde=True,
+    stat="density", kde_kws=dict(cut=3),
+    alpha=.4, edgecolor=(1, 1, 1, .4), bins=25)
 plt.plot(ks, analytical, marker='o', label="Analytical")
 plt.xlabel("Segregating sites")
 plt.legend();
@@ -1672,12 +1682,16 @@ rho_col = np.zeros(N)
 s_col = np.zeros(N)
 row = 0
 for rho in rhos:
-    replicates = msprime.simulate(
-        sample_size=2, Ne=0.5, mutation_rate=theta / 2,
-        recombination_rate=rho / 2, num_replicates=num_replicates)
+    replicates = msprime.sim_ancestry(1, num_replicates=num_replicates,
+                                        recombination_rate=rho/2, population_size=0.5,
+                                        discrete_genome=False, sequence_length=1
+                                     )
+
     for ts in replicates:
+        mutated_ts = msprime.sim_mutations(ts, rate=theta/2, discrete_genome=False)
+
         rho_col[row] = rho
-        s_col[row] = ts.num_sites
+        s_col[row] = mutated_ts.num_sites
         row += 1
 df = pd.DataFrame({"rho": rho_col, "s": s_col})
 \end{pythoncode}
@@ -1754,18 +1768,19 @@ implementation.
 \begin{pythoncode}
 nsamp = 2
 theta = 2
-true_M = 0.3
+true_m = 0.3
 num_loci = 200
 
-def run_sims(m, num_loci=1,theta=0):
-    return msprime.simulate(
-        Ne=1/2,
-        population_configurations=[
-            msprime.PopulationConfiguration(sample_size=nsamp),
-            msprime.PopulationConfiguration(sample_size=nsamp)],
-        migration_matrix=[[0, m], [m, 0]],
-        num_replicates=num_loci,
-        mutation_rate=theta / 2)
+def run_sims(m, num_loci=1, theta=0):
+    demography = msprime.Demography.island_model([1, 1], migration_rate=m)
+    replicates = msprime.sim_ancestry(samples=[
+                                msprime.SampleSet(nsamp, population=0),
+                                msprime.SampleSet(nsamp, population=1)],
+                                demography=demography,
+                                num_replicates=num_loci, ploidy=1,
+                                discrete_genome=False, sequence_length=1)
+    for ts in replicates:
+        yield msprime.sim_mutations(ts, rate=theta, discrete_genome=False)
 
 def get_joint_site_frequency_spectra(reps):
     data = np.zeros((num_loci, nsamp + 1, nsamp + 1))
@@ -1773,7 +1788,6 @@ def get_joint_site_frequency_spectra(reps):
         # Track the samples from population 0.
         for tree in ts.trees(tracked_samples=[0, 1]):
             for site in tree.sites():
-                # Only works for infinite sites mutations.
                 assert len(site.mutations) == 1
                 mutation = site.mutations[0]
                 nleaves0 = tree.num_tracked_samples(mutation.node)
@@ -1782,7 +1796,7 @@ def get_joint_site_frequency_spectra(reps):
     return data
 
 truth = get_joint_site_frequency_spectra(
-    run_sims(true_M, num_loci=num_loci, theta=2))
+    run_sims(true_m, num_loci=num_loci, theta=2))
 \end{pythoncode}
 
     The \texttt{run\_sims} function returns an iterator with the complete
@@ -1804,9 +1818,9 @@ E.g.\ for the first locus we have:
 \begin{pythoncode}
 print(truth[0])
 
->>> [[ 0.  1.  4.]
-     [ 5.  0.  7.]
-     [ 0.  0.  0.]]
+>>> [[ 0.  14.  0.]
+     [ 0.  0.  0.]
+     [ 8.  1.  0.]]
 \end{pythoncode}
 
     One could base inference on the bSFS \citep{Lohse2016, Beeravolu2017}, but we will for the sake of simplicity use a simpler (and lossy)
@@ -1818,9 +1832,9 @@ truth_mean = np.mean(truth, axis=0)
 truth_mean /= np.sum(truth_mean)
 print(truth_mean)
 
->>> [[ 0.          0.22099954  0.16139386]
-     [ 0.25630445  0.03255387  0.08482348]
-     [ 0.16093535  0.08298945  0.        ]]
+>>> [[0.         0.24496958 0.16471689]
+     [0.20846982 0.05662143 0.06948994]
+     [0.16752457 0.08820777 0.        ]]
 \end{pythoncode}
 
     To illustrate a simple ABC inference, we will focus on a single
@@ -1834,9 +1848,11 @@ draw 10,000 \(M\) values from the prior and use the functions
  replicate. We assume an exponential distribution, a common choice of prior \citep{hey2004multilocus}.
 
 \begin{pythoncode}
+import tskit
+
 num_reps = 100
 num_prior_draws = 10000
-prior_M = np.random.exponential(0.1, num_prior_draws)
+prior_m = np.random.exponential(0.1, num_prior_draws)
 
 def approx_jSFS(m):
     reps = run_sims(m, num_loci=num_reps)
@@ -1844,19 +1860,20 @@ def approx_jSFS(m):
     for rep_index, ts in enumerate(reps):
         samp1 = ts.samples(population_id=0)
         for tree in ts.trees(tracked_samples=samp1):
-            # Note that this will be inefficient if we have
-            # lots of trees. Should use an incremental update
-            # strategy using edge_diffs in this case.
+            # Note that this will be inefficient if we have lots of trees. Should
+            # use an incremental update strategy using edge_diffs in this case.
             for u in tree.nodes():
-                n1 = tree.num_tracked_samples(u)
-                n2 = tree.num_samples(u) - n1
-                if tree.parent(u) != msprime.NULL_NODE:
-                    B[rep_index, n1, n2] += tree.branch_length(u)
+                nleaves1 = tree.num_tracked_samples(u)
+                nleaves2 = tree.num_samples(u) - nleaves1
+                if tree.parent(u) != tskit.NULL:
+                    B[rep_index, nleaves1, nleaves2] += tree.branch_length(u)
     data = np.mean(B, axis=0)
     return data / np.sum(data)
 
 with multiprocessing.Pool() as pool:
-    prior_jSFS = pool.map(approx_jSFS, prior_M)
+    prior_jSFS = pool.map(approx_jSFS, prior_m)
+
+print(prior_jSFS[0])
 \end{pythoncode}
 
 Here we run 100 simulation replicates for each of the 10,000
@@ -1920,8 +1937,12 @@ keep = np.where(distances < cutoff)
 post_m = prior_m[keep]
 mean_m = np.mean(post_m)
 ci_m = np.percentile(post_m, 2.5), np.percentile(post_m, 95.75)
-sns.distplot(prior_m, label="Prior")
-sns.distplot(post_m, label="Posterior")
+sns.histplot(prior_m, label="Prior", kde=True,
+    stat="density", kde_kws=dict(cut=3),
+    alpha=.4, edgecolor=(1, 1, 1, .4), bins=25)
+sns.histplot(post_m, label="Posterior", kde=True,
+    stat="density", kde_kws=dict(cut=3),
+    alpha=.4, edgecolor=(1, 1, 1, .4), bins=25)
 # Plotting code omitted.
 \end{pythoncode}
 
@@ -1930,7 +1951,7 @@ are:
 \begin{pythoncode}
 print([mean_m, ci_m])
 
->>> [0.22494687232052613, (0.14574598726102159, 0.32315656482448107)]
+>>> [np.float64(0.2706689107323255), (np.float64(0.1680558635307605), np.float64(0.40359485279569585))]
 \end{pythoncode}
 
 
