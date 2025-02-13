@@ -1772,12 +1772,10 @@ num_loci = 200
 
 def run_sims(m, num_loci=1, theta=0):
     demography = msprime.Demography.island_model([1, 1], migration_rate=m)
-    replicates = msprime.sim_ancestry(samples=[
-                                msprime.SampleSet(nsamp, population=0),
-                                msprime.SampleSet(nsamp, population=1)],
-                                demography=demography,
-                                num_replicates=num_loci, ploidy=1,
-                                discrete_genome=False, sequence_length=1)
+    replicates = msprime.sim_ancestry({0: nsamp, 1:nsamp},
+                                      demography=demography,
+                                      num_replicates=num_loci, ploidy=1,
+                                      discrete_genome=False, sequence_length=1)
     for ts in replicates:
         yield msprime.sim_mutations(ts, rate=theta, discrete_genome=False)
 
