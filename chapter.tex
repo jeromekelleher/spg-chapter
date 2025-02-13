@@ -525,8 +525,8 @@ rate.
 
 \begin{pythoncode}
 ts = msprime.sim_ancestry(3, ploidy=1, random_seed=7) #sequence_length=2 to get similar results, or change to non discrete genome
-mutated_ts = msprime.sim_mutations(ts, rate=1, random_seed=7, discrete_genome=False)
-tree = mutated_ts.first()
+ts = msprime.sim_mutations(ts, rate=1, random_seed=7, discrete_genome=False)
+tree = ts.first()
 SVG(tree.draw())
 \end{pythoncode}
 
@@ -544,7 +544,7 @@ above, the site 0 has a mutation over node 3, and site 1 has a mutation
 over node 1, and so we get the following matrix:
 
 \begin{pythoncode}
-mutated_ts.genotype_matrix()
+ts.genotype_matrix()
 >>> array([[0, 1, 0],
            [1, 0, 1]], dtype=int32)
 \end{pythoncode}
@@ -1104,7 +1104,7 @@ ts = msprime.sim_ancestry(
     sequence_length=10*10**6, random_seed=3,
     ploidy=1)
 
-mutated_ts = msprime.sim_mutations(ts, rate=1e-8, random_seed=7, discrete_genome=False)
+ts = msprime.sim_mutations(ts, rate=1e-8, random_seed=7, discrete_genome=False)
 print((ts.num_trees, ts.num_sites))
 
 >>> (93844, 102270)
@@ -1138,10 +1138,10 @@ def ibd_segments(ts, a, b):
     segment_lengths.append(ts.sequence_length - last_left)
     return np.array(segment_lengths) / ts.sequence_length
 
-sns.histplot(ibd_segments(mutated_ts, 0, 1), label="Within population", kde=True,
+sns.histplot(ibd_segments(ts, 0, 1), label="Within population", kde=True,
     stat="density", kde_kws=dict(cut=3),
     alpha=.4, edgecolor=(1, 1, 1, .4), bins=70)
-sns.histplot(ibd_segments(mutated_ts, 0, 10**5), label="Between populations", kde=True,
+sns.histplot(ibd_segments(ts, 0, 10**5), label="Between populations", kde=True,
     stat="density", kde_kws=dict(cut=3),
     alpha=.4, edgecolor=(1, 1, 1, .4), bins=70)
 plt.xlim(-0.0001, 0.003)
@@ -1184,7 +1184,6 @@ this technique, consider the following code to compute the number of
 sites with derived allele frequency less than 1\%:
 
 \begin{pythoncode}
-ts = mutated_ts
 N = ts.num_samples
 threshold = 0.01
 num_rare_derived = 0
@@ -1688,10 +1687,10 @@ for rho in rhos:
                                      )
 
     for ts in replicates:
-        mutated_ts = msprime.sim_mutations(ts, rate=theta/2, discrete_genome=False)
+        ts = msprime.sim_mutations(ts, rate=theta/2, discrete_genome=False)
 
         rho_col[row] = rho
-        s_col[row] = mutated_ts.num_sites
+        s_col[row] = ts.num_sites
         row += 1
 df = pd.DataFrame({"rho": rho_col, "s": s_col})
 \end{pythoncode}
