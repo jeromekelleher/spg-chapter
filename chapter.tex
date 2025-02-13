@@ -364,6 +364,8 @@ run these simulations. To ensure that the seeds used in these different
 processes are unique, it is best to manually specify them. For example,
 
 \begin{pythoncode}
+import concurrent.futures as cf
+
 def run_simulation(seed):
     ts = msprime.sim_ancestry(10, random_seed=seed, ploidy=1)
     tree = ts.first()
@@ -371,8 +373,9 @@ def run_simulation(seed):
 
 N = 1000
 seeds = np.random.randint(1, 2**32 - 1, N)
-with multiprocessing.Pool(4) as pool:
-    T_mrca = np.array(pool.map(run_simulation, seeds))
+with cf.ProcessPoolExecutor(max_workers=4) as executor:
+     futures = [executor.submit(approx_jSFS, m) for m in prior_m]
+     T_mrca = np.array([f.result() for f in cf.as_completed(futures)])
 print(np.mean(T_mrca))
 
 >>> np.float64(1.7920618730043976)
@@ -380,9 +383,9 @@ print(np.mean(T_mrca))
 
     In this example we create a list of 1000 seeds between 1 and $2^{32} -
 1$ (the range accepted by \msprime) randomly. We then use the
-multiprocessing module to create a worker pool of four processes, and
-run our different replicates in these subprocesses. The results are then
-collected together in an array so that we can easily process them.
+concurrent.futures module to create a process pool of four workers, and
+run our different replicates in parallel. The results are then
+collected together in an numpy array so that we can easily process them.
 This approach is a straightforward way to utilise modern
 multi-core processors.
 
@@ -569,8 +572,8 @@ theta = 5
 S = np.zeros(N)
 replicates = msprime.sim_ancestry(2, population_size=0.5, num_replicates=N, ploidy=1, discrete_genome=False)
 for j, ts in enumerate(replicates):
-    mutated_replicate = msprime.sim_mutations(ts, rate=theta, discrete_genome=False)
-    S[j] = mutated_replicate.num_sites  # Number of segregrating sites.
+    ts = msprime.sim_mutations(ts, rate=theta, discrete_genome=False)
+    S[j] = ts.num_sites  # Number of segregrating sites.
 
 print(np.mean(S))
 
@@ -1773,9 +1776,9 @@ num_loci = 200
 def run_sims(m, num_loci=1, theta=0):
     demography = msprime.Demography.island_model([1, 1], migration_rate=m)
     replicates = msprime.sim_ancestry({0: nsamp, 1:nsamp},
-                                      demography=demography,
-                                      num_replicates=num_loci, ploidy=1,
-                                      discrete_genome=False, sequence_length=1)
+                                demography=demography,
+                                num_replicates=num_loci, ploidy=1,
+                                discrete_genome=False, sequence_length=1)
     for ts in replicates:
         yield msprime.sim_mutations(ts, rate=theta, discrete_genome=False)
 
@@ -1867,15 +1870,16 @@ def approx_jSFS(m):
     data = np.mean(B, axis=0)
     return data / np.sum(data)
 
-with multiprocessing.Pool() as pool:
-    prior_jSFS = pool.map(approx_jSFS, prior_m)
+with cf.ProcessPoolExecutor(max_workers=4) as executor:
+    futures = [executor.submit(approx_jSFS, prior) for prior in prior_m]
+    prior_jSFS = np.array([f.result() for f in cf.as_completed(futures)])
 
 print(prior_jSFS[0])
 \end{pythoncode}
 
 Here we run 100 simulation replicates for each of the 10,000
 $m$ values drawn from the prior, giving a total of 1 million individual simulations.
-We use the \texttt{multiprocessing} module to distribute these
+We use the \texttt{concurrent.futures} module to distribute these
 computations over the available CPU cores.
 Once this has completed, we compute the Euclidean distance between the estimated jSFS for each
 draw from the prior (\texttt{prior\_jSFS}) and the jSFS in the (pseudo)observed
