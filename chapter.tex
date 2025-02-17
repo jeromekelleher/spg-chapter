@@ -1785,14 +1785,8 @@ def run_sims(m, num_loci=1, theta=0):
 def get_joint_site_frequency_spectra(reps):
     data = np.zeros((num_loci, nsamp + 1, nsamp + 1))
     for rep_index, ts in enumerate(reps):
-        # Track the samples from population 0.
-        for tree in ts.trees(tracked_samples=[0, 1]):
-            for site in tree.sites():
-                assert len(site.mutations) == 1
-                mutation = site.mutations[0]
-                nleaves0 = tree.num_tracked_samples(mutation.node)
-                nleaves1 = tree.num_samples(mutation.node) - nleaves0
-                data[rep_index, nleaves0, nleaves1] += 1
+        data[rep_index] = ts.allele_frequency_spectrum([[0, 1], [2,3]], polarised=True)
+
     return data
 
 truth = get_joint_site_frequency_spectra(
