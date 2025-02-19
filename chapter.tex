@@ -927,6 +927,66 @@ until the indefinite past.
 A more complex example involving a three population out-of-Africa human
 model is available in the online documentation.
 
+\subsubsection{Using Demes standard format}\label{using-demes-standard-format}
+
+The Demes format~\citep{gower_demes_2022} is a standard for writing
+demographic models, to facilitate interchange between simulators, as well as between
+demographic inference software and simulators. Demes models are typically written as a
+YAML file, and loaded into Python using the demes library.
+
+Consider the following Demes model that describes two extant demes A and B, which
+have a common ancestor X.
+
+\begin{footnotesize}
+\begin{verbatim}
+time_units: generations
+defaults:
+    {epoch: {start_size: 5000}}
+demes:
+    - {name: X, epochs: [{end_time: 1000}]}
+    - {name: A, ancestors: [X]}
+    - {name: B, ancestors: [X],
+        epochs: [{end_time: 500, start_size: 2000},
+        {end_time: 0, start_size: 400, end_size: 10000}]}
+migrations:
+    - {source: A, dest: B, rate: 1e-4}
+
+\end{verbatim}
+\end{footnotesize}
+
+When visualised using \texttt{demesdraw}~\citep{gower_grahamgowerdemesdraw_2024},
+the demographic model is represented as shown in Figure~\ref{fig-demes-plot}.
+ In this plot, arrows indicate movement of individuals as time proceeds from
+the past to the present.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{images/demes.pdf}
+\caption{\label{fig-demes-plot}A demes YAML file visualised using \texttt{demesdraw}.}
+\end{figure}
+
+To import demes from a YAML file, we can use the \texttt{demes.load()} function to
+load a demes graph object. Then, the \texttt{Demography.from\_demes()} method is used to convert a
+\texttt{demes graph} object into a \texttt{Demography} object. On the
+other hand, the \texttt{Demography.to\_demes()} method performs the opposite conversion; it
+converts a \texttt{Demography} object to a \texttt{demes graph} object, which can be then
+exported as a YAML file.
+
+For example:
+
+\begin{pythoncode}
+import demes
+graph = demes.load("demes_example_01.yaml")
+demography = msprime.Demography.from_demes(graph)
+ts = msprime.sim_ancestry({"A":2, "B":3},
+             demography=demography, random_seed=1234)
+\end{pythoncode}
+
+The previous code block loads the example demes model of figure~\ref{fig-demes-plot} from a YAML file. Then, a demography
+object is created from the loaded deme graph. Finally, a tree is simulated using the demography object, with samples
+drawn from demes A and B.
+
+
 \subsection{Ancient samples}\label{ancient-samples}
 
 Up to this point we have assumed that all samples are taken at the
