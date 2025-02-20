@@ -1912,15 +1912,7 @@ def approx_jSFS(m):
     reps = run_sims(m, num_loci=num_reps)
     B = np.zeros((num_reps, nsamp + 1, nsamp + 1))
     for rep_index, ts in enumerate(reps):
-        samp1 = ts.samples(population_id=0)
-        for tree in ts.trees(tracked_samples=samp1):
-            # Note that this will be inefficient if we have lots of trees. Should
-            # use an incremental update strategy using edge_diffs in this case.
-            for u in tree.nodes():
-                nleaves1 = tree.num_tracked_samples(u)
-                nleaves2 = tree.num_samples(u) - nleaves1
-                if tree.parent(u) != tskit.NULL:
-                    B[rep_index, nleaves1, nleaves2] += tree.branch_length(u)
+        B[rep_index] = ts.allele_frequency_spectrum([[0,1],[2,3]], mode='branch', polarised=True, span_normalise=False)
     data = np.mean(B, axis=0)
     return data / np.sum(data)
 
