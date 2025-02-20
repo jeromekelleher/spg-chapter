@@ -1927,9 +1927,10 @@ Here we run 100 simulation replicates for each of the 10,000
 $m$ values drawn from the prior, giving a total of 1 million individual simulations.
 We use the \texttt{concurrent.futures} module to distribute these
 computations over the available CPU cores.
-Once this has completed, we compute the Euclidean distance between the estimated jSFS for each
-draw from the prior (\texttt{prior\_jSFS}) and the jSFS in the (pseudo)observed
-data (\texttt{truth\_mean}):
+
+Once this has completed, we compute the Euclidean distance between the estimated branch-jSFS for each
+draw from the prior (\texttt{prior\_jSFS}) and the site-jSFS in the (pseudo)observed
+data (\texttt{truth\_mean}), as both values should be similar~\citep{ralph_efficiently_2020}.:
 \begin{pythoncode}
 distances = np.zeros(num_prior_draws)
 for j in range(num_prior_draws):
