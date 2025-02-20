@@ -374,7 +374,7 @@ def run_simulation(seed):
 N = 1000
 seeds = np.random.randint(1, 2**32 - 1, N)
 with cf.ProcessPoolExecutor(max_workers=4) as executor:
-     futures = [executor.submit(approx_jSFS, m) for m in prior_m]
+     futures = [executor.submit(run_simulation, seed) for seed in seeds]
      T_mrca = np.array([f.result() for f in cf.as_completed(futures)])
 print(np.mean(T_mrca))
 
