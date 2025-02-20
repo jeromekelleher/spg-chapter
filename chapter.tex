@@ -374,7 +374,7 @@ def run_simulation(seed):
 N = 1000
 seeds = np.random.randint(1, 2**32 - 1, N)
 with cf.ProcessPoolExecutor(max_workers=4) as executor:
-     futures = [executor.submit(approx_jSFS, m) for m in prior_m]
+     futures = [executor.submit(run_simulation, seed) for seed in seeds]
      T_mrca = np.array([f.result() for f in cf.as_completed(futures)])
 print(np.mean(T_mrca))
 
@@ -1915,15 +1915,7 @@ def approx_jSFS(m):
     reps = run_sims(m, num_loci=num_reps)
     B = np.zeros((num_reps, nsamp + 1, nsamp + 1))
     for rep_index, ts in enumerate(reps):
-        samp1 = ts.samples(population_id=0)
-        for tree in ts.trees(tracked_samples=samp1):
-            # Note that this will be inefficient if we have lots of trees. Should
-            # use an incremental update strategy using edge_diffs in this case.
-            for u in tree.nodes():
-                nleaves1 = tree.num_tracked_samples(u)
-                nleaves2 = tree.num_samples(u) - nleaves1
-                if tree.parent(u) != tskit.NULL:
-                    B[rep_index, nleaves1, nleaves2] += tree.branch_length(u)
+        B[rep_index] = ts.allele_frequency_spectrum([[0,1],[2,3]], mode='branch', polarised=True, span_normalise=False)
     data = np.mean(B, axis=0)
     return data / np.sum(data)
 
@@ -1938,9 +1930,10 @@ Here we run 100 simulation replicates for each of the 10,000
 $m$ values drawn from the prior, giving a total of 1 million individual simulations.
 We use the \texttt{concurrent.futures} module to distribute these
 computations over the available CPU cores.
-Once this has completed, we compute the Euclidean distance between the estimated jSFS for each
-draw from the prior (\texttt{prior\_jSFS}) and the jSFS in the (pseudo)observed
-data (\texttt{truth\_mean}):
+
+Once this has completed, we compute the Euclidean distance between the estimated branch-jSFS for each
+draw from the prior (\texttt{prior\_jSFS}) and the site-jSFS in the (pseudo)observed
+data (\texttt{truth\_mean}), as both values should be similar~\citep{ralph_efficiently_2020}.:
 \begin{pythoncode}
 distances = np.zeros(num_prior_draws)
 for j in range(num_prior_draws):
