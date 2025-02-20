@@ -589,7 +589,8 @@ indefinitely. This is particularly important in simulation based
 approaches to inference from real data.)
 
 
-\subsection{Population structure}\label{population-structure}
+\subsection{Demography}\label{Demography}
+\subsubsection{Population structure}\label{population-structure}
 
 Following \ms~\citep{hudson2002generating}, \msprime\ supports a
 discrete-deme model of population structure in which
@@ -715,7 +716,7 @@ from a genealogy in real data~\citep{sousa2011nonidentifiability}.
 Other forms of migration are also possible between specific demes at
 specific times. These different demographic events are dealt with in the next section.
 
-\subsection{Demographic events}\label{demographic-events}
+\subsubsection{Demographic events}\label{demographic-events}
 
 Demographic events allow us to model more complex histories involving
 changes to the population structure over time, and are specified using
@@ -725,7 +726,7 @@ be supplied in the order they occur (backwards in time). There are a
 number of different types of demographic event, which we examine in
 turn.
 
-\subsubsection{Migration rate change}\label{migration-rate-change}
+\runinhead{Migration rate change}\label{migration-rate-change}
 
 Migration rate change events allow us to update the migration rate
 matrix at some point in time. We can either update a single cell in the
@@ -772,7 +773,7 @@ with demographic events. Nodes are coloured by population.}
 \end{figure}
 
 
-\subsubsection{Mass migration}\label{mass-migration}
+\runinhead{Mass migration}\label{mass-migration}
 
 This class of event allows us to move some proportion of the lineages in
 one deme to another at a particular time. This allows us to model
@@ -830,7 +831,7 @@ changing the migration rate between the demes to 0.1, thereby allowing
 lineages to move between them. Eventually, all lineages end up in deme
 1, where they coalesce into the MRCA at time \(t=6.9\).
 
-\subsubsection{Population parameter change}\label{population-parameter-change}
+\runinhead{Population parameter change}\label{population-parameter-change}
 
 This class of event represents a change in the growth rate or
 size of a particular population. Since each population has its own
@@ -989,7 +990,7 @@ object is created from the loaded deme graph. Finally, a tree is simulated using
 drawn from demes A and B.
 
 
-\subsection{Ancient samples}\label{ancient-samples}
+\subsubsection{Ancient samples}\label{ancient-samples}
 
 Up to this point we have assumed that all samples are taken at the
 present time. However, \msprime\ allows us to specify arbitrary sampling
