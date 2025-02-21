@@ -1031,13 +1031,13 @@ arbitrary populations and at arbitrary times.
 
 \subsection{Ancestry Models}\label{ancestry-models}
 
-By default, \msprime\ simulates the coalescent process based on the Hudson model~\citep{hudson1983properties}, refered to as the
+By default, \msprime\ simulates the coalescent process based on the Hudson model~\citep{hudson1983properties}, referred to as the
 \emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process under other models, such as
 \emph{SMC models}~\citep{mcvean2005approximating} and the \emph{DiscreteTimeWrightFisher model (DTWF)}~\citep{nelson_accounting_2020}(for a full list of
-supported models please refere to the \msprime\ documentation).
+supported models please refer to the \msprime\ documentation).
 
 The model used for the simulation is specified using the \texttt{model} parameter
-in the \texttt{sim\_ancestry} function. Moreover, \msprime\ is also to combine different models; for example, the DTWF model can be used to simulate the more recet
+in the \texttt{sim\_ancestry} function. Moreover, \msprime\ is also to combine different models; for example, the DTWF model can be used to simulate the more recent
 past, while the faster standard model can be used to simulate the more distant past, which provides a decent approximation of the discrete process.
 
 \begin{pythoncode}
