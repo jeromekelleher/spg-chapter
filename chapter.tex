@@ -1172,6 +1172,22 @@ occur exactly at the integer boundaries between these loci. This shows that
 we can also simulate models of recombination with discrete loci models
 in \msprime, as well as the more standard continuous genome.
 
+\subsubsection{Gene conversion}\label{gene-conversion}
+
+Beside simulating recombination, \msprime\ also supports gene conversion events.To simulate gene conversion,
+two parameters are required: the gene conversion rate and the tract length distribution. By default, tract lengths are drawn
+from a genometric distribution with a mean of 1.
+
+Gene conversion can be simulated independently, or it can be simulated alongside recombination, provided that both rates are constants.
+The following example shows a simulation with gene conversion and recombination.
+
+\begin{pythoncode}
+ts = msprime.sim_ancestry(
+    3, sequence_length = 100, recombination_rate=0.003,
+    gene_conversion_rate=0.002, gene_conversion_tract_length=5,
+    random_seed=6)
+\end{pythoncode}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
