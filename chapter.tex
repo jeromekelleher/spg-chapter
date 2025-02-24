@@ -1188,6 +1188,32 @@ ts = msprime.sim_ancestry(
     random_seed=6)
 \end{pythoncode}
 
+\subsection{SLiM mutations}\label{slim-mutations}
+
+SLiM~\citep{haller_slim_2023} is a popular forward-time simulator that can be used to simulate complex evolutionary scenarios. To allow integration with SLiM,
+\msprime\ can simulate mutations similarly to SLiM. First, these mutations can "stack" over each other, meaning that multiple mutations
+can occur at the same site. Second, the mutation model adds SLiM's metadata to each mutations. This metadata includes the SLiM's
+mutation type and selection coefficient.
+
+\begin{pythoncode}
+ts = msprime.sim_ancestry(6, random_seed=2, sequence_length=1)
+model = msprime.SLiMMutationModel(type=1)
+mts = msprime.sim_mutations(ts, rate=1, random_seed=1, model=model)
+\end{pythoncode}
+
+The first line of the code block above simulates the genealogy of 6 samples. In the second line, we define a SLiM mutation model with type 1,
+which is equivalent to setting up the SLiM mutations as type m1. We then input the constructed SLiM mutation model to the \texttt{sim\_mutations}
+function of \msprime. The resulting tree sequence is then visualised in Figure~\ref{fig-slim-mutations} with the SLiM mutation IDs overlaid on
+top. We set up a high mutation rate of 1 so that we can see multiple mutations at the same site. These are shown in the figure by the mutation
+labels, where the labels are comma-separated mutation IDs.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.48\textwidth]{images/slim_mutations.pdf}
+\end{center}
+\caption{\label{fig-slim-mutations} A simulated genealogy of six samples with
+SLiM mutations.}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
