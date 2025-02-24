@@ -1248,11 +1248,9 @@ def ibd_segments(ts, a, b):
     return np.array(segment_lengths) / ts.sequence_length
 
 sns.histplot(ibd_segments(ts, 0, 1), label="Within population", kde=True,
-    stat="density", kde_kws=dict(cut=3),
-    alpha=.4, edgecolor=(1, 1, 1, .4), bins=70)
+    stat="density")
 sns.histplot(ibd_segments(ts, 0, 10**5), label="Between populations", kde=True,
-    stat="density", kde_kws=dict(cut=3),
-    alpha=.4, edgecolor=(1, 1, 1, .4), bins=70)
+    stat="density")
 plt.xlim(-0.0001, 0.003)
 plt.legend()
 plt.ylabel("Count")
@@ -1701,8 +1699,7 @@ T_total_20 = T_total_col[n_col == n]
 ts = np.linspace(0, np.max(T_total_20), 25)
 t_densities = np.array([T_total_density(n, t) for t in ts])
 sns.histplot(T_total_20, kde=True,
-    stat="density", kde_kws=dict(cut=3),
-    alpha=.4, edgecolor=(1, 1, 1, .4), bins=70)
+    stat="density")
 plt.plot(ts, t_densities, marker="o", label="Analytical")
 plt.xlabel("T_total")
 plt.legend();
@@ -1738,8 +1735,7 @@ for j, ts in enumerate(replicates):
 ks = np.arange(np.max(simulation))
 analytical = np.array([S_dist(n, theta, k) for k in ks])
 sns.histplot(simulation, kde=True,
-    stat="density", kde_kws=dict(cut=3),
-    alpha=.4, edgecolor=(1, 1, 1, .4), bins=25)
+    stat="density")
 plt.plot(ks, analytical, marker='o', label="Analytical")
 plt.xlabel("Segregating sites")
 plt.legend();
@@ -2032,11 +2028,9 @@ post_m = prior_m[keep]
 mean_m = np.mean(post_m)
 ci_m = np.percentile(post_m, 2.5), np.percentile(post_m, 95.75)
 sns.histplot(prior_m, label="Prior", kde=True,
-    stat="density", kde_kws=dict(cut=3),
-    alpha=.4, edgecolor=(1, 1, 1, .4), bins=25)
+    stat="density")
 sns.histplot(post_m, label="Posterior", kde=True,
-    stat="density", kde_kws=dict(cut=3),
-    alpha=.4, edgecolor=(1, 1, 1, .4), bins=25)
+    stat="density")
 # Plotting code omitted.
 \end{pythoncode}
 
