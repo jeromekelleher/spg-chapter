@@ -476,8 +476,9 @@ that time is measured in haploid coalescent time units). Such
 factor-of-two gymnastics are unfortunately unavoidable in coalescent
 theory.
 
+\subsection{Demography}\label{Demography}
 
-\subsection{Population models}\label{population-models}
+\subsubsection{Population size}\label{population-models}
 
 In the previous section the only parameters we supplied to
 \texttt{simulate} were the \texttt{sample\_size} and
@@ -526,8 +527,8 @@ examples. However, when running simulations of a specific organism and/or popula
 is substantially more convenient to use an appropriate estimated value
 for \(N_e\) so that times are directly interpretable.
 
-\subsubsection{Exponentially growing/shrinking
-populations}\label{exponentially-growingshrinking-populations}
+\runinhead{Exponentially growing/shrinking
+populations}\label{exponentially-growingshrinking-populations} \
 
 When we provide an \(N_e\) parameter, this specifies a fixed effective
 population size. We can also model populations that are exponentially
@@ -589,7 +590,6 @@ indefinitely. This is particularly important in simulation based
 approaches to inference from real data.)
 
 
-\subsection{Demography}\label{Demography}
 \subsubsection{Population structure}\label{population-structure}
 
 Following \ms~\citep{hudson2002generating}, \msprime\ supports a
