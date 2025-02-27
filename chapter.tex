@@ -476,8 +476,9 @@ that time is measured in haploid coalescent time units). Such
 factor-of-two gymnastics are unfortunately unavoidable in coalescent
 theory.
 
+\subsection{Demography}\label{Demography}
 
-\subsection{Population models}\label{population-models}
+\subsubsection{Population size}\label{population-models}
 
 In the previous section the only parameters we supplied to
 \texttt{simulate} were the \texttt{sample\_size} and
@@ -526,8 +527,8 @@ examples. However, when running simulations of a specific organism and/or popula
 is substantially more convenient to use an appropriate estimated value
 for \(N_e\) so that times are directly interpretable.
 
-\subsubsection{Exponentially growing/shrinking
-populations}\label{exponentially-growingshrinking-populations}
+\runinhead{Exponentially growing/shrinking
+populations}\label{exponentially-growingshrinking-populations} \
 
 When we provide an \(N_e\) parameter, this specifies a fixed effective
 population size. We can also model populations that are exponentially
@@ -589,7 +590,6 @@ indefinitely. This is particularly important in simulation based
 approaches to inference from real data.)
 
 
-\subsection{Demography}\label{Demography}
 \subsubsection{Population structure}\label{population-structure}
 
 Following \ms~\citep{hudson2002generating}, \msprime\ supports a
@@ -990,7 +990,7 @@ object is created from the loaded deme graph. Finally, a tree is simulated using
 drawn from demes A and B.
 
 
-\subsubsection{Ancient samples}\label{ancient-samples}
+\subsubsection{Drawing samples}\label{ancient-samples}
 
 Up to this point we have assumed that all samples are taken at the
 present time. However, \msprime\ allows us to specify arbitrary sampling
@@ -1028,33 +1028,6 @@ that in this case we used the \texttt{samples} parameter to
 \texttt{simulate} to specify our samples. This is the most general
 approach to assigning samples, and allows samples to be assigned to
 arbitrary populations and at arbitrary times.
-
-\subsection{Ancestry Models}\label{ancestry-models}
-
-By default, \msprime\ simulates the coalescent process based on the Hudson model~\citep{hudson1983properties}, referred to as the
-\emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process under other models, such as
-\emph{SMC models}~\citep{mcvean2005approximating} and the \emph{DiscreteTimeWrightFisher model (DTWF)}~\citep{nelson_accounting_2020}(for a full list of
-supported models please refer to the \msprime\ documentation).
-
-The model used for the simulation is specified using the \texttt{model} parameter
-in the \texttt{sim\_ancestry} function. Moreover, \msprime\ can combine different models; for example, the DTWF model can be used to simulate the more recent
-past, while the faster standard model can be used to simulate the more distant past.
-
-\begin{pythoncode}
-ts = msprime.sim_ancestry(
-    2,
-    population_size=1000,
-    model=[
-        msprime.DiscreteTimeWrightFisher(duration=500),
-        msprime.StandardCoalescent(),
-    ],
-    random_seed=4
-)
-
-\end{pythoncode}
-
-In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 500 generations,
-and then switch to the \emph{StandardCoalescent} model for the remaining generations.
 
 \subsection{Recombination}\label{recombination}
 
@@ -1116,6 +1089,8 @@ This code generates the plot in Figure~\ref{fig:tree_tmrcas} showing the time of
 sequence. We find the \(T_{MRCA}\) as before, and plot this against the
 left coordinate of the genomic interval that each tree covers. A full description of
 \emph{tree sequences} and the methods for working with them is beyond the scope of this chapter (but see the online documentation for more details).
+
+\subsubsection{Variable recombination rate}\label{variable-recombination-rate}
 
 It is also possible to simulate data with recombination rates varying
 across the genome (for example, in recombination hotspots). To do this, we
@@ -1188,6 +1163,32 @@ ts = msprime.sim_ancestry(
     random_seed=6)
 \end{pythoncode}
 
+\subsection{Ancestry Models}\label{ancestry-models}
+
+By default, \msprime\ simulates the coalescent process based on the Hudson model~\citep{hudson1983properties}, referred to as the
+\emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process under other models, such as
+\emph{SMC models}~\citep{mcvean2005approximating} and the \emph{DiscreteTimeWrightFisher model (DTWF)}~\citep{nelson_accounting_2020}(for a full list of
+supported models please refer to the \msprime\ documentation).
+
+The model used for the simulation is specified using the \texttt{model} parameter
+in the \texttt{sim\_ancestry} function. Moreover, \msprime\ can combine different models; for example, the DTWF model can be used to simulate the more recent
+past, while the faster standard model can be used to simulate the more distant past.
+
+\begin{pythoncode}
+ts = msprime.sim_ancestry(
+    2,
+    population_size=1000,
+    model=[
+        msprime.DiscreteTimeWrightFisher(duration=500),
+        msprime.StandardCoalescent(),
+    ],
+    random_seed=4
+)
+
+\end{pythoncode}
+
+In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 500 generations,
+and then switch to the \emph{StandardCoalescent} model for the remaining generations.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
