@@ -1158,10 +1158,18 @@ The following example shows a simulation with gene conversion and recombination.
 
 \begin{pythoncode}
 ts = msprime.sim_ancestry(
-    3, sequence_length = 100, recombination_rate=0.003,
-    gene_conversion_rate=0.002, gene_conversion_tract_length=5,
-    random_seed=6)
+    3, gene_conversion_rate=0.02, gene_conversion_tract_length=1,
+    sequence_length=10, random_seed=3)
 \end{pythoncode}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=\textwidth]{images/gene_conversion.pdf}
+\end{center}
+\caption{\label{fig:gene_conversion} An example of the effect of gene conversion on simulations.}
+\end{figure}
+
+In this example, as shown in Figure~\ref{fig:gene_conversion}, we see the gene conversion-specific effect; trees on either side of the event are identical.
 
 \subsection{Ancestry Models}\label{ancestry-models}
 
