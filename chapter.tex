@@ -1201,9 +1201,35 @@ In this example, as shown in Figure~\ref{fig:gene_conversion}, we see the gene c
 \subsection{Ancestry Models}\label{ancestry-models}
 
 By default, \msprime\ simulates the coalescent process based on the Hudson model~\citep{hudson1983properties}, referred to as the
-\emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process under other models, such as
-\emph{SMC models}~\citep{mcvean2005approximating} and the \emph{DiscreteTimeWrightFisher model (DTWF)}~\citep{nelson_accounting_2020}(for a full list of
-supported models please refer to the \msprime\ documentation).
+\emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process under other models; The available models are listed in
+Table~\ref{tab:ancestry-models}.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Name} & \textbf{Model} \\
+\hline
+StandardCoalescent & Coalescent with recombination (“hudson”) \\
+\hline
+SmcApproxCoalescent & Sequentially Markov Coalescent (“smc”) \\
+\hline
+SmcPrimeApproxCoalescent & SMC’(“smc\_prime”) \\
+\hline
+DiscreteTimeWrightFisher & Generation-by-generation Wright-Fisher \\
+\hline
+FixedPedigree & Simulated conditioned on a given pedigree \\
+\hline
+BetaCoalescent & Beta coalescent multiple-merger \\
+\hline
+DiracCoalescent & Dirac coalescent multiple-merger \\
+\hline
+SweepGenicSelection & Selective sweep at a linked locus \\
+\hline
+\end{tabular}
+\caption{A simple 2x2 table with a header and values.}
+\label{tab:ancestry-models}
+\end{table}
 
 The model used for the simulation is specified using the \texttt{model} parameter
 in the \texttt{sim\_ancestry} function. Moreover, \msprime\ can combine different models; for example, the DTWF model can be used to simulate the more recent
