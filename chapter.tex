@@ -1231,6 +1231,36 @@ SweepGenicSelection & Selective sweep at a linked locus \\
 \label{tab:ancestry-models}
 \end{table}
 
+\subsubsection{Single models}\label{single-models}
+
+It is more common to run simulations using a single ancetory model. The model used for the simulation can be specified by passing an argument
+from table~\ref{tab:ancestry-models} as the \texttt{model} parameter to the \texttt{sim\_ancestry} function.The following example shows how
+to simulate the coalescent process using the \emph{SmcApproxCoalescent} model.
+
+\begin{pythoncode}
+ts1 = msprime.sim_ancestry(
+    10,
+    sequence_length=10,
+    recombination_rate=0.1,
+    model=msprime.SmcApproxCoalescent(),
+    random_seed=1234)
+\end{pythoncode}
+
+For non-parametric models, a string format of the model name can also be used. For example, the following code block gives exactly the
+same result as the previous one.
+
+begin{pythoncode}
+ts2 = msprime.sim_ancestry(
+    10,
+    sequence_length=10,
+    recombination_rate=0.1,
+    model="smc",
+    random_seed=1234)
+\end{pythoncode}
+
+The string format is not recommended to be used for multiple models, as specifying the model explicitly allows us to set the model's \texttt{duration}
+parameter.
+
 The model used for the simulation is specified using the \texttt{model} parameter
 in the \texttt{sim\_ancestry} function. Moreover, \msprime\ can combine different models; for example, the DTWF model can be used to simulate the more recent
 past, while the faster standard model can be used to simulate the more distant past.
