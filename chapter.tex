@@ -1317,9 +1317,9 @@ ts = msprime.sim_ancestry(
 Figure~\ref{fig:SweepGenicSelection} shows the result of the simulation. The simulation stops before coalescence is reached, and without the \texttt{end\_time} or
 \texttt{duration} parameters bieng specified.
 
+\subsubsection{Multiple models}\label{multiple-models}
 
-The model used for the simulation is specified using the \texttt{model} parameter
-in the \texttt{sim\_ancestry} function. Moreover, \msprime\ can combine different models; for example, the DTWF model can be used to simulate the more recent
+Different ancestory models can be combined using \msprime\; for example, the DTWF model can be used to simulate the more recent
 past, while the faster standard model can be used to simulate the more distant past.
 
 \begin{pythoncode}
