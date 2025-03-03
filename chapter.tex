@@ -1249,7 +1249,7 @@ ts1 = msprime.sim_ancestry(
 For non-parametric models, a string format of the model name can also be used. For example, the following code block gives exactly the
 same result as the previous one.
 
-begin{pythoncode}
+\begin{pythoncode}
 ts2 = msprime.sim_ancestry(
     10,
     sequence_length=10,
@@ -1260,6 +1260,34 @@ ts2 = msprime.sim_ancestry(
 
 The string format is not recommended to be used for multiple models, as specifying the model explicitly allows us to set the model's \texttt{duration}
 parameter.
+
+\subsubsection{Model duration and model completion}\label{model-duration-and-model-completion}
+
+By default, most models in \msprime\ run until coalescence, where a common ancestor of all samples is found. However, the duration of the model can be specified
+using the \texttt{duration} parameter. Moreover, an \texttt{end\_time} parameter can be used to specify the time at which the model should end, even if coalescence
+is not reached. The following example shows how to simulate the coalescent process using the \emph{DiscreteTimeWrightFisher} model for 10 generations.
+
+\begin{pythoncode}
+
+ts = msprime.sim_ancestry(
+    3,
+    population_size=10,
+    start_time=5,
+    model=msprime.DiscreteTimeWrightFisher(duration=10),
+    random_seed=1234)
+SVG(ts.draw_svg(y_axis=True))
+\end{pythoncode}
+
+Here, a simulation run for ten generations, startin from generation 5 until generation 15. As shown in Figure~\ref{fig:start-duration}, simulations stoped
+at generation 15, even though coalescence was not reached.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.48\textwidth]{images/model-duration-and-model-completion.pdf}
+\end{center}
+\caption{\label{fig:start-duration} DTWF simulations running for 10 generations starting from genertion 5 until genration 15.}
+\end{figure}
+
 
 The model used for the simulation is specified using the \texttt{model} parameter
 in the \texttt{sim\_ancestry} function. Moreover, \msprime\ can combine different models; for example, the DTWF model can be used to simulate the more recent
