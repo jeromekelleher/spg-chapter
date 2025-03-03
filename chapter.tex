@@ -1201,7 +1201,7 @@ In this example, as shown in Figure~\ref{fig:gene_conversion}, we see the gene c
 \subsection{Ancestry Models}\label{ancestry-models}
 
 By default, \msprime\ simulates the coalescent process based on the Hudson model~\citep{hudson1983properties}, referred to as the
-\emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process under other models; The available models are listed in
+\emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process under other models; the available models are listed in
 Table~\ref{tab:ancestry-models}.
 
 \begin{table}[h]
@@ -1233,8 +1233,8 @@ SweepGenicSelection & Selective sweep at a linked locus \\
 
 \subsubsection{Single models}\label{single-models}
 
-It is more common to run simulations using a single ancetory model. The model used for the simulation can be specified by passing an argument
-from table~\ref{tab:ancestry-models} as the \texttt{model} parameter to the \texttt{sim\_ancestry} function.The following example shows how
+It is more common to run simulations using a single ancestry model. The model used for the simulation can be specified by passing an argument
+from Table~\ref{tab:ancestry-models} as the \texttt{model} parameter to the \texttt{sim\_ancestry} function. The following example shows how
 to simulate the coalescent process using the \emph{SmcApproxCoalescent} model.
 
 \begin{pythoncode}
@@ -1278,7 +1278,7 @@ ts = msprime.sim_ancestry(
 SVG(ts.draw_svg(y_axis=True))
 \end{pythoncode}
 
-Here, a simulation run for ten generations, startin from generation 5 until generation 15. As shown in Figure~\ref{fig:start-duration}, simulations stoped
+Here, a simulation run for ten generations, starting from generation 5 until generation 15. As shown in Figure~\ref{fig:start-duration}, simulations stopped
 at generation 15, even though coalescence was not reached.
 
 \begin{figure}
@@ -1288,7 +1288,7 @@ at generation 15, even though coalescence was not reached.
 \caption{\label{fig:start-duration} DTWF simulations running for 10 generations starting from genertion 5 until genration 15.}
 \end{figure}
 
-Some models, like \texttt{SweepGenicSelection} are only defined for a specific time interval and do not run until coalescence. The following example showes
+Some models, like \texttt{SweepGenicSelection} are only defined for a specific time interval and do not run until coalescence. The following example shows
 how to simulate the coalescent process using the \emph{SweepGenicSelection}.
 
 \begin{pythoncode}
@@ -1315,11 +1315,11 @@ ts = msprime.sim_ancestry(
 \end{figure}
 
 Figure~\ref{fig:SweepGenicSelection} shows the result of the simulation. The simulation stops before coalescence is reached, and without the \texttt{end\_time} or
-\texttt{duration} parameters bieng specified.
+\texttt{duration} parameters being specified.
 
 \subsubsection{Multiple models}\label{multiple-models}
 
-Different ancestory models can be combined using \msprime\; for example, the DTWF model can be used to simulate the more recent
+Different ancestry models can be combined using \msprime\. For example, the DTWF model can be used to simulate the more recent
 past, while the faster standard model can be used to simulate the more distant past.
 
 \begin{pythoncode}
@@ -1335,14 +1335,14 @@ ts = msprime.sim_ancestry(
 
 \end{pythoncode}
 
-In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 500 generations,
+In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 500 generations
 and then switch to the \emph{StandardCoalescent} model for the remaining generations.
 
 \subsubsection{Fixed pedigree}\label{fixed-pedigree}
 
-A pedigree records the ancestory relationships between individuals, which can limit the possibilities of genetic inheritance. It is possible to
-simulate ancestory conditioned on a fixed pedigree using \msprime\ by using the \texttt{FixedPedigree} model. This model limits the transfer of
-genetic material from ancestors to descendants, while still allowing for recombination. Recombination events occur randomly; therfore, each of
+A pedigree records the ancestry relationships between individuals, which can limit the possibilities of genetic inheritance. It is possible to
+simulate ancestry conditioned on a fixed pedigree using \msprime\ by using the \texttt{FixedPedigree} model. This model limits the transfer of
+genetic material from ancestors to descendants while still allowing for recombination. Recombination events occur randomly; therefore, each of
 the ancestor's diploid genomes is a mixture of the genomes of their parents defined by the pedigree.
 
 Pedigree can be recorded as a string, where each line contains the ID of the node, the ID of the first parent, the ID of the
@@ -1378,7 +1378,7 @@ This pedigree is visualised in Figure~\ref{fig:pedigree}.
 \caption{\label{fig:pedigree} A visualised pedigree.}
 \end{figure}
 
-In the following code block, this pedigree is used to simulate ancestory using the \texttt{FixedPedigree} model.
+In the following code block, this pedigree is used to simulate ancestry using the \texttt{FixedPedigree} model.
 
 \begin{pythoncode}
 ped_ts = msprime.sim_ancestry(
@@ -1389,7 +1389,7 @@ SVG(ped_ts.draw_svg(y_axis=True,  node_labels=node_labels, size=(600,200)))
 \end{pythoncode}
 
 The result of the simulation is shown in Figure~\ref{fig:pedigree-simulation}, where the node labels show the individual ID and the node ID;
- because of recombination, the result is two tress for the same fixed pedigree.
+ because of recombination, the result is two trees for the same fixed pedigree.
 
 \begin{figure}
 \begin{center}
