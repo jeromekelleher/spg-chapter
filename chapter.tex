@@ -416,8 +416,10 @@ rate.
 
 \begin{pythoncode}
 ts = msprime.sim_ancestry(3, ploidy=1, random_seed=7)
-#sequence_length=2 to get similar results, or change to non discrete genome
-ts = msprime.sim_mutations(ts, rate=1, random_seed=7, discrete_genome=False)
+#sequence_length=2 to get similar results,
+#or change to non discrete genome
+ts = msprime.sim_mutations(ts, rate=1, random_seed=7,
+                           discrete_genome=False)
 tree = ts.first()
 SVG(tree.draw())
 \end{pythoncode}
@@ -446,6 +448,70 @@ information, but will consume a great deal of memory for larger
 simulations. See Section~\ref{processing-variants} for more information
 on how to access genotype data efficiently.
 
+\runinhead{Other mutation models} \
+
+Beside a generic mutation model, \msprime\ also supports a list of mutation models: Table~\ref{tab:mutation-models}
+lists the available models. Moreover, \msprime\ allows for the specification of a custom mutation model—please refer
+to the \msprime\ documentation for more in-depth information regarding creating a custom mutation model.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{8cm}|}
+\hline
+\textbf{Name} & \textbf{Model} \\
+\hline
+BinaryMutationModel & Basic binary mutation model with two flip-flopping alleles : “0” and “1”. \\
+\hline
+JC69 & Jukes \& Cantor model (‘69), equal probability of transitions between nucleotides \\
+\hline
+HKY & Hasegawa, Kishino \& Yano model (‘85), different probabilities for transitions and transversions \\
+\hline
+F84 & Felsenstein model (‘84), different probabilities for transitions and transversions \\
+\hline
+GTR & The Generalised Time-Reversible nucleotide mutation model, a general parameterisation of a time-reversible mutation process \\
+\hline
+BLOSUM62 & The BLOSUM62 model of time-reversible amino acid mutation \\
+\hline
+PAM & The PAM model of time-reversible amino acid mutation \\
+\hline
+MatrixMutationModel & Superclass of the specific mutation models with a finite set of states \\
+\hline
+SMM & Stepwise mutation model for microsatellite repeat copy number. Ohta and Kimura (‘73) \\
+\hline
+TPM & Two-phase mutation model for microsatellite repeat copy number. DiRienzo et al. (‘94) \\
+\hline
+EL2 & Two-phase mutation model, equal rate, linear bias model for microsatellite repeat copy number. Garza et al. (‘95) \\
+\hline
+InfiniteAlleles & A generic infinite-alleles mutation model \\
+\hline
+SLiMMutationModel & An infinite-alleles model of mutation producing SLiM-style mutations \\
+\hline
+\end{tabular}
+\caption{Mutation models supported by \texttt{msprime}.}
+\label{tab:mutation-models}
+\end{table}
+
+To specify a mutation model, we pass the model to the \texttt{sim\_mutations} function using the \texttt{model} parameter. For example,
+to use the Jukes-Cantor model, we would use the following code:
+
+\begin{pythoncode}
+rate = 1.5e-3
+ts = msprime.sim_ancestry(5, random_seed=5, sequence_length=1e6)
+mts = msprime.sim_mutations(ts, rate=rate, model=msprime.JC69(),
+                            random_seed=7)
+\end{pythoncode}
+
+This code chunk simulated mutations that look like:
+\begin{pythoncode}
+    A   C   G   T
+A   0    89    90    74
+C   102  36    148   63
+G   71   165   39    94
+T   60   62    89    0
+\end{pythoncode}
+
+\runinhead{Scaled mutation rate} \
+
 When comparing simulations to analytic results, it is very important to be aware of the way in which the
 mutation rates are defined in coalescent theory. For historical reasons,
 the scaled mutation rate \(\theta\) is defined as \(2N_e \mu\), where
@@ -459,7 +525,10 @@ example, the mean number of segregating sites for a sample of two is
 N = 10000
 theta = 5
 S = np.zeros(N)
-replicates = msprime.sim_ancestry(2, population_size=0.5, num_replicates=N, ploidy=1, discrete_genome=False)
+replicates = msprime.sim_ancestry(2, population_size=0.5,
+                                  num_replicates=N,
+                                  ploidy=1,
+                                  discrete_genome=False)
 for j, ts in enumerate(replicates):
     ts = msprime.sim_mutations(ts, rate=theta, discrete_genome=False)
     S[j] = ts.num_sites  # Number of segregrating sites.
