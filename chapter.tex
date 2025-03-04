@@ -992,20 +992,32 @@ drawn from demes A and B.
 
 \subsubsection{Drawing samples}\label{ancient-samples}
 
+The samples drawn from a simulation can be defined in one of three ways: by
+simply providing an integer as the number of samples drawn from a single population,
+by providing a dictionary with population names as keys and the number of
+samples as values, or by providing a list of \texttt{SampleSet} objects.
+An \msprime\ \texttt{SampleSet} object can be used to specify the sampling
+time, the population, and the ploidy of a set of samples, making it the more
+versatile option.
+
+\runinhead{Sample sets}\label{sample-sets}\
+
+
 Up to this point we have assumed that all samples are taken at the
 present time. However, \msprime\ allows us to specify arbitrary sampling
 times and locations, allowing us to simulate (for example) ancient
 samples.
 
 \begin{pythoncode}
-demography = msprime.Demography.island_model(initial_size=[1, 1], migration_rate=1)
-
+demography = msprime.Demography.island_model(initial_size=[1, 1],
+                                             migration_rate=1)
 ts = msprime.sim_ancestry(
     samples=[
         msprime.SampleSet(1, population=0, time=0),
         msprime.SampleSet(1, population=0, time=0),
         msprime.SampleSet(1, population=0, time=0),
-        msprime.SampleSet(1, population=1, time=0.75), # Ancient sample in deme 1
+        msprime.SampleSet(1, population=1, time=0.75), # Ancient
+        # sample in deme 1
     ],
     demography=demography,
     ploidy=1,
@@ -1023,11 +1035,15 @@ with ancient samples.}
 The tree produced by this code chunk is shown in Figure~\ref{fig-tree-ancient-samples}.
 All of the trees that we previously considered had leaf nodes at time
 zero. In this case, the samples 0, 1 and 2 are taken at time 0 in
-population 0, but node 3 is sampled at time 0.75 in population 1. Note
-that in this case we used the \texttt{samples} parameter to
-\texttt{simulate} to specify our samples. This is the most general
-approach to assigning samples, and allows samples to be assigned to
-arbitrary populations and at arbitrary times.
+population 0, but node 3 is sampled at time 0.75 in population 1.
+
+Note that sampled individuals and nodes are defined sequentially based
+on the order in which they are provided to the \texttt{samples} parameter. Also, it is vital
+to note that changing the ploidy parameter only affects the number of samples drawn from
+the population, not the actual simulation; simulations will be performed on the
+haploid coalescent scale by default. The ploidy of the simulation can be changed by the
+\texttt{ploidy} parameter in the \texttt{sim\_ancestry} function.
+
 
 \subsection{Recombination}\label{recombination}
 
