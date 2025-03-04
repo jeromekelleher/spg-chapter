@@ -862,57 +862,13 @@ dp = demography.debug()
 dp.print_history()
 \end{pythoncode}
 
-Gives the following output:
-\begin{footnotesize}
-\begin{verbatim}
-DemographyDebugger
-════════════════════════════════╗
-    Epoch[0]: [0, 100) generations
-════════════════════════════════╝
-    Populations (total=1 active=1)
-    ┌───────────────────────────────────────────┐
-    │       │     start│       end│growth_rate  │
-    ├───────────────────────────────────────────┤
-    │  pop_0│   20000.0│   20000.0│ 0           │
-    └───────────────────────────────────────────┘
-    Events @ generation 100
-    ┌────────────────────────────────────────────────────────────────────────────┐
-    │  time│type        │parameters              │effect                         │
-    ├────────────────────────────────────────────────────────────────────────────┤
-    │   100│Population  │population=-1, growth_  │growth_rate → 0.00354 for all  │
-    │      │parameter   │rate=0.003542438604606  │populations                    │
-    │      │change      │2238                    │                               │
-    └────────────────────────────────────────────────────────────────────────────┘
-══════════════════════════════════╗
-    Epoch[1]: [100, 750) generations
-══════════════════════════════════╝
-    Populations (total=1 active=1)
-    ┌──────────────────────────────────────────┐
-    │       │     start│      end│growth_rate  │
-    ├──────────────────────────────────────────┤
-    │  pop_0│   20000.0│   2000.0│ 0.00354     │
-    └──────────────────────────────────────────┘
-    Events @ generation 750
-    ┌──────────────────────────────────────────────────────────────────────────┐
-    │  time│type        │parameters      │effect                               │
-    ├──────────────────────────────────────────────────────────────────────────┤
-    │   750│Population  │population=-1,  │growth_rate → 0 for all populations  │
-    │      │parameter   │growth_rate=0   │                                     │
-    │      │change      │                │                                     │
-    └──────────────────────────────────────────────────────────────────────────┘
-══════════════════════════════════╗
-    Epoch[2]: [750, inf) generations
-══════════════════════════════════╝
-    Populations (total=1 active=1)
-    ┌─────────────────────────────────────────┐
-    │       │    start│      end│growth_rate  │
-    ├─────────────────────────────────────────┤
-    │  pop_0│   2000.0│   2000.0│ 0           │
-    └─────────────────────────────────────────┘
+Gives the output in figure~\ref{fig:DemographyDebugger}:
 
-
-\end{verbatim}
-\end{footnotesize}
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{images/DemographyDebugger.pdf}
+\caption{\label{fig:DemographyDebugger}A visualised \texttt{DemographyDebugger} output.}
+\end{figure}
 
     After we set up our model, we use the \texttt{DemographyDebugger} to
 check our calculations. We see that time has been split into three
