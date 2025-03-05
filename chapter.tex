@@ -497,8 +497,7 @@ to use the Jukes-Cantor model, we would use the following code:
 \begin{pythoncode}
 rate = 1.5e-3
 ts = msprime.sim_ancestry(5, random_seed=5, sequence_length=1e6)
-mts = msprime.sim_mutations(ts, rate=rate, model=msprime.JC69(),
-                            random_seed=7)
+ts = msprime.sim_mutations(ts, rate=rate, model="JC69", random_seed=7)
 \end{pythoncode}
 
 \runinhead{Scaled mutation rate} \
