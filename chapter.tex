@@ -1201,12 +1201,125 @@ In this example, as shown in Figure~\ref{fig:gene_conversion}, we see the gene c
 \subsection{Ancestry Models}\label{ancestry-models}
 
 By default, \msprime\ simulates the coalescent process based on the Hudson model~\citep{hudson1983properties}, referred to as the
-\emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process under other models, such as
-\emph{SMC models}~\citep{mcvean2005approximating} and the \emph{DiscreteTimeWrightFisher model (DTWF)}~\citep{nelson_accounting_2020}(for a full list of
-supported models please refer to the \msprime\ documentation).
+\emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process under other models; the available models are listed in
+Table~\ref{tab:ancestry-models}.
 
-The model used for the simulation is specified using the \texttt{model} parameter
-in the \texttt{sim\_ancestry} function. Moreover, \msprime\ can combine different models; for example, the DTWF model can be used to simulate the more recent
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Name} & \textbf{Model} \\
+\hline
+StandardCoalescent & Coalescent with recombination (“hudson”) \\
+\hline
+SmcApproxCoalescent & Sequentially Markov Coalescent (“smc”) \\
+\hline
+SmcPrimeApproxCoalescent & SMC’(“smc\_prime”) \\
+\hline
+DiscreteTimeWrightFisher & Generation-by-generation Wright-Fisher \\
+\hline
+FixedPedigree & Simulated conditioned on a given pedigree \\
+\hline
+BetaCoalescent & Beta coalescent multiple-merger \\
+\hline
+DiracCoalescent & Dirac coalescent multiple-merger \\
+\hline
+SweepGenicSelection & Selective sweep at a linked locus \\
+\hline
+\end{tabular}
+\caption{Ancestry models supported by \msprime.}
+\label{tab:ancestry-models}
+\end{table}
+
+\subsubsection{Single models}\label{single-models}
+
+It is more common to run simulations using a single ancestry model. The model used for the simulation can be specified by passing an argument
+from Table~\ref{tab:ancestry-models} as the \texttt{model} parameter to the \texttt{sim\_ancestry} function. The following example shows how
+to simulate the coalescent process using the \emph{SmcApproxCoalescent} model.
+
+\begin{pythoncode}
+ts1 = msprime.sim_ancestry(
+    10,
+    sequence_length=10,
+    recombination_rate=0.1,
+    model=msprime.SmcApproxCoalescent(),
+    random_seed=1234)
+\end{pythoncode}
+
+For non-parametric models, a string format of the model name can also be used. For example, the following code block gives exactly the
+same result as the previous one.
+
+\begin{pythoncode}
+ts2 = msprime.sim_ancestry(
+    10,
+    sequence_length=10,
+    recombination_rate=0.1,
+    model="smc",
+    random_seed=1234)
+\end{pythoncode}
+
+The string format is not recommended to be used for multiple models, as specifying the model explicitly allows us to set the model's \texttt{duration}
+parameter.
+
+\subsubsection{Model duration and model completion}\label{model-duration-and-model-completion}
+
+By default, most models in \msprime\ run until coalescence, where a common ancestor of all samples is found. However, the duration of the model can be specified
+using the \texttt{duration} parameter. Moreover, an \texttt{end\_time} parameter can be used to specify the time at which the model should end, even if coalescence
+is not reached. The following example shows how to simulate the coalescent process using the \emph{DiscreteTimeWrightFisher} model for 10 generations.
+
+\begin{pythoncode}
+
+ts = msprime.sim_ancestry(
+    3,
+    population_size=10,
+    start_time=5,
+    model=msprime.DiscreteTimeWrightFisher(duration=10),
+    random_seed=1234)
+SVG(ts.draw_svg(y_axis=True))
+\end{pythoncode}
+
+Here, a simulation run for ten generations, starting from generation 5 until generation 15. As shown in Figure~\ref{fig:start-duration}, simulations stopped
+at generation 15, even though coalescence was not reached.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.48\textwidth]{images/model-duration-and-model-completion.pdf}
+\end{center}
+\caption{\label{fig:start-duration} DTWF simulations running for 10 generations starting from genertion 5 until genration 15.}
+\end{figure}
+
+Some models, like \texttt{SweepGenicSelection} are only defined for a specific time interval and do not run until coalescence. The following example shows
+how to simulate the coalescent process using the \emph{SweepGenicSelection}.
+
+\begin{pythoncode}
+sweep = msprime.SweepGenicSelection(
+    position=5,
+    start_frequency=0.1,
+    end_frequency=0.9,
+    s=0.25,
+    dt=1e-6,
+)
+ts = msprime.sim_ancestry(
+    3,
+    sequence_length=10,
+    population_size=100,
+    model=sweep,
+    random_seed=1234)
+\end{pythoncode}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.48\textwidth]{images/sweep.pdf}
+\end{center}
+\caption{\label{fig:SweepGenicSelection} Ancestory simulation using the \emph{SweepGenicSelection} model.}
+\end{figure}
+
+Figure~\ref{fig:SweepGenicSelection} shows the result of the simulation. The simulation stops before coalescence is reached, and without the \texttt{end\_time} or
+\texttt{duration} parameters being specified.
+
+\subsubsection{Multiple models}\label{multiple-models}
+
+Different ancestry models can be combined using \msprime\. For example, the DTWF model can be used to simulate the more recent
 past, while the faster standard model can be used to simulate the more distant past.
 
 \begin{pythoncode}
@@ -1222,8 +1335,69 @@ ts = msprime.sim_ancestry(
 
 \end{pythoncode}
 
-In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 500 generations,
+In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 500 generations
 and then switch to the \emph{StandardCoalescent} model for the remaining generations.
+
+\subsubsection{Fixed pedigree}\label{fixed-pedigree}
+
+A pedigree records the ancestry relationships between individuals, which can limit the possibilities of genetic inheritance. It is possible to
+simulate ancestry conditioned on a fixed pedigree using \msprime\ by using the \texttt{FixedPedigree} model. This model limits the transfer of
+genetic material from ancestors to descendants while still allowing for recombination. Recombination events occur randomly; therefore, each of
+the ancestor's diploid genomes is a mixture of the genomes of their parents defined by the pedigree.
+
+Pedigree can be recorded as a string, where each line contains the ID of the node, the ID of the first parent, the ID of the
+second parent, the time of this node, and whether the node is a sample node. The following example visualises a sample pedigree.
+
+\begin{pythoncode}
+import io
+ped_txt = """\
+# id parent0 parent1 time is_sample
+0   5   4   0.0 1
+1   3   3   0.0 1
+2   3   4   0.0 1
+3   7   7   1.0 0
+4   8   8   1.0 0
+5   8   6   1.0 0
+6   9   10  2.0 0
+7   10  10  2.0 0
+8   9   9   2.0 0
+9   11  12  3.0 0
+10  11  12  3.0 0
+11  .   .   4.0 0
+12  .   .   4.0 0
+"""
+pedigree = msprime.parse_pedigree(io.StringIO(ped_txt), sequence_length=100)
+\end{pythoncode}
+
+This pedigree is visualised in Figure~\ref{fig:pedigree}.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.48\textwidth]{images/pedigree.pdf}
+\end{center}
+\caption{\label{fig:pedigree} A visualised pedigree.}
+\end{figure}
+
+In the following code block, this pedigree is used to simulate ancestry using the \texttt{FixedPedigree} model.
+
+\begin{pythoncode}
+ped_ts = msprime.sim_ancestry(
+    initial_state=pedigree, model="fixed_pedigree", random_seed=41,
+    recombination_rate=0.001)
+node_labels = {node.id: f"{node.individual}({node.id})" for node in ped_ts.nodes()}
+SVG(ped_ts.draw_svg(y_axis=True,  node_labels=node_labels, size=(600,200)))
+\end{pythoncode}
+
+The result of the simulation is shown in Figure~\ref{fig:pedigree-simulation}, where the node labels show the individual ID and the node ID;
+ because of recombination, the result is two trees for the same fixed pedigree.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.75\textwidth]{images/pedigree-simulation.pdf}
+\end{center}
+\caption{\label{fig:pedigree-simulation} Tree visualisation of ancestory simulations conditioned on a fixed pedigree.}
+\end{figure}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
