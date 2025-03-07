@@ -1201,41 +1201,25 @@ In this example, as shown in Figure~\ref{fig:gene_conversion}, we see the gene c
 \subsection{Ancestry Models}\label{ancestry-models}
 
 By default, \msprime\ simulates the coalescent process based on the Hudson model~\citep{hudson1983properties}, referred to as the
-\emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process under other models; the available models are listed in
-Table~\ref{tab:ancestry-models}.
+\emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process using other models.
 
-\begin{table}[h]
-\centering
-\begin{tabular}{|c|c|}
-\hline
-\textbf{Name} & \textbf{Model} \\
-\hline
-StandardCoalescent & Coalescent with recombination (“hudson”) \\
-\hline
-SmcApproxCoalescent & Sequentially Markov Coalescent (“smc”) \\
-\hline
-SmcPrimeApproxCoalescent & SMC’(“smc\_prime”) \\
-\hline
-DiscreteTimeWrightFisher & Generation-by-generation Wright-Fisher \\
-\hline
-FixedPedigree & Simulated conditioned on a given pedigree \\
-\hline
-BetaCoalescent & Beta coalescent multiple-merger \\
-\hline
-DiracCoalescent & Dirac coalescent multiple-merger \\
-\hline
-SweepGenicSelection & Selective sweep at a linked locus \\
-\hline
-\end{tabular}
-\caption{Ancestry models supported by \msprime.}
-\label{tab:ancestry-models}
-\end{table}
+For large sample sizes and long recombining genomes, simulating recent human datasets, for example, the Hudson model can be
+less accurate. In such cases, we recommend the use of the \emph{DiscreteTimeWrightFisher}~\citep{nelson2020accounting} model.
+Since this model simulates the coalescence process generation-by-generation, it is less computationally efficient than the
+Hudson model. Therefore, we recommend combining the two models as we will show in section~\ref{multiple-models}.
+
+Sequentially Markov Coalescent (SMC) simulations are supported by \msprime\ in two models: the \emph{SmcApproxCoalescent}~\citep{mcvean2005approximating}
+and the \emph{SmcPrimeApproxCoalescent}~\citep{marjoram2006fast}. These models, however, are only
+recommended to study the SMC approximations, since they are not more accurate or less computationally expensive than the standard coalescent model.
+
+Other models supported by \msprime\ include the \emph{BetaCoalescent}~\citep{schweinsberg03}, the \emph{DiracCoalescent}~\citep{BBE13},
+the \emph{FixedPedigree} (discussed in section~\ref{fixed-pedigree}), and the \emph{SweepGenicSelection} (discussed in section~\ref{multiple-models}).
+
 
 \subsubsection{Single models}\label{single-models}
 
-It is more common to run simulations using a single ancestry model. The model used for the simulation can be specified by passing an argument
-from Table~\ref{tab:ancestry-models} as the \texttt{model} parameter to the \texttt{sim\_ancestry} function. The following example shows how
-to simulate the coalescent process using the \emph{SmcApproxCoalescent} model.
+It is more common to run simulations using a single ancestry model. The model used for the simulation can be specified using the \texttt{model} parameter
+of the \texttt{sim\_ancestry} function. The following example shows how to simulate the coalescent process using the \emph{SmcApproxCoalescent} model.
 
 \begin{pythoncode}
 ts1 = msprime.sim_ancestry(
@@ -1319,7 +1303,7 @@ Figure~\ref{fig:SweepGenicSelection} shows the result of the simulation. The sim
 
 \subsubsection{Multiple models}\label{multiple-models}
 
-Different ancestry models can be combined using \msprime\. For example, the DTWF model can be used to simulate the more recent
+Different ancestry models can be combined using \msprime. For example, the DTWF model can be used to simulate the more recent
 past, while the faster standard model can be used to simulate the more distant past.
 
 \begin{pythoncode}
@@ -1332,7 +1316,6 @@ ts = msprime.sim_ancestry(
     ],
     random_seed=4
 )
-
 \end{pythoncode}
 
 In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 500 generations
