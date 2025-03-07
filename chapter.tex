@@ -1310,15 +1310,24 @@ ts = msprime.sim_ancestry(
     2,
     population_size=1000,
     model=[
-        msprime.DiscreteTimeWrightFisher(duration=500),
+        msprime.DiscreteTimeWrightFisher(duration=200),
         msprime.StandardCoalescent(),
     ],
-    random_seed=4
+    random_seed=2953
 )
 \end{pythoncode}
 
 In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 500 generations
-and then switch to the \emph{StandardCoalescent} model for the remaining generations.
+and then switch to the \emph{StandardCoalescent} model for the remaining generations. Figure \ref{fig:politomy} shows the tree
+simulated by this example; we can see a politomy (where three lineages coalesce at the same time) which could not be simulated using the
+\emph{StandardCoalescent} model.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.48\textwidth]{images/politomy.pdf}
+\end{center}
+\caption{\label{fig:politomy} Tree simulated with a combination of the \emph{DTWF} model and a \emph{StandardCoalescent} model. Politomy is observed.}
+\end{figure}
 
 \subsubsection{Fixed pedigree}\label{fixed-pedigree}
 
