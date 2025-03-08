@@ -1319,7 +1319,7 @@ ts = msprime.sim_ancestry(
 
 In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 500 generations
 and then switch to the \emph{StandardCoalescent} model for the remaining generations. Figure \ref{fig:politomy} shows the tree
-simulated by this example; we can see a politomy (where three lineages coalesce at the same time) which could not be simulated using the
+simulated by this example; we can see a polytomy (where three lineages coalesce at the same time), which could not occur under the
 \emph{StandardCoalescent} model.
 
 \begin{figure}
@@ -1328,6 +1328,44 @@ simulated by this example; we can see a politomy (where three lineages coalesce 
 \end{center}
 \caption{\label{fig:politomy} Tree simulated with a combination of the \emph{DTWF} model and a \emph{StandardCoalescent} model. Politomy is observed.}
 \end{figure}
+
+\runinhead{Selective sweeps}\
+
+We have seen  in section~\ref{model-duration-and-model-completion} how to set up and use a selective sweep model. However, selective sweeps are
+usually simulated using a combination of the selective sweep model that runs for a specific period and a neutral model (usually the standard
+coalescent model) that runs until coalescence. In this example, we will do a simple selective sweep simulation.
+
+\begin{pythoncode}
+L = 1e6  # Length of simulated region
+Ne = 1e3
+sweep_model = msprime.SweepGenicSelection(
+    position=L / 2,  # middle of chrom
+    start_frequency=1.0 / (2 * Ne),
+    end_frequency=1.0 - (1.0 / (2 * Ne)),
+    s=0.25,
+    dt=1e-6,
+)
+\end{pythoncode}
+
+In the above code block, we defined a hard sweep on the middle position of a 1 megabase region. This sweep starts with a frequency of 1/(2*Ne) and
+until it almost reaches fixation. We set the selection coefficient to be 0.25 and dt, which is the small increment of time for stepping through the sweep
+phase of the model, to be 1e-6.
+
+Running the simulation is rather simple, as shown in the following code block:
+
+\begin{pythoncode}
+msprime.sim_ancestry(
+    5,
+    model=[sweep_model,
+           msprime.StandardCoalescent()],
+    population_size=Ne,
+    recombination_rate=1e-7,
+    sequence_length=L,
+)
+\end{pythoncode}
+
+This code block simulates the coalescent process for 5 samples using the selective sweep model and then runs the standard coalescent model until
+coalescence.
 
 \subsubsection{Fixed pedigree}\label{fixed-pedigree}
 
