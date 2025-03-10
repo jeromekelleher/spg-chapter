@@ -306,8 +306,8 @@ print(mean_T_mrca)
     In this example we run 1000 independent replicates of the coalescent for
 a sample of 10 chromosomes, and compute the mean time to the MRCA of the entire sample, i.e., the root of the
 tree. The value of 1.76 generations in the past we obtain is of course highly unrealistic.
-However, by default, time is measured in units of \(4 N_e\) generations (see the next section for details on how to
-specify population models and interpret times). It is important to note here
+However, by default, time is measured in units of \(4 N_e\) generations (see the section~\ref{Demography}
+for details on how to specify population models and interpret times). It is important to note here
 that although time is measured in units of generations, this is of course
 an approximation and we may have fractional values. Internally,
 during a simulation time is scaled into coalescent units
@@ -429,7 +429,7 @@ tree.draw_svg()
 \end{pythoncode}
 
 The tree produced by this code chunk is shown in
-Figure~\ref{fig-tree-mutations}. Here we have two mutations, shown by the red squares.
+Figure~\ref{fig-tree-mutations}. Here we have two mutations, shown by the red "X"s.
 Mutations occur above a given node in the tree, and all samples beneath
 this node will inherit the mutation. The infinite sites mutations used
 here are simple binary mutations, that is, the ancestral state is 0 and
