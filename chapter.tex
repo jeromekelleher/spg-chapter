@@ -339,7 +339,9 @@ import msprime
 import numpy as np
 N = 1000
 T_mrca = np.zeros(N)
-for j, ts in enumerate(msprime.sim_ancestry(10, num_replicates=N, ploidy=1)):
+for j, ts in enumerate(msprime.sim_ancestry(10,
+                                            num_replicates=N,
+                                            ploidy=1)):
     tree = ts.first()
     T_mrca[j] = tree.time(tree.root)
 print([np.mean(T_mrca), np.var(T_mrca)])
