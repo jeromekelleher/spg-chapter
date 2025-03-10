@@ -249,7 +249,7 @@ using the \texttt{tree.draw()} method.}
 import msprime
 ts = msprime.sim_ancestry(3, ploidy=1)
 tree = ts.first()
-SVG(tree.draw())
+tree.draw_svg()
 \end{pythoncode}
 
 This code chunk illustrates the basic approach required to draw a tree
@@ -422,7 +422,7 @@ ts = msprime.sim_ancestry(3, ploidy=1, random_seed=7)
 ts = msprime.sim_mutations(ts, rate=1, random_seed=7,
                            discrete_genome=False)
 tree = ts.first()
-SVG(tree.draw())
+tree.draw_svg()
 \end{pythoncode}
 
 The tree produced by this code chunk is shown in
