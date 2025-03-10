@@ -318,7 +318,7 @@ tedious time scaling calculations from the user. We discuss these time
 scaling issues in more detail in the next section.
 
 The
-\texttt{simulate} function behaves slightly differently when it is
+\texttt{sim_ancestry} function behaves slightly differently when it is
 called with the \texttt{num\_replicates} argument: rather than returning
 a single tree sequence, we return an \emph{iterator} over the individual
 replicates. This means that we can use the
@@ -541,7 +541,7 @@ theory.
 \subsubsection{Population size}\label{population-models}
 
 In the previous section the only parameters we supplied to
-\texttt{simulate} were the \texttt{sample\_size} and
+\texttt{sim_ancestry} were the \texttt{sample\_size} and
 \texttt{num\_replicates} parameters. This allows us to randomly sample
 trees with a given number of nodes, but, as it leaves the population
 unspecified, has little connection with
@@ -602,10 +602,10 @@ In \msprime, the initial size and growth rate for a particular population
 are specified using the \texttt{PopulationConfiguration} object. A list
 of these objects (describing the different populations; see
 Section~\ref{population-structure}) are then provided to the
-\texttt{simulate}
+\texttt{sim_ancestry}
 function. When providing a list of
-\texttt{PopulationConfiguration\ objects}, the \texttt{Ne} parameter to
-\texttt{simulate} is not required, as the \texttt{initial\_size} of the
+\texttt{PopulationConfiguration\ objects}, the \texttt{population_size} parameter to
+\texttt{sim_ancestry} is not required, as the \texttt{initial\_size} of the
 population configurations performs the same task. For example,
 
 \begin{pythoncode}
@@ -702,7 +702,7 @@ adjacent in a linear fashion.
 
 Demographic events allow us to model more complex histories involving
 changes to the population structure over time and are specified using
-the \texttt{demographic\_events} parameter to \texttt{simulate}. Each
+the \texttt{demographic\_events} parameter to \texttt{sim_ancestry}. Each
 demographic event occurs at a specific time, and the list of events must
 be supplied in the order they occur (backwards in time). There are a
 number of different types of demographic events that msprime supports, for example
@@ -951,7 +951,7 @@ It is also possible to simulate data with recombination rates varying
 across the genome (for example, in recombination hotspots). To do this, we
 first create a \texttt{RecombinationMap} instance that describes the
 properties of the recombination landscape that we wish to simulate. We
-then supply this object to \texttt{simulate} using the
+then supply this object to \texttt{sim_ancestry} using the
 \texttt{recombination\_map} argument. In the following example, we
 simulate 100 samples using the human chromosome 22 recombination map
 from the HapMap project~\citep{international2003international}.
