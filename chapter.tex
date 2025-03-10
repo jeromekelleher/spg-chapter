@@ -524,7 +524,8 @@ replicates = msprime.sim_ancestry(2, population_size=1,
                                   ploidy=1,
                                   discrete_genome=False)
 for j, ts in enumerate(replicates):
-    ts = msprime.sim_mutations(ts, rate=theta/2, discrete_genome=False)
+    ts = msprime.sim_mutations(ts, rate=theta/2,
+                               discrete_genome=False)
     S[j] = ts.num_sites  # Number of segregrating sites.
 
 print(np.mean(S))
@@ -556,18 +557,20 @@ population sizes correspond to older coalescence times:
 def pairwise_T_mrca(population_size):
     N = 10000
     T_mrca = np.zeros(N)
-    for j, ts in enumerate(msprime.sim_ancestry(2, population_size=population_size, num_replicates=N, ploidy=1)):
+    for j, ts in enumerate(msprime.sim_ancestry(2,
+                            population_size=population_size,
+                            num_replicates=N, ploidy=1)):
         tree = ts.first()
         T_mrca[j] = tree.time(tree.root)
     return np.mean(T_mrca)
 
 print(
-    pairwise_T_mrca(0.5), pairwise_T_mrca(10),
+    pairwise_T_mrca(1), pairwise_T_mrca(10),
     pairwise_T_mrca(100))
 
->>> (np.float64(0.4955590279542856),
-     np.float64(10.213697079990956),
-     np.float64(101.4337058054171))
+>>> (np.float64(0.9965894759060011),
+     np.float64(10.036428076042618),
+     np.float64(99.25331259141007))
 
 \end{pythoncode}
 
