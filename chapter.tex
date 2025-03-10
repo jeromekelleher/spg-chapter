@@ -574,9 +574,10 @@ print(
 
 \end{pythoncode}
 
-    Thus, when we specify \(N_e=10\) we get a mean pairwise coalescence time of about
-20 generations, and with \(N_e=100\), the mean coalescence time is about
-200 generations. See \cite{wakely2008coalescent} for details on the biological interpretation of effective population size.
+    Thus, when we specify \(population\_size = 10\) we get a mean pairwise coalescence time of about
+10 generations, and with \(population\_size = 100\), the mean coalescence time is about
+100 generations (when we simulate haploids). See \cite{wakely2008coalescent} for details on the
+biological interpretation of effective population size.
 
 By default, \(N_e = 1\) in \msprime, which is equivalent to measuring
 time in units of \(N_e\) generations. It is very important to note that
@@ -584,11 +585,11 @@ time in units of \(N_e\) generations. It is very important to note that
 which means that all times are scaled by \(2N_e\) (rather than $N_e$ for a
 haploid coalescent). Thus, if we wish to compare the results that are
 given in the literature for a haploid coalescent, then we must set
-\(N_e\) to $1/2$ to compensate. For example, we know that the expected
+\(N_e\) to $1/2$ to compensate, or set \(ploidy = 1\). For example, we know that the expected
 coalescence time for a sample of size 2 is 1, and this is the value we
 obtain from the \texttt{pairwise\_T\_mrca} function when we have
-\(N_e=0.5\). We will usually assume that we are working in haploid
-coalescent time units from here on, and so set \(N_e=0.5\) in most
+\(N_e = 0.5\) or when we set \(N_e = 1\) and \(ploidy = 1\). We will usually assume that we are working in haploid
+coalescent time units from here on, and so set \(N_e = 1\) and \(ploidy = 1\) in most
 examples. However, when running simulations of a specific organism and/or population, it
 is substantially more convenient to use an appropriate estimated value
 for \(N_e\) so that times are directly interpretable.
