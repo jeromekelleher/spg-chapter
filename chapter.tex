@@ -1767,9 +1767,10 @@ n = 20
 theta = 5
 num_replicates = 1000
 simulation = np.zeros(num_replicates)
-replicates = msprime.simulate(
-    n, Ne=0.5, mutation_rate=theta / 2, num_replicates=num_replicates)
+replicates = msprime.sim_ancestry(
+    n, population_size=1, num_replicates=num_replicates, ploidy=1)
 for j, ts in enumerate(replicates):
+    ts = msprime.mutate(ts, rate=theta/2)
     simulation[j] = ts.num_sites  # number of seg. sites
 ks = np.arange(np.max(simulation))
 analytical = np.array([S_dist(n, theta, k) for k in ks])
