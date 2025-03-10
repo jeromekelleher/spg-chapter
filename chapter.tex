@@ -519,12 +519,12 @@ example, the mean number of segregating sites for a sample of two is
 N = 10000
 theta = 5
 S = np.zeros(N)
-replicates = msprime.sim_ancestry(2, population_size=0.5,
+replicates = msprime.sim_ancestry(2, population_size=1,
                                   num_replicates=N,
                                   ploidy=1,
                                   discrete_genome=False)
 for j, ts in enumerate(replicates):
-    ts = msprime.sim_mutations(ts, rate=theta, discrete_genome=False)
+    ts = msprime.sim_mutations(ts, rate=theta/2, discrete_genome=False)
     S[j] = ts.num_sites  # Number of segregrating sites.
 
 print(np.mean(S))
@@ -534,7 +534,7 @@ print(np.mean(S))
 \end{pythoncode}
 
     Note that here we set the mutation rate to \(\theta / 2\) (to cancel out
-the factor of 2 in the definition of \(\theta\)) and \(N_e = 1/2\) (so
+the factor of 2 in the definition of \(\theta\)) and \(ploidy = 1\) (so
 that time is measured in haploid coalescent time units). Such
 factor-of-two gymnastics are unfortunately unavoidable in coalescent
 theory.
