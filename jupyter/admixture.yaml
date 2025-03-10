@@ -1,0 +1,29 @@
+# Comments start with a hash.
+description:
+  Demography with admixture and population split.
+time_units: generations
+defaults:
+  epoch:
+    start_size: 100
+demes:
+  - name: ANC
+    epochs:
+      - end_time: 20
+  - name: A
+    ancestors: [ANC]
+    start_time: 20
+
+
+  - name: B
+    ancestors: [ANC]
+    start_time: 20
+
+
+  - name: ADMIX
+    ancestors: [A, B]
+    proportions: [0.25, 0.75]
+    start_time: 10
+
+
+migrations: []
+

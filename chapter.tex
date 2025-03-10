@@ -785,7 +785,7 @@ be supplied in the order they occur (backwards in time). There are a
 number of different types of demographic event, which we examine in
 turn.
 
-\runinhead{Migration rate change}\label{migration-rate-change}
+\runinhead{Migration rate change}\label{migration-rate-change} \
 
 Migration rate change events allow us to update the migration rate
 matrix at some point in time. We can either update a single cell in the
@@ -820,77 +820,65 @@ afterwards. The lineages then coalesce at time 21.4.
 \includegraphics[width=0.3\textwidth]{images/plot_6.pdf}
 \label{fig-trees-migration-rate-change}}
 % \qquad
-\subfloat[][Mass migration]{
-\includegraphics[width=0.3\textwidth]{images/plot_7.pdf}
-\label{fig-trees-mass-migration}}
+\subfloat[][Population split]{
+\includegraphics[width=0.3\textwidth]{images/population_split.pdf}
+\label{fig-trees-population-split}}
 % \qquad
 \subfloat[][Admixture]{
-\includegraphics[width=0.3\textwidth]{images/plot_8.pdf}
+\includegraphics[width=0.3\textwidth]{images/admixture.pdf}
 \label{fig-trees-admixture}}
-\caption{\label{fig-trees-demographic-events} Example trees produced in models
-with demographic events. Nodes are coloured by population.}
+\caption{\label{fig-trees-demographic-events} Examples of different demographic events
+that could be simulated by \msprime.}
 \end{figure}
 
+\runinhead{Population split}\label{population-split} \
 
-\runinhead{Mass migration}\label{mass-migration}
-
-This class of event allows us to move some proportion of the lineages in
-one deme to another at a particular time. This allows us to model
-population splits and admixture events. Population splits occur
-when (backwards in time) all the lineages in one population migrate to
-another.
+To simulate a scenario where a population is derived from a specific population at a certain time (split event), the
+\texttt{add\_population\_split()} method of a \texttt{Demography} object can be used. This method takes the time of the split event,
+the source population, and the destination population as arguments. The following code chunk demonstrates how to
+simulate population split events:
 
 \begin{pythoncode}
-demography = msprime.Demography.isolated_model([1, 1])
-demography.add_mass_migration(time=15, source=1, dest=0, proportion=1)
-
-ts  = msprime.sim_ancestry(
-    samples={0:3, 1:3},
-    demography=demography,
-    ploidy=1,
-    random_seed=20)
-tree = ts.first()
+demography = msprime.Demography()
+demography.add_population(name="A", initial_size=100)
+demography.add_population(name="B", initial_size=100)
+demography.add_population(name="C", initial_size=100)
+demography.add_population(name="AB", initial_size=100)
+demography.add_population(name="ABC", initial_size=100)
+demography.add_population_split(time=10,
+                                derived=["A", "B"],
+                                ancestral="AB")
+demography.add_population_split(time=20,
+                                derived=["AB", "C"],
+                                ancestral="ABC")
 \end{pythoncode}
 
-The tree produced by this code chunk is shown in
-Figure~\ref{fig-trees-mass-migration}. In this case we also have two isolated
-populations which coalesce down to a single lineage. The population split at
-time 15 (which, forwards in time produced all the individuals in population 1),
-results in this lineage migrating back to population 0, where it coalesces with
-the ancestor of the samples 0, 1 and 2.
+This code chunk encodes the tree in figure~\ref{fig-trees-population-split}.
 
-Admixture events (i.e., where some fraction of the lineages move to a
-different deme) are specified in the same way:
+\runinhead{Admixture}\label{admixture} \
 
-\clearpage
+To simulate a population admixture event, where a population is formed by the admixture of two or more populations,
+the \texttt{Demography.add\_admixture()} method can be used. This method takes the time of the admixture event,
+the source populations, the destination population, and the proportion of each source population as arguments. The
+following code chunk demonstrates how to simulate the population admixture event illustrated in figure~\ref{fig-trees-admixture}:
 \begin{pythoncode}
-demography = msprime.Demography.isolated_model([1, 1])
-
-demography.add_mass_migration(time=0.5, source=0, dest=1, proportion=0.5)
-demography.add_migration_rate_change(time=1.1, rate=0.1)
-
-ts  = msprime.sim_ancestry(
-    samples={0:6, 1:0},
-    demography=demography,
-    ploidy=1,
-    random_seed=5)
-
-tree = ts.first()
+    demography = msprime.Demography()
+    demography.add_population(name="A", initial_size=100)
+    demography.add_population(name="B", initial_size=100)
+    demography.add_population(name="ADMIX", initial_size=100)
+    demography.add_population(name="ANC", initial_size=100)
+    demography.add_admixture(
+        time=10, derived="ADMIX",
+        ancestral=["A", "B"], proportions=[0.25, 0.75])
+    demography.add_population_split(time=20,
+        derived=["A", "B"], ancestral="ANC")
 \end{pythoncode}
 
-The tree produced by this code chunk is shown in
-Figure~\ref{fig-trees-admixture}.
-We begin in this example with 6 lineages sampled in population 0, zero
-samples in population 1, and with no migration between these
-populations. At time 0.5, we specify an admixture event where each of
-the 4 extant lineages (5, 7, 0 and 6) has a probability of 1/2 of moving
-to deme 1. Linages 0 and 6 migrate, and subsequently coalesce into node
-8. Further back in time, at \(t=1.1\), another demographic event occurs,
-changing the migration rate between the demes to 0.1, thereby allowing
-lineages to move between them. Eventually, all lineages end up in deme
-1, where they coalesce into the MRCA at time \(t=6.9\).
+This code chunk simulates an ancestral population, "ANC", that splits into populations A and B at time 20.
+At time 10, populations A and B admix to form population ADMIX. The proportions of the admixture are 0.25 and 0.75,
+respectively.
 
-\runinhead{Population parameter change}\label{population-parameter-change}
+\runinhead{Population parameter change}\label{population-parameter-change}\
 
 This class of event represents a change in the growth rate or
 size of a particular population. Since each population has its own
