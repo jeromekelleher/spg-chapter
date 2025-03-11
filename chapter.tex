@@ -1318,15 +1318,15 @@ ts = msprime.sim_ancestry(
 \end{pythoncode}
 
 In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 500 generations
-and then switch to the \emph{StandardCoalescent} model for the remaining generations. Figure \ref{fig:politomy} shows the tree
+and then switch to the \emph{StandardCoalescent} model for the remaining generations. Figure \ref{fig:polytomy} shows the tree
 simulated by this example; we can see a polytomy (where three lineages coalesce at the same time), which could not occur under the
 \emph{StandardCoalescent} model.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=0.48\textwidth]{images/politomy.pdf}
+\includegraphics[width=0.48\textwidth]{images/polytomy.pdf}
 \end{center}
-\caption{\label{fig:politomy} Tree simulated with a combination of the \emph{DTWF} model and a \emph{StandardCoalescent} model. Politomy is observed.}
+\caption{\label{fig:polytomy} Tree simulated with a combination of the \emph{DTWF} model and a \emph{StandardCoalescent} model. polytomy is observed.}
 \end{figure}
 
 \runinhead{Selective sweeps}\
