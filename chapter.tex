@@ -613,14 +613,15 @@ Section~\ref{population-structure}) are then provided to the
 function. When providing a list of
 \texttt{Demography\ objects}, the \texttt{population\_size} parameter to
 \texttt{sim\_ancestry} is not required, as the \texttt{initial\_size} of the
-population configurations performs the same task. For example,
+\texttt{Demography\ objects} performs the same task. For example,
 
 \begin{pythoncode}
 def pairwise_T_mrca(growth_rate):
     N = 10000
     T_mrca = np.zeros(N)
     demography = msprime.Demography()
-    demography.add_population(initial_size=1, growth_rate=growth_rate)
+    demography.add_population(initial_size=1,
+                              growth_rate=growth_rate)
     replicates = msprime.sim_ancestry(
         samples=2,
         demography=demography,
