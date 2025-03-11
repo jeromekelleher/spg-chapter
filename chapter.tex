@@ -627,7 +627,7 @@ def pairwise_T_mrca(growth_rate):
         demography=demography,
         num_replicates=N,
         ploidy=1,
-        random_seed=100)
+        random_seed=16)
 
     for j, ts in enumerate(replicates):
         tree = ts.first()
@@ -635,17 +635,17 @@ def pairwise_T_mrca(growth_rate):
     return np.mean(T_mrca)
 
 print(
-    pairwise_T_mrca(0.05), pairwise_T_mrca(0),
-    pairwise_T_mrca(-0.05))
->>> (np.float64(0.4775720920641944),
-     np.float64(0.4889637700421355),
-     np.float64(0.5015256860964078))
+    pairwise_T_mrca(0.1), pairwise_T_mrca(0),
+    pairwise_T_mrca(-0.1))
+>>> (np.float64(0.9309511916503714),
+     np.float64(1.0179152621046077),
+     np.float64(1.1532469384850648))
 \end{pythoncode}
 
     Here we simulate the pairwise \(T_{MRCA}\) for positive, zero and
 negative growth rates. When we have a growth rate of zero, we see that
 recover the usual result of 1.0 (as our initial size, and hence \(N_e\),
-is set to \(1/2\)). When the growth rate is positive, we see that the
+is set to 1 haploid individuals). When the growth rate is positive, we see that the
 mean coalescence time is reduced, since the population size is getting
 smaller as we go backwards in time, resulting in an increased rate of
 coalescence. Conversely, when we have a negative growth rate, the
