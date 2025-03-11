@@ -1271,34 +1271,7 @@ at generation 15, even though coalescence was not reached.
 \caption{\label{fig:start-duration} DTWF simulations running for 10 generations starting from genertion 5 until genration 15.}
 \end{figure}
 
-Some models, like \texttt{SweepGenicSelection} are only defined for a specific time interval and do not run until coalescence. The following example shows
-how to simulate the coalescent process using the \emph{SweepGenicSelection}.
-
-\begin{pythoncode}
-sweep = msprime.SweepGenicSelection(
-    position=5,
-    start_frequency=0.1,
-    end_frequency=0.9,
-    s=0.25,
-    dt=1e-6,
-)
-ts = msprime.sim_ancestry(
-    3,
-    sequence_length=10,
-    population_size=100,
-    model=sweep,
-    random_seed=1234)
-\end{pythoncode}
-
-\begin{figure}
-\begin{center}
-\includegraphics[width=0.48\textwidth]{images/sweep.pdf}
-\end{center}
-\caption{\label{fig:SweepGenicSelection} Ancestory simulation using the \emph{SweepGenicSelection} model.}
-\end{figure}
-
-Figure~\ref{fig:SweepGenicSelection} shows the result of the simulation. The simulation stops before coalescence is reached, and without the \texttt{end\_time} or
-\texttt{duration} parameters being specified.
+It is also worth noting that some models, like \texttt{SweepGenicSelection}, are only defined for a specific time interval and do not run until coalescence.
 
 \subsubsection{Multiple models}\label{multiple-models}
 
@@ -1317,7 +1290,7 @@ ts = msprime.sim_ancestry(
 )
 \end{pythoncode}
 
-In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 500 generations
+In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 200 generations
 and then switch to the \emph{StandardCoalescent} model for the remaining generations. Figure \ref{fig:polytomy} shows the tree
 simulated by this example; we can see a polytomy (where three lineages coalesce at the same time), which could not occur under the
 \emph{StandardCoalescent} model.
@@ -1331,9 +1304,9 @@ simulated by this example; we can see a polytomy (where three lineages coalesce 
 
 \runinhead{Selective sweeps}\
 
-We have seen  in section~\ref{model-duration-and-model-completion} how to set up and use a selective sweep model. However, selective sweeps are
-usually simulated using a combination of the selective sweep model that runs for a specific period and a neutral model (usually the standard
-coalescent model) that runs until coalescence. In this example, we will do a simple selective sweep simulation.
+Selective sweeps are usually simulated using a combination of the selective sweep model that runs for a specific
+period and a neutral model (usually the standard coalescent model) that runs until coalescence. In this example,
+we will do a simple selective sweep simulation.
 
 \begin{pythoncode}
 L = 1e6  # Length of simulated region
