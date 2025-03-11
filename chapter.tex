@@ -1201,12 +1201,81 @@ In this example, as shown in Figure~\ref{fig:gene_conversion}, we see the gene c
 \subsection{Ancestry Models}\label{ancestry-models}
 
 By default, \msprime\ simulates the coalescent process based on the Hudson model~\citep{hudson1983properties}, referred to as the
-\emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process under other models, such as
-\emph{SMC models}~\citep{mcvean2005approximating} and the \emph{DiscreteTimeWrightFisher model (DTWF)}~\citep{nelson_accounting_2020}(for a full list of
-supported models please refer to the \msprime\ documentation).
+\emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process using other models.
 
-The model used for the simulation is specified using the \texttt{model} parameter
-in the \texttt{sim\_ancestry} function. Moreover, \msprime\ can combine different models; for example, the DTWF model can be used to simulate the more recent
+For large sample sizes and long recombining genomes, simulating recent human datasets, for example, the Hudson model can be
+less accurate. In such cases, we recommend the use of the \emph{DiscreteTimeWrightFisher}~\citep{nelson2020accounting} model.
+Since this model simulates the coalescence process generation-by-generation, it is less computationally efficient than the
+Hudson model. Therefore, we recommend combining the two models as we will show in section~\ref{multiple-models}.
+
+Sequentially Markov Coalescent (SMC) simulations are supported by \msprime\ in two models: the \emph{SmcApproxCoalescent}~\citep{mcvean2005approximating}
+and the \emph{SmcPrimeApproxCoalescent}~\citep{marjoram2006fast}. These models, however, are only
+recommended to study the SMC approximations, since they are not more accurate or less computationally expensive than the standard coalescent model.
+
+Other models supported by \msprime\ include the \emph{BetaCoalescent}~\citep{schweinsberg03}, the \emph{DiracCoalescent}~\citep{BBE13},
+the \emph{FixedPedigree} (discussed in section~\ref{fixed-pedigree}), and the \emph{SweepGenicSelection} (discussed in section~\ref{multiple-models}).
+
+
+\subsubsection{Single models}\label{single-models}
+
+It is more common to run simulations using a single ancestry model. The model used for the simulation can be specified using the \texttt{model} parameter
+of the \texttt{sim\_ancestry} function. The following example shows how to simulate the coalescent process using the \emph{SmcApproxCoalescent} model.
+
+\begin{pythoncode}
+ts1 = msprime.sim_ancestry(
+    10,
+    sequence_length=10,
+    recombination_rate=0.1,
+    model=msprime.SmcApproxCoalescent(),
+    random_seed=1234)
+\end{pythoncode}
+
+For non-parametric models, a string format of the model name can also be used. For example, the following code block gives exactly the
+same result as the previous one.
+
+\begin{pythoncode}
+ts2 = msprime.sim_ancestry(
+    10,
+    sequence_length=10,
+    recombination_rate=0.1,
+    model="smc",
+    random_seed=1234)
+\end{pythoncode}
+
+The string format is not recommended to be used for multiple models, as specifying the model explicitly allows us to set the model's \texttt{duration}
+parameter.
+
+\subsubsection{Model duration and model completion}\label{model-duration-and-model-completion}
+
+By default, most models in \msprime\ run until coalescence, where a common ancestor of all samples is found. However, the duration of the model can be specified
+using the \texttt{duration} parameter. Moreover, an \texttt{end\_time} parameter can be used to specify the time at which the model should end, even if coalescence
+is not reached. The following example shows how to simulate the coalescent process using the \emph{DiscreteTimeWrightFisher} model for 10 generations.
+
+\begin{pythoncode}
+
+ts = msprime.sim_ancestry(
+    3,
+    population_size=10,
+    start_time=5,
+    model=msprime.DiscreteTimeWrightFisher(duration=10),
+    random_seed=1234)
+\end{pythoncode}
+
+Here, a simulation run for ten generations, starting from generation 5 until generation 15. As shown in Figure~\ref{fig:start-duration}, simulations stopped
+at generation 15, even though coalescence was not reached.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.48\textwidth]{images/model-duration-and-model-completion.pdf}
+\end{center}
+\caption{\label{fig:start-duration} DTWF simulations running for 10 generations starting from genertion 5 until genration 15.}
+\end{figure}
+
+It is also worth noting that some models, like \texttt{SweepGenicSelection}, are only defined for a specific time interval and do not run until coalescence.
+
+\subsubsection{Multiple models}\label{multiple-models}
+
+Different ancestry models can be combined using \msprime. For example, the DTWF model can be used to simulate the more recent
 past, while the faster standard model can be used to simulate the more distant past.
 
 \begin{pythoncode}
@@ -1214,16 +1283,122 @@ ts = msprime.sim_ancestry(
     2,
     population_size=1000,
     model=[
-        msprime.DiscreteTimeWrightFisher(duration=500),
+        msprime.DiscreteTimeWrightFisher(duration=200),
         msprime.StandardCoalescent(),
     ],
-    random_seed=4
+    random_seed=2953
 )
-
 \end{pythoncode}
 
-In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 500 generations,
-and then switch to the \emph{StandardCoalescent} model for the remaining generations.
+In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 200 generations
+and then switch to the \emph{StandardCoalescent} model for the remaining generations. Figure \ref{fig:polytomy} shows the tree
+simulated by this example; we can see a polytomy (where three lineages coalesce at the same time), which could not occur under the
+\emph{StandardCoalescent} model.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.48\textwidth]{images/polytomy.pdf}
+\end{center}
+\caption{\label{fig:polytomy} Tree simulated with a combination of the \emph{DTWF} model and a \emph{StandardCoalescent} model. polytomy is observed.}
+\end{figure}
+
+\runinhead{Selective sweeps}\
+
+Selective sweeps are usually simulated using a combination of the selective sweep model that runs for a specific
+period and a neutral model (usually the standard coalescent model) that runs until coalescence. In this example,
+we will do a simple selective sweep simulation.
+
+\begin{pythoncode}
+L = 1e6  # Length of simulated region
+Ne = 1e3
+sweep_model = msprime.SweepGenicSelection(
+    position=L / 2,  # middle of chrom
+    start_frequency=1.0 / (2 * Ne),
+    end_frequency=1.0 - (1.0 / (2 * Ne)),
+    s=0.25,
+    dt=1e-6,
+)
+\end{pythoncode}
+
+In the above code block, we defined a hard sweep on the middle position of a 1 megabase region. This sweep starts with a frequency of 1/(2*Ne) and
+until it almost reaches fixation. We set the selection coefficient to be 0.25 and dt, which is the small increment of time for stepping through the sweep
+phase of the model, to be 1e-6.
+
+Running the simulation is rather simple, as shown in the following code block:
+
+\begin{pythoncode}
+msprime.sim_ancestry(
+    5,
+    model=[sweep_model,
+           msprime.StandardCoalescent()],
+    population_size=Ne,
+    recombination_rate=1e-7,
+    sequence_length=L,
+)
+\end{pythoncode}
+
+This code block simulates the coalescent process for 5 samples using the selective sweep model and then runs the standard coalescent model until
+coalescence.
+
+\subsubsection{Fixed pedigree}\label{fixed-pedigree}
+
+A pedigree records the ancestry relationships between individuals, which can limit the possibilities of genetic inheritance. It is possible to
+simulate ancestry conditioned on a fixed pedigree using \msprime\ by using the \texttt{FixedPedigree} model. This model limits the transfer of
+genetic material from ancestors to descendants while still allowing for recombination. Recombination events occur randomly; therefore, each of
+the ancestor's diploid genomes is a mixture of the genomes of their parents defined by the pedigree.
+
+Pedigree can be recorded as a string, where each line contains the ID of the node, the ID of the first parent, the ID of the
+second parent, the time of this node, and whether the node is a sample node. The following example visualises a sample pedigree.
+
+\begin{pythoncode}
+import io
+ped_txt = """\
+# id parent0 parent1 time is_sample
+0   5   4   0.0 1
+1   3   3   0.0 1
+2   3   4   0.0 1
+3   7   7   1.0 0
+4   8   8   1.0 0
+5   8   6   1.0 0
+6   9   10  2.0 0
+7   10  10  2.0 0
+8   9   9   2.0 0
+9   11  12  3.0 0
+10  11  12  3.0 0
+11  .   .   4.0 0
+12  .   .   4.0 0
+"""
+pedigree = msprime.parse_pedigree(io.StringIO(ped_txt), sequence_length=100)
+\end{pythoncode}
+
+This pedigree is visualised in Figure~\ref{fig:pedigree}.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.48\textwidth]{images/pedigree.pdf}
+\end{center}
+\caption{\label{fig:pedigree} A visualised pedigree.}
+\end{figure}
+
+In the following code block, this pedigree is used to simulate ancestry using the \texttt{FixedPedigree} model.
+
+\begin{pythoncode}
+ped_ts = msprime.sim_ancestry(
+    initial_state=pedigree, model="fixed_pedigree", random_seed=41,
+    recombination_rate=0.001)
+node_labels = {node.id: f"{node.individual}({node.id})" for node in ped_ts.nodes()}
+\end{pythoncode}
+
+The result of the simulation is shown in Figure~\ref{fig:pedigree-simulation}, where the node labels show the individual ID and the node ID;
+ because of recombination, the result is two trees for the same fixed pedigree.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.75\textwidth]{images/pedigree-simulation.pdf}
+\end{center}
+\caption{\label{fig:pedigree-simulation} Tree visualisation of ancestory simulations conditioned on a fixed pedigree.}
+\end{figure}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
