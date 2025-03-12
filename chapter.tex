@@ -24,6 +24,7 @@
                              % when including figure files
 \usepackage{multicol}        % used for the two-column index
 \usepackage[bottom]{footmisc}% places footnotes at page bottom
+\usepackage{minted}
 
 % see the list of further useful packages
 % in the Reference Guide
@@ -861,7 +862,7 @@ Consider the following Demes model that describes two extant demes A and B, whic
 have a common ancestor X.
 
 \begin{footnotesize}
-\begin{verbatim}
+\begin{minted}{yaml}
 time_units: generations
 defaults:
     {epoch: {start_size: 5000}}
@@ -874,7 +875,7 @@ demes:
 migrations:
     - {source: A, dest: B, rate: 1e-4}
 
-\end{verbatim}
+\end{minted}
 \end{footnotesize}
 
 When visualised using \texttt{demesdraw}~\citep{gower_grahamgowerdemesdraw_2024},
