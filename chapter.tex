@@ -778,89 +778,34 @@ specific times. These different demographic events are dealt with in the next se
 \subsubsection{Demographic events}\label{demographic-events}
 
 Demographic events allow us to model more complex histories involving
-changes to the population structure over time, and are specified using
+changes to the population structure over time and are specified using
 the \texttt{demographic\_events} parameter to \texttt{simulate}. Each
 demographic event occurs at a specific time, and the list of events must
 be supplied in the order they occur (backwards in time). There are a
-number of different types of demographic event, which we examine in
-turn.
-
-\runinhead{Migration rate change}\label{migration-rate-change} \
-
-Migration rate change events allow us to update the migration rate
-matrix at some point in time. We can either update a single cell in the
-matrix or all (non-diagonal) entries at the same time.
-\begin{pythoncode}
-demography = msprime.Demography.isolated_model([1, 1])
-
-demography.add_migration_rate_change(time=20, rate=1, source=0, dest=1)
-ts  = msprime.sim_ancestry(
-    samples={0:2, 1:2},
-    demography=demography,
-    ploidy=1,
-    random_seed=2)
-
-tree = ts.first()
-
-\end{pythoncode}
-
-The tree produced by this code chunk is shown in
-Figure~\ref{fig-trees-migration-rate-change} (in this example and those
-following we have omitted the code required to draw the tree).
-The samples 0 and 1, and 2 and 3 coalesce quickly within their
-own populations. However, because the migration rate between the
-populations is zero these lineages are isolated and would never coalesce
-without some change in demography. The migration rate change event
-happens at time 20, resulting in node 5 migrating to deme 1 soon
-afterwards. The lineages then coalesce at time 21.4.
+number of different types of demographic events that msprime supports, for example,
+\texttt{add\_population\_parameters\_change()} changes the growth rate or size of a population;
+\texttt{add\_population\_split()} simulates a scenario where a population is derived from a
+specific population at a certain time (split event);
+and \texttt{add\_admixture()} simulates a population admixture event, where a population is
+formed by the admixture of two or more populations.
 
 \begin{figure}[t]
 \centering
-\subfloat[][Migration rate change]{
-\includegraphics[width=0.3\textwidth]{images/plot_6.pdf}
-\label{fig-trees-migration-rate-change}}
 % \qquad
-\subfloat[][Population split]{
-\includegraphics[width=0.3\textwidth]{images/population_split.pdf}
-\label{fig-trees-population-split}}
-% \qquad
-\subfloat[][Admixture]{
-\includegraphics[width=0.3\textwidth]{images/admixture.pdf}
-\label{fig-trees-admixture}}
-\caption{\label{fig-trees-demographic-events} Examples of different demographic events
-that could be simulated by \msprime.}
+\includegraphics[width=0.75\textwidth]{images/admixture.pdf}
+\caption{\label{fig:complex-demography} An example of a complex demography that could be
+simulated using \msprime.}
 \end{figure}
 
-\runinhead{Population split}\label{population-split} \
+\runinhead{Complex demography}\label{Complex-demography} \
 
-To simulate a scenario where a population is derived from a specific population at a certain time (split event), the
-\texttt{add\_population\_split()} method of a \texttt{Demography} object can be used. This method takes the time of the split event,
-the source population, and the destination population as arguments. The following code chunk demonstrates how to
-simulate population split events:
+To simulate complex demography, we use the \texttt{Demography} class to specify different
+demographic events that make this complex model. In the following example, we will
+simulate an ancestral population (ANC) that splits into two populations (A and B) at time
+20 generations ago. After 10 generations, populations A and B admix with proportions of 0.25
+and 0.75, respectively, to form population (ADMIX). Figure~\ref{fig:complex-demography}
+illustrates this model.
 
-\begin{pythoncode}
-demography = msprime.Demography()
-demography.add_population(name="A", initial_size=100)
-demography.add_population(name="B", initial_size=100)
-demography.add_population(name="C", initial_size=100)
-demography.add_population(name="AB", initial_size=100)
-demography.add_population(name="ABC", initial_size=100)
-demography.add_population_split(time=10,
-                                derived=["A", "B"],
-                                ancestral="AB")
-demography.add_population_split(time=20,
-                                derived=["AB", "C"],
-                                ancestral="ABC")
-\end{pythoncode}
-
-This code chunk encodes the tree in figure~\ref{fig-trees-population-split}.
-
-\runinhead{Admixture}\label{admixture} \
-
-To simulate a population admixture event, where a population is formed by the admixture of two or more populations,
-the \texttt{Demography.add\_admixture()} method can be used. This method takes the time of the admixture event,
-the source populations, the destination population, and the proportion of each source population as arguments. The
-following code chunk demonstrates how to simulate the population admixture event illustrated in figure~\ref{fig-trees-admixture}:
 \begin{pythoncode}
     demography = msprime.Demography()
     demography.add_population(name="A", initial_size=100)
@@ -874,64 +819,36 @@ following code chunk demonstrates how to simulate the population admixture event
         derived=["A", "B"], ancestral="ANC")
 \end{pythoncode}
 
-This code chunk simulates an ancestral population, "ANC", that splits into populations A and B at time 20.
-At time 10, populations A and B admix to form population ADMIX. The proportions of the admixture are 0.25 and 0.75,
-respectively.
+In this example, we use the \texttt{add\_population()} method to add the four populations
+to the model. The method \texttt{add\_admixture()} is used to specify the admixture event;
+this method takes the time of the event, the name of the derived population, the ancestral
+populations, and the proportions of each ancestral population in the derived population.
+The method \texttt{add\_population\_split()} is used to specify the population split event;
+similar to the \texttt{add\_admixture()} method, it takes the time of the event, the derived
+populations, and the ancestral population.
 
-\runinhead{Population parameter change}\label{population-parameter-change}\
-
-This class of event represents a change in the growth rate or
-size of a particular population. Since each population has its own
-individual size and growth rates, we can change these arbitrarily as we
-go backwards in time. Keeping track of the actual sizes of different
-populations can be a little challenging, and for this reason \msprime\
-provides a \texttt{DemographyDebugger} class.
-
-To illustrate this, we consider a very simple example in which we have a
-single population experiencing a phase of exponential growth from 750
-to 100 generations ago. The size of the population 750 generations ago
-was 2000, and it grew to 20,000 over the next 650 generations. The size
-of the population has been stable at this value for the past 100
-generations. We encode this model as follows:
-
+Simulating this model using the \texttt{sim\_ancestory} function is straightforward:
 \begin{pythoncode}
-N1 = 20000  # Population size at present
-N2 = 2000   # Population size at start (forwards in time) of exponential growth.
-T1 = 100    # End of exponential growth period (forwards in time)
-T2 = 750    # Start of exponential growth period (forwards in time)
-# Calculate growth rate; solve N2 = N1 * exp(-alpha * (T2 - T1))
-growth_rate = -np.log(N2 / N1) / (T2 - T1)
-demography = msprime.Demography.isolated_model([N1])
-demography.add_population_parameters_change(time=T1, growth_rate=growth_rate)
-demography.add_population_parameters_change(time=T2, growth_rate=0)
-
-dp = demography.debug()
-dp.print_history()
+ts = msprime.sim_ancestry(
+    samples={"A":1, "B":1, "ADMIX":1},
+    demography=demography,
+    )
 \end{pythoncode}
 
-Gives the output in figure~\ref{fig:DemographyDebugger}:
+\runinhead{Demography debugger}\label{demography-debugger}\
+
+Keeping track of complex models can be challenging, and \msprime, for this reason,
+provides the \texttt{DemographyDebugger} class. This class provides a visual summary of
+the demographic history by splitting time into epochs and displaying the demographic
+events that take place in each epoch. In the previous example, to use the \texttt{DemographyDebugger} class,
+we simply use \texttt{demography.debug()}, which displays the demographic history in an \texttt{HTML}
+format. Figure~\ref{fig:DemographyDebugger} shows the \texttt{demography.debug()} output for the example in section~\ref{Complex-demography}.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{images/DemographyDebugger.pdf}
-\caption{\label{fig:DemographyDebugger}A visualised \texttt{DemographyDebugger} output.}
+\includegraphics[width=\textwidth]{images/demography_debugger.pdf}
+\caption{\label{fig:DemographyDebugger}The \texttt{DemographyDebugger} output for a complex demography.}
 \end{figure}
-
-    After we set up our model, we use the \texttt{DemographyDebugger} to
-check our calculations. We see that time has been split into three
-``epochs''. From the present until 100 generations ago, the
-population size is constant at 20,000. Then, we have a demographic event
-that changes the growth rate to 0.0035, which applies over the next
-epoch (from 100 to 750 generations ago). Over this time, the population
-grows from 2000 to 20,000 (note that the ``start'' and
-``end'' of each epoch is looking \emph{backwards} in time, as we consider
-epochs starting from the present and moving backwards). At generation
-750, another event occurs, setting the growth rate for the population to
-0. Then, the population size is constant at 20,000 from generation 750
-until the indefinite past.
-
-A more complex example involving a three population out-of-Africa human
-model is available in the online documentation.
 
 \subsubsection{Using Demes standard format}\label{using-demes-standard-format}
 
