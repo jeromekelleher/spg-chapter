@@ -24,6 +24,7 @@
                              % when including figure files
 \usepackage{multicol}        % used for the two-column index
 \usepackage[bottom]{footmisc}% places footnotes at page bottom
+\usepackage{minted}
 
 % see the list of further useful packages
 % in the Reference Guide
@@ -611,8 +612,8 @@ population configurations performs the same task. For example,
 def pairwise_T_mrca(growth_rate):
     N = 10000
     T_mrca = np.zeros(N)
-    demography = msprime.Demography.isolated_model(initial_size=[0.5],
-                                                   growth_rate=[growth_rate])
+    demography = msprime.Demography()
+    demography.add_population(initial_size=1, growth_rate=growth_rate)
     replicates = msprime.sim_ancestry(
         samples=2,
         demography=demography,
@@ -650,300 +651,127 @@ approaches to inference from real data.)
 
 
 \subsubsection{Population structure}\label{population-structure}
+To facilitate population modelling, \msprime\ implements
+predefined theoretical models. The simplest model is the isolated model,
+where populations are simulated in isolation, i.e., without migration.
 
-Following \ms~\citep{hudson2002generating}, \msprime\ supports a
-discrete-deme model of population structure in which
-\(d\) panmictic populations exchange migrants according to the rates
-defined in an \(d \times d\) matrix. This approach is very flexible,
-allowing us to simulate island models (in which all populations exchange
-migrants at a fixed rate), one and two dimensional stepping stone models
-(where migrants only move to adjacent demes) and other more complex
-migration patterns. This population structure is declared in \msprime\ via the
-\texttt{population\_configurations} and \texttt{migration\_matrix}
-parameters in the \texttt{simulate} function. The list of population
-configurations defines the populations; each element of this list must
-be a \texttt{PopulationConfiguration} instance (each population has
-independent initial population size and growth rate parameters). The
-migration matrix is a NumPy array (or list of lists) of per-generation
-migration rates; \(m[j,k]\) defines the fraction of population \(j\)
-that consists of migrants from population \(k\) in each generation. (Note that when running simulations on the coalescence scale, i.e.\ setting \(N_e=1/2\), this is equivalent to the number of migrants per deme and generation \(M[j,k]=2 N_e m[j,k]\).)
+\runinhead{Isolated model}\label{isolated-model} \
 
+The method \texttt{msprime.Demography.isolated\_model()} is used to
+simulate populations in isolation. The \texttt{initial\_size} parameter
+specifies the initial population size, and the \texttt{growth\_rate}
+parameter specifies the growth rate of the population. Both parameters
+are lists, where each element corresponds to a population. In the
+following line, we set up a simple model of two populations in isolation:
 \begin{pythoncode}
-demography =  msprime.Demography.isolated_model([1, 1])
-demography.set_migration_rate(source=0, dest=1, rate=0.1)
-
-ts  = msprime.sim_ancestry(
-    samples={0:2, 1:2}, ploidy=1,
-    random_seed=2, demography=demography)
-tree = ts.first()
-colour_map = {0:"red", 1:"blue"}
-node_colours = {u: colour_map[tree.population(u)] for u in tree.nodes()}
-SVG(tree.draw(node_colours=node_colours))
+    demography =  msprime.Demography.isolated_model([1, 1],
+                                        growth_rate=[0.01, 0.02])
+\end{pythoncode}
+Although the two populations are simulated without migration, we can
+specify migration rates between populations using the \texttt{set\_migration\_rate()}
+method. This method takes the source and destination populations and the migration rate as arguments.
+To add migration between populations 0 and 1, we use the following line:
+\begin{pythoncode}
+    demography.set_migration_rate(source=0, dest=1, rate=0.1)
 \end{pythoncode}
 
-We create our model by first making a list of two
-\texttt{PopulationConfiguration} objects. For convenience here, we use
-the \texttt{sample\_size} argument to these objects to state that we
-wish to have two samples from each population. This results in samples
-being allocated sequentially to the populations when \texttt{simulate}
-is called: 0 and 1 are placed in population 0, and samples 2 and 3 are
-placed in population 1. We then declare our migration matrix, which is
-asymmetric in this example. Because ${M{[}0,1{]} = 0.1}$ and
-${M{[}1, 0{]} = 0}$, forwards in time, individuals can migrate
-from population 1 to population 0 but not vice-versa. This is illustrated in
-Figure~\ref{fig-trees-migration-asymmetric} which shows the tree
-produced by this simulation. Each node has been coloured by its
-population (red is population 0 and blue population 1). Thus, the leaf
-nodes 0 and 1 are both from population 0, and 2 and 3 are both from
-population 2 (as explained above). As we go up the tree, the first event
-that occurs is 2 and 3 coalescing in population 1, creating node 4.
-After this, 4 coalesces with with node 0, which has at some point before
-this migrated into deme 1, creating node 5. Node 1 also migrates into
-deme 1, where it coalesces with 5. Because migration is asymmetric here,
-the MRCA of the four samples \emph{must} occur
-within deme 1.
+\runinhead{Island model}\label{island-model} \
 
-\begin{figure}[t]
-\centering
-\subfloat[][Two populations with asymmetric migration]{
-\includegraphics[width=0.3\textwidth]{images/plot_3.pdf}
-\label{fig-trees-migration-asymmetric}}
-\qquad\qquad
-\subfloat[][Three population island model]{
-\includegraphics[width=0.3\textwidth]{images/plot_4.pdf}
-\label{fig-trees-island-model}}
-\caption{\label{fig-trees-migration} Example trees produced in models with multiple
-populations and migration. Nodes are coloured by population.}
-\end{figure}
-
-The exact history of migration events is available if we use the
-\texttt{record\_migrations} option. In the next example, we set up a
-symmetric island model and track every migration event:
-
+When the migration rate is the same between simulated populations, we don't
+need to specify the migration rate between each pair of populations. Instead,
+we can use the \texttt{island\_model()}. The \texttt{Demography.island\_model()} accepts
+the same parameters as the \texttt{Demography.isolated\_model()} method in
+addition to the \texttt{migration\_rate} parameter. The following line sets up an
+\texttt{island\_model()} with three populations:
 \begin{pythoncode}
-demography =  msprime.Demography.island_model([1, 1, 1], migration_rate=1)
-
-ts  = msprime.sim_ancestry(
-    samples={0:3, 1:1, 2:1},
-    demography=demography,
-    record_migrations=True,
-    ploidy=1,
-    random_seed=101)
-tree = ts.first()
-colour_map = {0:"red", 1:"blue", 2: "green"}
-node_colours = {u: colour_map[tree.population(u)] for u in tree.nodes()}
-SVG(tree.draw(node_colours=node_colours))
+    demography =  msprime.Demography.island_model([1, 1, 1],
+                                             migration_rate=0.1)
 \end{pythoncode}
 
-Figure~\ref{fig-trees-island-model} shows the tree produced by this code
-chunk. Here we sample three nodes from population 0, but because there is a lot of migration, the locations of coalescences are quite random. For
-example, the first coalescence occurs in deme 2 (green), after node 0
-has migrated in. To see the details of these migration events, we can
-examine the ``migration records'' that are stored by \msprime. (These are
-not stored by default, as they may consume a substantial amount of memory.
-The \texttt{record\_migrations} parameter must be
-supplied to \texttt{simulate} to turn on this feature.) Migration
-records store complete information about the time, source and
-destination demes and the genomic interval in question. Here we are
-interested in the total number of migration events experienced by each node:
+This single line is equivalent to setting up an isolated model with three populations
+and setting up migration rate of 0.1 between each pair of populations.
 
-\begin{pythoncode}
-node_count = np.zeros(ts.num_nodes)
-for migration in ts.migrations():
-    node_count[migration.node] += 1
-plt.bar(np.arange(ts.num_nodes), node_count)
-plt.xlabel("Node ID")
-plt.ylabel("Number of migrations");
-\end{pythoncode}
+\runinhead{Stepping stone model}\label{stepping-stone-model} \
 
-\begin{figure}[t]
-\begin{center}
-\includegraphics[width=\textwidth]{images/plot_5.pdf}
-\end{center}
-\caption{\label{fig:migration_counts} Number of migration events for
-each tree node in a simulation with migration.}
-\end{figure}
-
-This code produces the plot in Figure~\ref{fig:migration_counts}.
-We can see that node 0 experienced very few migration events before it
-ended up in deme 2, where it coalesced with 4 (which never migrated).
-Node 2, on the other hand migrated 30 times before it finally coalesced
-with 7 in deme 0. Note that there are many more migrations events than
-nodes here, implying that most migration events are not identifiable
-from a genealogy in real data~\citep{sousa2011nonidentifiability}.
-
-Other forms of migration are also possible between specific demes at
-specific times. These different demographic events are dealt with in the next section.
+Similar to the \texttt{island\_model()}, the \texttt{stepping\_stone\_model()}
+accepts a single migration rate parameter. However, the stepping stone model simulates
+migration between adjacent populations exclusively. This model considers populations to be
+adjacent in a linear fashion.
 
 \subsubsection{Demographic events}\label{demographic-events}
 
 Demographic events allow us to model more complex histories involving
-changes to the population structure over time, and are specified using
+changes to the population structure over time and are specified using
 the \texttt{demographic\_events} parameter to \texttt{simulate}. Each
 demographic event occurs at a specific time, and the list of events must
 be supplied in the order they occur (backwards in time). There are a
-number of different types of demographic event, which we examine in
-turn.
-
-\runinhead{Migration rate change}\label{migration-rate-change}
-
-Migration rate change events allow us to update the migration rate
-matrix at some point in time. We can either update a single cell in the
-matrix or all (non-diagonal) entries at the same time.
-\begin{pythoncode}
-demography = msprime.Demography.isolated_model([1, 1])
-
-demography.add_migration_rate_change(time=20, rate=1, source=0, dest=1)
-ts  = msprime.sim_ancestry(
-    samples={0:2, 1:2},
-    demography=demography,
-    ploidy=1,
-    random_seed=2)
-
-tree = ts.first()
-
-\end{pythoncode}
-
-The tree produced by this code chunk is shown in
-Figure~\ref{fig-trees-migration-rate-change} (in this example and those
-following we have omitted the code required to draw the tree).
-The samples 0 and 1, and 2 and 3 coalesce quickly within their
-own populations. However, because the migration rate between the
-populations is zero these lineages are isolated and would never coalesce
-without some change in demography. The migration rate change event
-happens at time 20, resulting in node 5 migrating to deme 1 soon
-afterwards. The lineages then coalesce at time 21.4.
+number of different types of demographic events that msprime supports, for example
+\texttt{add\_population\_parameters\_change()} changes the growth rate or size of a population;
+\texttt{add\_population\_split()} simulates a scenario where a population is derived from a
+specific population at a certain time (split event);
+and \texttt{add\_admixture()} simulates a population admixture event, where a population is
+formed by the admixture of two or more populations.
 
 \begin{figure}[t]
 \centering
-\subfloat[][Migration rate change]{
-\includegraphics[width=0.3\textwidth]{images/plot_6.pdf}
-\label{fig-trees-migration-rate-change}}
 % \qquad
-\subfloat[][Mass migration]{
-\includegraphics[width=0.3\textwidth]{images/plot_7.pdf}
-\label{fig-trees-mass-migration}}
-% \qquad
-\subfloat[][Admixture]{
-\includegraphics[width=0.3\textwidth]{images/plot_8.pdf}
-\label{fig-trees-admixture}}
-\caption{\label{fig-trees-demographic-events} Example trees produced in models
-with demographic events. Nodes are coloured by population.}
+\includegraphics[width=0.75\textwidth]{images/admixture.pdf}
+\caption{\label{fig:complex-demography} An example of a complex demography that could be
+simulated using \msprime.}
 \end{figure}
 
+\runinhead{Complex demography}\label{Complex-demography} \
 
-\runinhead{Mass migration}\label{mass-migration}
-
-This class of event allows us to move some proportion of the lineages in
-one deme to another at a particular time. This allows us to model
-population splits and admixture events. Population splits occur
-when (backwards in time) all the lineages in one population migrate to
-another.
+To simulate complex demography, we use the \texttt{Demography} class to specify different
+demographic events that make this complex model. In the following example, we will
+simulate an ancestral population (ANC) that splits into two populations (A and B) at time
+20 generations ago. After 10 generations, populations A and B admix with proportions of 0.25
+and 0.75, respectively, to form population (ADMIX). Figure~\ref{fig:complex-demography}
+illustrates this model.
 
 \begin{pythoncode}
-demography = msprime.Demography.isolated_model([1, 1])
-demography.add_mass_migration(time=15, source=1, dest=0, proportion=1)
+    demography = msprime.Demography()
+    demography.add_population(name="A", initial_size=100)
+    demography.add_population(name="B", initial_size=100)
+    demography.add_population(name="ADMIX", initial_size=100)
+    demography.add_population(name="ANC", initial_size=100)
+    demography.add_admixture(
+        time=10, derived="ADMIX",
+        ancestral=["A", "B"], proportions=[0.25, 0.75])
+    demography.add_population_split(time=20,
+        derived=["A", "B"], ancestral="ANC")
+\end{pythoncode}
 
-ts  = msprime.sim_ancestry(
-    samples={0:3, 1:3},
+In this example, we use the \texttt{add\_population()} method to add the four populations
+to the model. The method \texttt{add\_admixture()} is used to specify the admixture event;
+this method takes the time of the event, the name of the derived population, the ancestral
+populations, and the proportions of each ancestral population in the derived population.
+The method \texttt{add\_population\_split()} is used to specify the population split event;
+similar to the \texttt{add\_admixture()} method, it takes the time of the event, the derived
+populations, and the ancestral population.
+
+Simulating this model using the \texttt{sim\_ancestory} function is straightforward:
+\begin{pythoncode}
+ts = msprime.sim_ancestry(
+    samples={"A":1, "B":1, "ADMIX":1},
     demography=demography,
-    ploidy=1,
-    random_seed=20)
-tree = ts.first()
+    )
 \end{pythoncode}
 
-The tree produced by this code chunk is shown in
-Figure~\ref{fig-trees-mass-migration}. In this case we also have two isolated
-populations which coalesce down to a single lineage. The population split at
-time 15 (which, forwards in time produced all the individuals in population 1),
-results in this lineage migrating back to population 0, where it coalesces with
-the ancestor of the samples 0, 1 and 2.
+\runinhead{Demography debugger}\label{demography-debugger}\
 
-Admixture events (i.e., where some fraction of the lineages move to a
-different deme) are specified in the same way:
-
-\clearpage
-\begin{pythoncode}
-demography = msprime.Demography.isolated_model([1, 1])
-
-demography.add_mass_migration(time=0.5, source=0, dest=1, proportion=0.5)
-demography.add_migration_rate_change(time=1.1, rate=0.1)
-
-ts  = msprime.sim_ancestry(
-    samples={0:6, 1:0},
-    demography=demography,
-    ploidy=1,
-    random_seed=5)
-
-tree = ts.first()
-\end{pythoncode}
-
-The tree produced by this code chunk is shown in
-Figure~\ref{fig-trees-admixture}.
-We begin in this example with 6 lineages sampled in population 0, zero
-samples in population 1, and with no migration between these
-populations. At time 0.5, we specify an admixture event where each of
-the 4 extant lineages (5, 7, 0 and 6) has a probability of 1/2 of moving
-to deme 1. Linages 0 and 6 migrate, and subsequently coalesce into node
-8. Further back in time, at \(t=1.1\), another demographic event occurs,
-changing the migration rate between the demes to 0.1, thereby allowing
-lineages to move between them. Eventually, all lineages end up in deme
-1, where they coalesce into the MRCA at time \(t=6.9\).
-
-\runinhead{Population parameter change}\label{population-parameter-change}
-
-This class of event represents a change in the growth rate or
-size of a particular population. Since each population has its own
-individual size and growth rates, we can change these arbitrarily as we
-go backwards in time. Keeping track of the actual sizes of different
-populations can be a little challenging, and for this reason \msprime\
-provides a \texttt{DemographyDebugger} class.
-
-To illustrate this, we consider a very simple example in which we have a
-single population experiencing a phase of exponential growth from 750
-to 100 generations ago. The size of the population 750 generations ago
-was 2000, and it grew to 20,000 over the next 650 generations. The size
-of the population has been stable at this value for the past 100
-generations. We encode this model as follows:
-
-\begin{pythoncode}
-N1 = 20000  # Population size at present
-N2 = 2000   # Population size at start (forwards in time) of exponential growth.
-T1 = 100    # End of exponential growth period (forwards in time)
-T2 = 750    # Start of exponential growth period (forwards in time)
-# Calculate growth rate; solve N2 = N1 * exp(-alpha * (T2 - T1))
-growth_rate = -np.log(N2 / N1) / (T2 - T1)
-demography = msprime.Demography.isolated_model([N1])
-demography.add_population_parameters_change(time=T1, growth_rate=growth_rate)
-demography.add_population_parameters_change(time=T2, growth_rate=0)
-
-dp = demography.debug()
-dp.print_history()
-\end{pythoncode}
-
-Gives the output in figure~\ref{fig:DemographyDebugger}:
+Keeping track of complex models can be challenging, and \msprime, for this reason,
+provides the \texttt{DemographyDebugger} class. This class provides a visual summary of
+the demographic history by splitting time into epochs and displaying the demographic
+events that take place in each epoch. In the previous example, to use the \texttt{DemographyDebugger} class,
+we simply use \texttt{demography.debug()}, which displays the demographic history in an \texttt{HTML}
+format. Figure~\ref{fig:DemographyDebugger} shows the \texttt{demography.debug()} output for the example in section~\ref{Complex-demography}.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{images/DemographyDebugger.pdf}
-\caption{\label{fig:DemographyDebugger}A visualised \texttt{DemographyDebugger} output.}
+\includegraphics[width=\textwidth]{images/demography_debugger.pdf}
+\caption{\label{fig:DemographyDebugger}The \texttt{DemographyDebugger} output for a complex demography.}
 \end{figure}
-
-    After we set up our model, we use the \texttt{DemographyDebugger} to
-check our calculations. We see that time has been split into three
-``epochs''. From the present until 100 generations ago, the
-population size is constant at 20,000. Then, we have a demographic event
-that changes the growth rate to 0.0035, which applies over the next
-epoch (from 100 to 750 generations ago). Over this time, the population
-grows from 2000 to 20,000 (note that the ``start'' and
-``end'' of each epoch is looking \emph{backwards} in time, as we consider
-epochs starting from the present and moving backwards). At generation
-750, another event occurs, setting the growth rate for the population to
-0. Then, the population size is constant at 20,000 from generation 750
-until the indefinite past.
-
-A more complex example involving a three population out-of-Africa human
-model is available in the online documentation.
 
 \subsubsection{Using Demes standard format}\label{using-demes-standard-format}
 
@@ -956,7 +784,7 @@ Consider the following Demes model that describes two extant demes A and B, whic
 have a common ancestor X.
 
 \begin{footnotesize}
-\begin{verbatim}
+\begin{minted}{yaml}
 time_units: generations
 defaults:
     {epoch: {start_size: 5000}}
@@ -969,7 +797,7 @@ demes:
 migrations:
     - {source: A, dest: B, rate: 1e-4}
 
-\end{verbatim}
+\end{minted}
 \end{footnotesize}
 
 When visualised using \texttt{demesdraw}~\citep{gower_grahamgowerdemesdraw_2024},
