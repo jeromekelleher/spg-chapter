@@ -551,7 +551,9 @@ trees with a given number of nodes, but, as it leaves the population
 unspecified, has little connection with
 biological reality. The most fundamental population parameter is the \emph{effective population size}, or
 \(N_e\). This parameter simply rescales time; larger effective
-population sizes correspond to older coalescence times:
+population sizes correspond to older coalescence times. The following code chunk
+calculates a mean pairwise coalescence time for a sample of size 2 for different
+population sizes:
 
 \begin{pythoncode}
 def pairwise_T_mrca(population_size):
