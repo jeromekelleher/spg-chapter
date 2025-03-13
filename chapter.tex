@@ -712,9 +712,9 @@ adjacent in a linear fashion.
 
 Demographic events allow us to model more complex histories involving
 changes to the population structure over time and are specified using
-the \texttt{demographic\_events} parameter to \texttt{sim\_ancestry}. Each
-demographic event occurs at a specific time, and the list of events must
-be supplied in the order they occur (backwards in time). There are a
+a \texttt{demography} object. Each
+demographic event occurs at a specific time, and we recommend specifying them
+in the order they occur (backwards in time). There are a
 number of different types of demographic events that msprime supports, for example
 \texttt{add\_population\_parameters\_change()} changes the growth rate or size of a population;
 \texttt{add\_population\_split()} simulates a scenario where a population is derived from a
