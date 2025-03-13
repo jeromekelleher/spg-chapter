@@ -1297,10 +1297,11 @@ def ibd_segments(ts, a, b):
     segment_lengths.append(ts.sequence_length - last_left)
     return np.array(segment_lengths) / ts.sequence_length
 
-sns.histplot(ibd_segments(ts, 0, 1), label="Within population", kde=True,
-    stat="density")
-sns.histplot(ibd_segments(ts, 0, 10**5), label="Between populations", kde=True,
-    stat="density")
+sns.histplot(ibd_segments(ts, 0, 1), label="Within population",
+             kde=True, stat="density")
+sns.histplot(ibd_segments(ts, 0, 10**5),
+             label="Between populations",
+             kde=True, stat="density")
 plt.xlim(-0.0001, 0.003)
 plt.legend()
 plt.ylabel("Count")
@@ -1493,7 +1494,8 @@ difficulty.
 threshold = 0.1
 num_rare = 0
 for variant in ts.variants():
-    # Will work for any biallelic sites; back/recurrent mutations OK
+    # Will work for any biallelic sites;
+    # back/recurrent mutations OK
     assert len(variant.alleles) == 2
     if np.sum(variant.genotypes) / ts.num_samples < threshold:
         num_rare += 1
@@ -1517,12 +1519,12 @@ efficient, requiring less than 2 seconds to compute the same value.
 %%time
 num_rare = 0
 for tree in ts.trees():
-    for site in tree.sites():
-        # Only works for infinite sites mutations.
-        assert len(site.mutations) == 1
-        mutation = site.mutations[0]
-        if tree.num_samples(mutation.node) / ts.num_samples < threshold:
-            num_rare += 1
+  for site in tree.sites():
+    # Only works for infinite sites mutations.
+    assert len(site.mutations) == 1
+    mutation = site.mutations[0]
+    if tree.num_samples(mutation.node)/ts.num_samples<threshold:
+        num_rare += 1
 print(num_rare)
 >>> 83757
 CPU times: user 1.75 s, sys: 36 ms, total: 1.79 s
@@ -1541,15 +1543,15 @@ time.
 
 \begin{pythoncode}
 def get_total_branch_length(ts):
-    current = 0
-    total_branch_length = np.zeros(ts.num_trees)
-    for j, (_, edges_out, edges_in) in enumerate(ts.edge_diffs()):
-        for e in edges_out:
-            current -= ts.node(e.parent).time - ts.node(e.child).time
-        for e in edges_in:
-            current += ts.node(e.parent).time - ts.node(e.child).time
-        total_branch_length[j] = current
-    return total_branch_length
+  current = 0
+  total_branch_length = np.zeros(ts.num_trees)
+  for j, (_, edges_out, edges_in) in enumerate(ts.edge_diffs()):
+    for e in edges_out:
+        current -= ts.node(e.parent).time-ts.node(e.child).time
+    for e in edges_in:
+        current += ts.node(e.parent).time-ts.node(e.child).time
+    total_branch_length[j] = current
+  return total_branch_length
 \end{pythoncode}
 
     This function returns the total branch length value for each tree in the
@@ -1634,7 +1636,9 @@ n_col = np.zeros(ns.shape[0] * num_reps)
 T_total_col = np.zeros(ns.shape[0] * num_reps)
 row = 0
 for n in ns:
-    for ts in msprime.sim_ancestry(n, population_size=1, num_replicates=num_reps, ploidy=1):
+    for ts in msprime.sim_ancestry(n, population_size=1,
+                                   num_replicates=num_reps,
+                                   ploidy=1):
 
         tree = ts.first()
         n_col[row] = n
@@ -1837,13 +1841,16 @@ rho_col = np.zeros(N)
 s_col = np.zeros(N)
 row = 0
 for rho in rhos:
-    replicates = msprime.sim_ancestry(1, num_replicates=num_replicates,
-                                        recombination_rate=rho/2, population_size=0.5,
-                                        discrete_genome=False, sequence_length=1
-                                     )
+    replicates = msprime.sim_ancestry(1,
+                         num_replicates=num_replicates,
+                         recombination_rate=rho/2,
+                         population_size=0.5,
+                         discrete_genome=False, sequence_length=1
+                         )
 
     for ts in replicates:
-        ts = msprime.sim_mutations(ts, rate=theta/2, discrete_genome=False)
+        ts = msprime.sim_mutations(ts, rate=theta/2,
+                                   discrete_genome=False)
 
         rho_col[row] = rho
         s_col[row] = ts.num_sites
@@ -1867,7 +1874,7 @@ def f2(rho):
     return (rho + 18) / (rho**2 + 13 * rho + 18)
 
 def pairwise_S_var(theta, rho):
-    integral = scipy.integrate.quad(lambda x: (rho - x) * f2(x), 0, rho)
+    integral = scipy.integrate.quad(lambda x: (rho-x)*f2(x),0,rho)
     return theta + 2 * theta**2 * integral[0] / rho**2
 
 group = df.groupby("rho")
@@ -1927,18 +1934,24 @@ true_m = 0.3
 num_loci = 200
 
 def run_sims(m, num_loci=1, theta=0):
-    demography = msprime.Demography.island_model([1, 1], migration_rate=m)
+    demography = msprime.Demography.island_model([1, 1],
+                                                migration_rate=m)
     replicates = msprime.sim_ancestry({0: nsamp, 1:nsamp},
                                       demography=demography,
-                                      num_replicates=num_loci, ploidy=1,
-                                      discrete_genome=False, sequence_length=1)
+                                      num_replicates=num_loci,
+                                      ploidy=1,
+                                      discrete_genome=False,
+                                      sequence_length=1)
     for ts in replicates:
-        yield msprime.sim_mutations(ts, rate=theta, discrete_genome=False)
+        yield msprime.sim_mutations(ts, rate=theta,
+                                    discrete_genome=False)
 
 def get_joint_site_frequency_spectra(reps):
     data = np.zeros((num_loci, nsamp + 1, nsamp + 1))
     for rep_index, ts in enumerate(reps):
-        data[rep_index] = ts.allele_frequency_spectrum([[0, 1], [2,3]], polarised=True)
+        data[rep_index] = ts.allele_frequency_spectrum([[0, 1],
+                                                        [2,3]],
+                                                polarised=True)
 
     return data
 
@@ -1948,7 +1961,7 @@ truth = get_joint_site_frequency_spectra(
 
     The \texttt{run\_sims} function returns an iterator with the complete
 tree sequence and mutational information of each locus. We use the
-function \texttt{get\_joint\_site\_frequency\_spectra} to summarize the
+function \texttt{get\_joint\_site} \texttt{\_frequency\_spectra} to summarize the
 polymorphism information as the joint site frequency spectrum (jSFS) of
 each locus, i.e. the blockwise site frequency spectrum
 or bSFS \cite[sensu][]{Lohse2016}.
@@ -2002,16 +2015,21 @@ num_prior_draws = 10000
 prior_m = np.random.exponential(0.1, num_prior_draws)
 
 def approx_jSFS(m):
-    reps = run_sims(m, num_loci=num_reps)
-    B = np.zeros((num_reps, nsamp + 1, nsamp + 1))
-    for rep_index, ts in enumerate(reps):
-        B[rep_index] = ts.allele_frequency_spectrum([[0,1],[2,3]], mode='branch', polarised=True, span_normalise=False)
-    data = np.mean(B, axis=0)
-    return data / np.sum(data)
+  reps = run_sims(m, num_loci=num_reps)
+  B = np.zeros((num_reps, nsamp + 1, nsamp + 1))
+  for rep_index, ts in enumerate(reps):
+      B[rep_index] = ts.allele_frequency_spectrum([[0,1],[2,3]],
+                                          mode='branch',
+                                          polarised=True,
+                                          span_normalise=False)
+  data = np.mean(B, axis=0)
+  return data / np.sum(data)
 
 with cf.ProcessPoolExecutor(max_workers=4) as executor:
-    futures = [executor.submit(approx_jSFS, prior) for prior in prior_m]
-    prior_jSFS = np.array([f.result() for f in cf.as_completed(futures)])
+  futures = [executor.submit(approx_jSFS, prior)
+             for prior in prior_m]
+  prior_jSFS = np.array([f.result()
+                         for f in cf.as_completed(futures)])
 
 print(prior_jSFS[0])
 \end{pythoncode}
@@ -2023,11 +2041,11 @@ computations over the available CPU cores.
 
 Once this has completed, we compute the Euclidean distance between the estimated branch-jSFS for each
 draw from the prior (\texttt{prior\_jSFS}) and the site-jSFS in the (pseudo)observed
-data (\texttt{truth\_mean}), as both values should be similar~\citep{ralph_efficiently_2020}.:
+data (\texttt{truth\_mean}), as both values should be similar~\citep{ralph_efficiently_2020}.
 \begin{pythoncode}
 distances = np.zeros(num_prior_draws)
 for j in range(num_prior_draws):
-    distances[j] = np.sqrt(np.sum((prior_jSFS[j] - truth_mean)**2))
+    distances[j] = np.sqrt(np.sum((prior_jSFS[j]-truth_mean)**2))
 \end{pythoncode}
 
 \begin{figure}[t]
@@ -2090,7 +2108,9 @@ are:
 \begin{pythoncode}
 print([mean_m, ci_m])
 
->>> [np.float64(0.2706689107323255), (np.float64(0.1680558635307605), np.float64(0.40359485279569585))]
+>>> [np.float64(0.2706689107323255),
+    (np.float64(0.1680558635307605),
+     np.float64(0.40359485279569585))]
 \end{pythoncode}
 
 
