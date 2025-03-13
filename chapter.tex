@@ -1012,7 +1012,7 @@ to \texttt{False}.
 
 \subsubsection{Gene conversion}\label{gene-conversion}
 
-Beside simulating recombination, \msprime\ also supports gene conversion events.To simulate gene conversion,
+Beside simulating recombination, \msprime\ also supports gene conversion events. To simulate gene conversion,
 two parameters are required: the gene conversion rate and the tract length distribution. By default, tract lengths are drawn
 from a genometric distribution with a mean of 1.
 
@@ -1036,7 +1036,7 @@ In this example, as shown in Figure~\ref{fig:gene_conversion}, we see the gene c
 
 \subsection{Ancestry Models}\label{ancestry-models}
 
-By default, \msprime\ simulates the coalescent process based on the Hudson model~\citep{hudson1983properties}, referred to as the
+By default, \msprime\ simulates the coalescent process based on the Hudson model \citep{hudson1983properties}, referred to as the
 \emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process using other models.
 
 For large sample sizes and long recombining genomes, simulating recent human datasets, for example, the Hudson model can be
@@ -1055,7 +1055,7 @@ the \emph{FixedPedigree} (discussed in section~\ref{fixed-pedigree}), and the \e
 \subsubsection{Single models}\label{single-models}
 
 It is more common to run simulations using a single ancestry model. The model used for the simulation can be specified using the \texttt{model} parameter
-of the \texttt{sim\_ancestry} function. The following example shows how to simulate the coalescent process using the \emph{SmcApproxCoalescent} model.
+of the \texttt{sim} \texttt{\_ancestry} function. The following example shows how to simulate the coalescent process using the \emph{SmcApproxCoalescent} model.
 
 \begin{pythoncode}
 ts1 = msprime.sim_ancestry(
@@ -1220,9 +1220,10 @@ In the following code block, this pedigree is used to simulate ancestry using th
 
 \begin{pythoncode}
 ped_ts = msprime.sim_ancestry(
-    initial_state=pedigree, model="fixed_pedigree", random_seed=41,
-    recombination_rate=0.001)
-node_labels = {node.id: f"{node.individual}({node.id})" for node in ped_ts.nodes()}
+    initial_state=pedigree, model="fixed_pedigree",
+    random_seed=41, recombination_rate=0.001)
+node_labels = {node.id: f"{node.individual}({node.id})"
+               for node in ped_ts.nodes()}
 \end{pythoncode}
 
 The result of the simulation is shown in Figure~\ref{fig:pedigree-simulation}, where the node labels show the individual ID and the node ID;
@@ -1252,7 +1253,8 @@ from a simple two-population model with human-like parameters:
 
 \begin{pythoncode}
 demography = msprime.Demography.isolated_model([2*(10**4)]*2)
-demography.add_mass_migration(time=50000, source=1, dest=0, proportion=1.0)
+demography.add_mass_migration(time=50000, source=1,
+                              dest=0, proportion=1.0)
 
 ts = msprime.sim_ancestry(
     samples={0: 10**5, 1: 10**5},
@@ -1260,7 +1262,8 @@ ts = msprime.sim_ancestry(
     sequence_length=10*10**6, random_seed=3,
     ploidy=1)
 
-ts = msprime.sim_mutations(ts, rate=1e-8, random_seed=7, discrete_genome=False)
+ts = msprime.sim_mutations(ts, rate=1e-8,
+                           random_seed=7, discrete_genome=False)
 print((ts.num_trees, ts.num_sites))
 
 >>> (93844, 102270)
