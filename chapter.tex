@@ -993,13 +993,8 @@ ts = msprime.sim_ancestry(
 genetic map for chromosome 22 (blue) matches the density of breakpoints for a simulated chromosome (green) well.}
 \end{figure}
 
-Although coordinates are specified in floating point values, \msprime\
-uses a discrete loci model when performing simulations. By default, the
-number of loci is very large (\(\sim 2^{32}\)), and the locations of
-breakpoints are translated back into the coordinate system defined by
-the recombination map. However, the number of loci is configurable and
-it is possible to simulate a specific number of discrete
-loci.
+By default, \msprime\ simulates a discrete genome, where recombination
+events occur at integer positions.
 
 \begin{pythoncode}
 recomb_map = msprime.RateMap.uniform(sequence_length=10, rate=1)
@@ -1009,11 +1004,11 @@ print(list(ts.breakpoints()))
 \end{pythoncode}
 
     Here we simulate the history of two samples in a system with 10 loci, each of
-length 1 with recombination rate of 1 between adjacent loci per
+length 1 with a recombination rate of 1 between adjacent loci per
 generation. In the output, we see that the breakpoints between trees now
-occur exactly at the integer boundaries between these loci. This shows that
-we can also simulate models of recombination with discrete loci models
-in \msprime, as well as the more standard continuous genome.
+occur exactly at the integer boundaries between these loci. It is also possible to simulate
+a standard continuous genome by setting the \texttt{discrete\_genome} parameter for the \texttt{sim\_ancestry} function
+to \texttt{False}.
 
 \subsubsection{Gene conversion}\label{gene-conversion}
 
