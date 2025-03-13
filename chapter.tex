@@ -867,8 +867,8 @@ ts = msprime.sim_ancestry(
         msprime.SampleSet(1, population=0, time=0),
         msprime.SampleSet(1, population=0, time=0),
         msprime.SampleSet(1, population=0, time=0),
-        msprime.SampleSet(1, population=1, time=0.75), # Ancient
-        # sample in deme 1
+        msprime.SampleSet(1, population=1, time=0.75),
+        # Ancient sample in deme 1
     ],
     demography=demography,
     ploidy=1,
@@ -904,14 +904,17 @@ Adding recombination to a simulation is simple, requiring very minor
 changes to the methods given above.
 
 \begin{pythoncode}
-ts = msprime.sim_ancestry(10, population_size=1e4, sequence_length=1e5, recombination_rate=1e-8, random_seed=3)
+ts = msprime.sim_ancestry(10, population_size=1e4,
+                          sequence_length=1e5,
+                          recombination_rate=1e-8,
+                          random_seed=3)
 print(ts.num_trees)
 >>> 135
 \end{pythoncode}
 
-    In this case, we provide two extra parameters: \texttt{length}, which
+    In this case, we provide two extra parameters: \texttt{sequence\_length}, which
 defines the length of the genomic region to be simulated, and
-\texttt{recombination\_rate}, which defines the rate of recombination
+\texttt{recombination} \texttt{\_rate}, which defines the rate of recombination
 per unit of sequence length, per generation. It is often useful to
 think of both sequence lengths and recombination rates as defined in units of base-pairs. (Note, however, that these are continuous values, so this
 correspondence should not be taken too literally. Note also that because \msprime\ assumes an infinite sites mutation model
