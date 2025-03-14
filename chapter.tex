@@ -340,8 +340,8 @@ import numpy as np
 N = 1000
 T_mrca = np.zeros(N)
 for j, ts in enumerate(msprime.sim_ancestry(10,
-                                            num_replicates=N,
-                                            ploidy=1)):
+        num_replicates=N,
+        ploidy=1)):
     tree = ts.first()
     T_mrca[j] = tree.time(tree.root)
 print([np.mean(T_mrca), np.var(T_mrca)])
@@ -377,10 +377,10 @@ def run_simulation(seed):
 N = 1000
 seeds = np.random.randint(1, 2**32 - 1, N)
 with cf.ProcessPoolExecutor(max_workers=4) as executor:
-     futures = [executor.submit(run_simulation, seed)
-                for seed in seeds]
-     T_mrca = np.array([f.result()
-                        for f in cf.as_completed(futures)])
+    futures = [executor.submit(run_simulation, seed)
+        for seed in seeds]
+    T_mrca = np.array([f.result()
+        for f in cf.as_completed(futures)])
 print(np.mean(T_mrca))
 
 >>> np.float64(1.7920618730043976)
@@ -423,7 +423,7 @@ As usual, this rate is the per-generation rate.
 \begin{pythoncode}
 ts = msprime.sim_ancestry(3, ploidy=1, random_seed=7)
 ts = msprime.sim_mutations(ts, rate=1, random_seed=7,
-                           discrete_genome=False)
+    discrete_genome=False)
 tree = ts.first()
 tree.draw_svg()
 \end{pythoncode}
@@ -520,12 +520,12 @@ N = 10000
 theta = 5
 S = np.zeros(N)
 replicates = msprime.sim_ancestry(2, population_size=1,
-                                  num_replicates=N,
-                                  ploidy=1,
-                                  discrete_genome=False)
+    num_replicates=N,
+    ploidy=1,
+    discrete_genome=False)
 for j, ts in enumerate(replicates):
     ts = msprime.sim_mutations(ts, rate=theta/2,
-                               discrete_genome=False)
+        discrete_genome=False)
     S[j] = ts.num_sites  # Number of segregrating sites.
 
 print(np.mean(S))
@@ -560,8 +560,8 @@ def pairwise_T_mrca(population_size):
     N = 10000
     T_mrca = np.zeros(N)
     for j, ts in enumerate(msprime.sim_ancestry(2,
-                            population_size=population_size,
-                            num_replicates=N, ploidy=1)):
+            population_size=population_size,
+            num_replicates=N, ploidy=1)):
         tree = ts.first()
         T_mrca[j] = tree.time(tree.root)
     return np.mean(T_mrca)
@@ -623,7 +623,7 @@ def pairwise_T_mrca(growth_rate):
     T_mrca = np.zeros(N)
     demography = msprime.Demography()
     demography.add_population(initial_size=1,
-                              growth_rate=growth_rate)
+        growth_rate=growth_rate)
     replicates = msprime.sim_ancestry(
         samples=2,
         demography=demography,
@@ -674,8 +674,8 @@ parameter specifies the growth rate of the population. Both parameters
 are lists, where each element corresponds to a population. In the
 following line, we set up a simple model of two populations in isolation:
 \begin{pythoncode}
-    demography =  msprime.Demography.isolated_model([1, 1],
-                                        growth_rate=[0.01, 0.02])
+    demography = msprime.Demography.isolated_model([1, 1],
+        growth_rate=[0.01, 0.02])
 \end{pythoncode}
 Although the two populations are simulated without migration, we can
 specify migration rates between populations using the \texttt{set\_migration\_rate()}
@@ -694,8 +694,8 @@ the same parameters as the \texttt{Demography.isolated\_model()} method in
 addition to the \texttt{migration\_rate} parameter. The following line sets up an
 \texttt{island\_model()} with three populations:
 \begin{pythoncode}
-    demography =  msprime.Demography.island_model([1, 1, 1],
-                                             migration_rate=0.1)
+    demography = msprime.Demography.island_model([1, 1, 1],
+        migration_rate=0.1)
 \end{pythoncode}
 
 This single line is equivalent to setting up an isolated model with three populations
@@ -835,7 +835,7 @@ import demes
 graph = demes.load("demes_example_01.yaml")
 demography = msprime.Demography.from_demes(graph)
 ts = msprime.sim_ancestry({"A":2, "B":3},
-             demography=demography, random_seed=1234)
+    demography=demography, random_seed=1234)
 \end{pythoncode}
 
 The previous code block loads the example demes model of figure~\ref{fig-demes-plot} from a YAML file. Then, a demography
@@ -861,7 +861,7 @@ samples.
 
 \begin{pythoncode}
 demography = msprime.Demography.island_model(initial_size=[1, 1],
-                                             migration_rate=1)
+    migration_rate=1)
 ts = msprime.sim_ancestry(
     samples=[
         msprime.SampleSet(1, population=0, time=0),
@@ -905,9 +905,9 @@ changes to the methods given above.
 
 \begin{pythoncode}
 ts = msprime.sim_ancestry(10, population_size=1e4,
-                          sequence_length=1e5,
-                          recombination_rate=1e-8,
-                          random_seed=3)
+    sequence_length=1e5,
+    recombination_rate=1e-8,
+    random_seed=3)
 print(ts.num_trees)
 >>> 135
 \end{pythoncode}
@@ -1223,7 +1223,7 @@ ped_ts = msprime.sim_ancestry(
     initial_state=pedigree, model="fixed_pedigree",
     random_seed=41, recombination_rate=0.001)
 node_labels = {node.id: f"{node.individual}({node.id})"
-               for node in ped_ts.nodes()}
+    for node in ped_ts.nodes()}
 \end{pythoncode}
 
 The result of the simulation is shown in Figure~\ref{fig:pedigree-simulation}, where the node labels show the individual ID and the node ID;
@@ -1254,7 +1254,7 @@ from a simple two-population model with human-like parameters:
 \begin{pythoncode}
 demography = msprime.Demography.isolated_model([2*(10**4)]*2)
 demography.add_mass_migration(time=50000, source=1,
-                              dest=0, proportion=1.0)
+    dest=0, proportion=1.0)
 
 ts = msprime.sim_ancestry(
     samples={0: 10**5, 1: 10**5},
@@ -1263,7 +1263,7 @@ ts = msprime.sim_ancestry(
     ploidy=1)
 
 ts = msprime.sim_mutations(ts, rate=1e-8,
-                           random_seed=7, discrete_genome=False)
+    random_seed=7, discrete_genome=False)
 print((ts.num_trees, ts.num_sites))
 
 >>> (93844, 102270)
@@ -1298,10 +1298,10 @@ def ibd_segments(ts, a, b):
     return np.array(segment_lengths) / ts.sequence_length
 
 sns.histplot(ibd_segments(ts, 0, 1), label="Within population",
-             kde=True, stat="density")
+    kde=True, stat="density")
 sns.histplot(ibd_segments(ts, 0, 10**5),
-             label="Between populations",
-             kde=True, stat="density")
+    label="Between populations",
+    kde=True, stat="density")
 plt.xlim(-0.0001, 0.003)
 plt.legend()
 plt.ylabel("Count")
@@ -1637,8 +1637,8 @@ T_total_col = np.zeros(ns.shape[0] * num_reps)
 row = 0
 for n in ns:
     for ts in msprime.sim_ancestry(n, population_size=1,
-                                   num_replicates=num_reps,
-                                   ploidy=1):
+            num_replicates=num_reps,
+            ploidy=1):
 
         tree = ts.first()
         n_col[row] = n
@@ -1774,8 +1774,8 @@ def S_dist(n, theta, k):
     S = 0
     for i in range(2, n + 1):
         S += ((-1)**i * scipy.special.binom(n - 1, i - 1)
-              * (i - 1) / (theta + i - 1)
-              * (theta / (theta + i - 1))**k)
+            * (i - 1) / (theta + i - 1)
+            * (theta / (theta + i - 1))**k)
     return S
 
 n = 20
@@ -1842,15 +1842,15 @@ s_col = np.zeros(N)
 row = 0
 for rho in rhos:
     replicates = msprime.sim_ancestry(1,
-                         num_replicates=num_replicates,
-                         recombination_rate=rho/2,
-                         population_size=0.5,
-                         discrete_genome=False, sequence_length=1
-                         )
+        num_replicates=num_replicates,
+        recombination_rate=rho/2,
+        population_size=0.5,
+        discrete_genome=False, sequence_length=1
+        )
 
     for ts in replicates:
         ts = msprime.sim_mutations(ts, rate=theta/2,
-                                   discrete_genome=False)
+            discrete_genome=False)
 
         rho_col[row] = rho
         s_col[row] = ts.num_sites
@@ -1935,24 +1935,24 @@ num_loci = 200
 
 def run_sims(m, num_loci=1, theta=0):
     demography = msprime.Demography.island_model([1, 1],
-                                                migration_rate=m)
+        migration_rate=m)
     replicates = msprime.sim_ancestry({0: nsamp, 1:nsamp},
-                                      demography=demography,
-                                      num_replicates=num_loci,
-                                      ploidy=1,
-                                      discrete_genome=False,
-                                      sequence_length=1)
+        demography=demography,
+        num_replicates=num_loci,
+        ploidy=1,
+        discrete_genome=False,
+        sequence_length=1)
     for ts in replicates:
         yield msprime.sim_mutations(ts, rate=theta,
-                                    discrete_genome=False)
+            discrete_genome=False)
 
 def get_joint_site_frequency_spectra(reps):
     data = np.zeros((num_loci, nsamp + 1, nsamp + 1))
     for rep_index, ts in enumerate(reps):
-        data[rep_index] = ts.allele_frequency_spectrum([[0, 1],
-                                                        [2,3]],
-                                                polarised=True)
-
+        data[rep_index] = ts.allele_frequency_spectrum([
+            [0, 1],
+            [2,3]],
+            polarised=True)
     return data
 
 truth = get_joint_site_frequency_spectra(
@@ -2019,17 +2019,17 @@ def approx_jSFS(m):
   B = np.zeros((num_reps, nsamp + 1, nsamp + 1))
   for rep_index, ts in enumerate(reps):
       B[rep_index] = ts.allele_frequency_spectrum([[0,1],[2,3]],
-                                          mode='branch',
-                                          polarised=True,
-                                          span_normalise=False)
+        mode='branch',
+        polarised=True,
+        span_normalise=False)
   data = np.mean(B, axis=0)
   return data / np.sum(data)
 
 with cf.ProcessPoolExecutor(max_workers=4) as executor:
   futures = [executor.submit(approx_jSFS, prior)
-             for prior in prior_m]
+    for prior in prior_m]
   prior_jSFS = np.array([f.result()
-                         for f in cf.as_completed(futures)])
+    for f in cf.as_completed(futures)])
 
 print(prior_jSFS[0])
 \end{pythoncode}
