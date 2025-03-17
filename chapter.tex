@@ -242,7 +242,7 @@ history for a sample of three chromosomes:
 \includegraphics[width=0.4\textwidth]{images/plot_1.pdf}
 \end{center}
 \caption{\label{fig-simple-tree} Coalescent tree with mutations.
-using the \texttt{tree.draw()} method.}
+using the \texttt{tree.draw\_svg()} method.}
 \end{figure}
 
 \begin{pythoncode}
@@ -257,13 +257,9 @@ in a Jupyter notebook. We first generate a tree sequence object (\texttt{ts}),
 and we then obtain the tree object representing the first (and only)
 tree in this sequence. Finally, using the \texttt{draw\_svg()} method, we plot
 the tree in SVG format. Another way to draw the tree is to use the
-\texttt{draw()} method. This method is more versatile as it can be used to
-draw the tree in different formats, such as \texttt{SVG} (default method),
-\texttt{Unicode}, or \texttt{ASCII}. For example,
-\texttt{print(tree.draw(format="unicode"))} prints the tree to the console
-using Unicode box-drawing characters, which could be a very useful debugging tool.
-The line \texttt{SVG(tree.draw())} is equivalent to the \texttt{draw\_svg()} method
-used above. All code chunks in this chapter are included in the accompanying Jupyter
+\texttt{draw\_text()} method. This method prints the tree to the console
+as a string, which could be a very useful debugging tool.
+All code chunks in this chapter are included in the accompanying Jupyter
 notebook and are fully runnable.
 
 The output of one random realisation of this process is shown in
