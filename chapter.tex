@@ -1442,7 +1442,7 @@ tree = ts_subset.first()
 node_labels = {
     node_map[j]: "{}({})".format(node_map[j], str(j))
     for j in range(ts.num_nodes)}
-SVG(tree.draw(node_labels=node_labels, width=400))
+tree.draw_svg(node_labels=node_labels)
 \end{pythoncode}
 
 \begin{figure}[t]
