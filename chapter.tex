@@ -558,12 +558,12 @@ calculates a mean pairwise coalescence time for a sample of size 2 for different
 population sizes:
 
 \begin{pythoncode}
-def pairwise_T_mrca(population_size):
+def pairwise_T_mrca(population_size, ploidy):
     N = 10000
     T_mrca = np.zeros(N)
     for j, ts in enumerate(msprime.sim_ancestry(2,
             population_size=population_size,
-            num_replicates=N, ploidy=1)):
+            num_replicates=N, ploidy=ploidy)):
         tree = ts.first()
         T_mrca[j] = tree.time(tree.root)
     return np.mean(T_mrca)
@@ -578,30 +578,39 @@ print(
 
 \end{pythoncode}
 
-    Thus, when we specify \emph{population\_size = 10} we get a mean pairwise coalescence time of about
-10 generations, and with \emph{population\_size = 100}, the mean coalescence time is about
+    Thus, when we specify \emph{population\_size=10} we get a mean pairwise coalescence time of about
+10 generations, and with \emph{population\_size=100}, the mean coalescence time is about
 100 generations (when we simulate haploids). See \cite{wakely2008coalescent} for details on the
 biological interpretation of effective population size.
 
-By default, \(N_e = 1\) in \msprime, which is equivalent to measuring
+\runinhead{Ploidy and timescale}\label{ploidy} \
+
+The \texttt{sim\_ancestry} function accepts a ploidy parameter. Theoretically, ploidy referes the number of genomes per individual.
+In \msprime, the ploidy parameter determines the number of nodes per sample, and it scales time accordingly.
+
+By default, \emph{population\_size=1} in \msprime, which is equivalent to measuring
 time in units of \(N_e\) generations. It is very important to note that
-\(N_e\) in \msprime\ is the \emph{diploid} effective population size,
-which means that all times are scaled by \(2N_e\) (rather than $N_e$ for a
-haploid coalescent). Thus, if we wish to compare the results that are
-given in the literature for a haploid coalescent, then we must set
-\(N_e\) to $1/2$ to compensate, or set \(ploidy = 1\). For example, we know that the expected
+\texttt{population\_size} in \msprime\ is the \emph{ploidy} effective population size,
+which means that by default, all times are scaled by \(2N_e\), since the default ploidy is diploid. Similarly, however,
+if we set ploidy to 1, i.e., simulating haploids, time will be scaled by $N_e$. Thus, care about ploidy
+and population size is required when comparing results from \msprime\ with expectations from the literature, which
+are generally given in haploid coalescent time units. For example, we know that the expected
 coalescence time for a sample of size 2 is 1, and this is the value we
-obtain from the \texttt{pairwise\_T\_mrca} function when we have
-\(N_e = 0.5\) or when we set \(N_e = 1\) and \(ploidy = 1\). We will usually assume that we are working in haploid
-coalescent time units from here on, and so set \(N_e = 1\) and \(ploidy = 1\) in most
+obtain from the \texttt{pairwise\_T\_mrca} function when we set \emph{population\_size=1}, since \emph{ploidy}
+is set to 1. To obtain the same result for a diploid population, where ploidy is set to 2, first, we need to set
+sample size to 1 since we will get two nodes per sample instead of one node per sample. And second, we need to set population
+size to 0.5, as coalescence time is scaled by \(2N_e\) instead of \(N_e\).
+
+We will usually assume that we are working in haploid
+coalescent time units from here on and so set \emph{population\_size=1} and \emph{ploidy=1} in most
 examples. However, when running simulations of a specific organism and/or population, it
 is substantially more convenient to use an appropriate estimated value
-for \(N_e\) so that times are directly interpretable.
+for \emph{population\_size} so that times are directly interpretable.
 
 \runinhead{Exponentially growing/shrinking
 populations}\label{exponentially-growingshrinking-populations} \
 
-When we provide an \(N_e\) parameter, this specifies a fixed effective
+When we provide an \emph{population\_size} parameter, this specifies a fixed effective
 population size. We can also model populations that are exponentially
 growing or contracting at some rate over time. Given a population size
 at the present \(s\) and a growth rate \(\alpha\), the size of the
