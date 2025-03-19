@@ -416,15 +416,26 @@ As usual, this rate is the per-generation rate.
 \end{figure}
 
 \begin{pythoncode}
-ts = msprime.sim_ancestry(3, ploidy=1, random_seed=7)
-ts = msprime.sim_mutations(
-    ts, rate=1, random_seed=31, discrete_genome=False)
+ts = msprime.sim_ancestry(
+    3, ploidy=1, random_seed=7, sequence_length=2)
+ts = msprime.sim_mutations(ts, rate=1, random_seed=8)
 tree = ts.first()
 tree.draw_svg()
 \end{pythoncode}
 
-The tree produced by this code chunk is shown in
-Figure~\ref{fig-tree-mutations}. Here we have two mutations, shown by the red "X"s.
+As this code chunk suggests, simulating mutations on a tree sequence is a two-step process.
+First, we simulate the genealogy using \texttt{sim\_ancestry} and store the resulting
+tree sequence in the variable \texttt{ts}. Note that we specified a sequence length parameter;
+this will specify the number of discrete sites in the sequence. After that, in the second
+line, we simulate mutations on this tree sequence using the \texttt{sim\_mutations} function.
+We specified a \texttt{rate} parameter for the \texttt{sim\_mutations} function; this
+parameter specifies the per-generation per-site mutation rate. We overwrote the \texttt{ts} variable
+with the new tree sequence object that now contains mutations to save memory, as otherwise we would
+store the tree sequence twice in memory---once without mutations and once with mutations. We then
+select the first and only tree in the tree sequence and plot it using the \texttt{draw\_svg()}
+method. The tree produced by this code chunk is shown in Figure~\ref{fig-tree-mutations}.
+
+Here we have two mutations, shown by the red "X"s.
 Mutations occur above a given node in the tree, and all samples beneath
 this node will inherit the mutation. The infinite sites mutations used
 here are simple binary mutations, that is, the ancestral state is 0 and
