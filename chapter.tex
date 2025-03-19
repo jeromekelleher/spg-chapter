@@ -436,23 +436,18 @@ Here we have two mutations, shown by the red "X"s.
 Mutations occur above a given node in the tree, and all samples beneath
 this node will inherit the mutation. The mutational model used here, which is the default mutational
 model, is a Jukes-Cantor model (in the next section we will talk about other mutational models).
-One convenient way to access the resulting sample genotypes is to use the \texttt{genotype\_matrix()}
-method, which returns an \(m \times n\) NumPy array, if we have \(m\) variable sites
-and \(n\) samples. Thus, if \(G\) is the genotype matrix, \(G[j, k]\) is
-the state of the \(k\)th sample at the \(j\)th site. In our example
-above, the site 0 has a mutation over node 3, and site 1 has a mutation
-over node 1, and so we get the following matrix:
+One convenient way to access the resulting sample genotypes is to loop through variants in the
+tree sequence object. As each variant stores the position of the mutation, the alleles that are present
+In the following code chunk, we investigate the mutations that have occurred in the previous simulation:
 
 \begin{pythoncode}
-ts.genotype_matrix()
->>> array([[0, 1, 0],
-           [1, 0, 1]], dtype=int32)
+for var in ts.variants():
+    print(var.site.position, var.alleles, var.genotypes, sep="\t")
+>>> 0.0	('A', 'G')	[1 0 1]
+    1.0	('C', 'T')	[0 1 0]
 \end{pythoncode}
 
-    The genotype matrix gives a convenient way of accessing genotype
-information, but will consume a great deal of memory for larger
-simulations. See Section~\ref{processing-variants} for more information
-on how to access genotype data efficiently.
+Accessing genotype data is discussed in more detail in Section~\ref{processing-variants}.
 
 \runinhead{Other mutation models} \
 
