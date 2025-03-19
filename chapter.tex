@@ -418,7 +418,7 @@ As usual, this rate is the per-generation rate.
 \begin{pythoncode}
 ts = msprime.sim_ancestry(3, ploidy=1, random_seed=7)
 ts = msprime.sim_mutations(
-    ts, rate=1, random_seed=7, discrete_genome=False)
+    ts, rate=1, random_seed=31, discrete_genome=False)
 tree = ts.first()
 tree.draw_svg()
 \end{pythoncode}
