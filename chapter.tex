@@ -619,11 +619,9 @@ again that time and rates are measured in units of \emph{generations},
 not coalescent units.)
 
 In \msprime, the initial size and growth rate for a particular population
-are specified using a \texttt{Demography} object. A list
-of these objects (describing the different populations; see
-Section~\ref{population-structure}) are then provided to the
-\texttt{sim\_ancestry}
-function. When providing a list of
+are specified using a \texttt{Demography} object. A \texttt{Demography} object
+(describing the different populations; see Section~\ref{population-structure})
+is then provided to the \texttt{sim\_ancestry} function. When providing a list of
 \texttt{Demography} objects, the \texttt{population\_size} parameter to
 \texttt{sim\_ancestry} is not required, as the \texttt{initial\_size} of the
 \texttt{Demography} objects performs the same task. For example,
