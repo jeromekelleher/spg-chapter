@@ -493,14 +493,20 @@ SLiMMutationModel & An infinite-alleles model of mutation producing SLiM-style m
 \label{tab:mutation-models}
 \end{table}
 
-To specify a mutation model, we pass the model to the \texttt{sim\_mutations} function using the \texttt{model} parameter. For example,
-to use the Jukes-Cantor model, we would use the following code:
+To specify a mutation model, we pass the model to the \texttt{sim\_mutations} function using the \texttt{model} parameter. Some models
+require additional parameters to be specified. For example, the \texttt{HKY} model requires the transitions/transversions ratio to be specified.
+In the following code chunk, we simulate a tree with mutations using the \texttt{HKY} model:
 
 \begin{pythoncode}
-rate = 1.5e-3
+hky = msprime.HKY(kappa=0.75)
 ts = msprime.sim_ancestry(5, random_seed=5, sequence_length=1e6)
-ts = msprime.sim_mutations(ts, rate=rate, model="JC69", random_seed=7)
+ts = msprime.sim_mutations(
+    ts, rate=1e-6, model=hky, random_seed=7)
 \end{pythoncode}
+
+In this example, we first specified the mutational model in the first line as the \texttt{HKY} model. In this model, the \texttt{kappa} parameter specifies
+the transitions/transversions ratio. We then simulated a tree sequence with a sequence length of 1 million sites. We then simulated mutations on this tree
+sequence using the \texttt{HKY} model we specified with a mutation rate of \(10^{-6}\) per site per generation.
 
 \runinhead{Scaled mutation rate} \
 
