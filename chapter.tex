@@ -419,8 +419,8 @@ per-generation per-site mutation rate. For example, the following code chunk sim
 
 \begin{pythoncode}
 ts = msprime.sim_ancestry(
-    2, random_seed=13, sequence_length=2)
-ts = msprime.sim_mutations(ts, rate=0.05, random_seed=2)
+    2, random_seed=13, sequence_length=10)
+ts = msprime.sim_mutations(ts, rate=0.01, random_seed=2)
 tree = ts.first()
 tree.draw_svg()
 \end{pythoncode}
@@ -448,8 +448,8 @@ In the following code chunk, we investigate the mutations that have occurred in 
 \begin{pythoncode}
 for var in ts.variants():
     print(var.site.position, var.alleles, var.genotypes, sep="\t")
->>> 0.0	('A', 'T')	[0 1 0 1]
-    1.0	('G', 'A')	[0 0 1 0]
+>>> 3.0	('A', 'T')	[0 1 0 1]
+    9.0	('G', 'A')	[0 0 1 0]
 \end{pythoncode}
 
 Accessing genotype data is discussed in more detail in Section~\ref{processing-variants}.
