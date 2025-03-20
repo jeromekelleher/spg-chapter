@@ -926,15 +926,11 @@ print(ts.num_trees)
 defines the length of the genomic region to be simulated, and
 \texttt{recombination} \texttt{\_rate}, which defines the rate of recombination
 per unit of sequence length, per generation. It is often useful to
-think of both sequence lengths and recombination rates as defined in units of base-pairs. (Note, however, that these are continuous values, so this
-correspondence should not be taken too literally. Note also that because \msprime\ assumes an infinite sites mutation model
-the \texttt{length} parameter is not connected to the number
-of mutational \emph{sites}. Thus any number of mutations can occur on a
-given sequence length, depending on the mutation rate specified.)
-For this example, we
-defined a sequence length of 100kb, and a recombination rate of
+think of both sequence lengths and recombination rates as defined in units of base-pairs.
+
+For this example, we defined a sequence length of 100kb, and a recombination rate of
 \(10^{-8}\) per base per generation. The result of this particular simulation is a
-\emph{tree sequence} that contains 82 distinct trees. Other replicate
+\emph{tree sequence} that contains 135 distinct trees. Other replicate
 simulations with different random seeds will usually result in different
 numbers of trees.
 
