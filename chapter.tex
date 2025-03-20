@@ -247,13 +247,13 @@ using the \texttt{tree.draw\_svg()} method.}
 
 \begin{pythoncode}
 import msprime
-ts = msprime.sim_ancestry(3, ploidy=1)
+ts = msprime.sim_ancestry(2)
 tree = ts.first()
 tree.draw_svg()
 \end{pythoncode}
 
 This code chunk illustrates the basic approach required to draw a tree
-in a Jupyter notebook. We first generate a tree sequence object (\texttt{ts}),
+in a Jupyter notebook. We first generate a tree sequence object (\texttt{ts}), sampling 2 individuals from,
 and we then obtain the tree object representing the first (and only)
 tree in this sequence. Finally, using the \texttt{draw\_svg()} method, we plot
 the tree in SVG format. Another way to draw the tree is to use the
@@ -263,15 +263,16 @@ All code chunks in this chapter are included in the accompanying Jupyter
 notebook and are fully runnable.
 
 The output of one random realisation of this process is shown in
-Figure~\ref{fig-simple-tree}. The resulting tree has 5 nodes: nodes 0, 1 and 2 are \emph{leaves}, and
-represent our samples. Node 3 is an \emph{internal} node, and is the
-parent of 0 and 1. Node 4 is also an internal node, and is the root of
+Figure~\ref{fig-simple-tree}. The resulting tree has 7 nodes: nodes 0, 1, 2, and 3 are \emph{leaves}, and
+represent our samples. Node 4 is an \emph{internal} node, and is the
+parent of 1 and 3. Similarly, Node 5 is an internal node, and is the
+parent of 0 and 2. Node 6 is also an internal node, and is the root of
 the tree. In \msprime, we always refer to nodes by their integer IDs and
 obtain information about these nodes by calling methods on the tree
-object. For example the code \texttt{tree.children(4)} will return the
-tuple \texttt{(1,\ 3)} here, as these are the node IDs of the children
+object. For example the code \texttt{tree.children(6)} will return the
+tuple \texttt{(4,\ 5)} here, as these are the node IDs of the children
 of the root node. Similarly, \texttt{tree.parent(0)} will return
-\texttt{3}.
+\texttt{5}.
 
 The height of a tree node is determined by the \emph{time} at which the corresponding
 ancestor was born. So,
@@ -290,18 +291,18 @@ use the \texttt{num\_replicates} argument.
 import msprime
 N = 1000
 mean_T_mrca = 0
-for ts in msprime.sim_ancestry(10, num_replicates=N, ploidy=1):
+for ts in msprime.sim_ancestry(10, num_replicates=N):
     tree = ts.first()
     mean_T_mrca += tree.time(tree.root)
 mean_T_mrca = mean_T_mrca / N
 print(mean_T_mrca)
 
->>> 1.7591899369100823
+>>> 3.8478294094510166
 \end{pythoncode}
 
     In this example we run 1000 independent replicates of the coalescent for
 a sample of 10 chromosomes, and compute the mean time to the MRCA of the entire sample, i.e., the root of the
-tree. The value of 1.76 generations in the past we obtain is of course highly unrealistic.
+tree. The value of 3.85 generations in the past we obtain is of course highly unrealistic.
 However, by default, time is measured in units of \(4 N_e\) generations (see the section~\ref{Demography}
 for details on how to specify population models and interpret times). It is important to note here
 that although time is measured in units of generations, this is of course
@@ -336,12 +337,12 @@ import numpy as np
 N = 1000
 T_mrca = np.zeros(N)
 for j, ts in enumerate(
-        msprime.sim_ancestry(10, num_replicates=N, ploidy=1)):
+        msprime.sim_ancestry(10, num_replicates=N)):
     tree = ts.first()
     T_mrca[j] = tree.time(tree.root)
 print([np.mean(T_mrca), np.var(T_mrca)])
 
->>> (np.float64(1.855267280486074), np.float64(1.28673089924668))
+>>> (np.float64(3.836115509145935), np.float64(5.046041442780643))
 \end{pythoncode}
 
     Here we simulate 1000 replicates, storing the time to the MRCA for each replicate in the array \texttt{T\_mrca}.  We use the Python \texttt{enumerate} function to simplify the process of efficiently inserting values into this
@@ -365,7 +366,7 @@ processes are unique, it is best to manually specify them. For example,
 import concurrent.futures as cf
 
 def run_simulation(seed):
-    ts = msprime.sim_ancestry(10, random_seed=seed, ploidy=1)
+    ts = msprime.sim_ancestry(10, random_seed=seed)
     tree = ts.first()
     return tree.time(tree.root)
 
@@ -378,7 +379,7 @@ with cf.ProcessPoolExecutor(max_workers=4) as executor:
         f.result() for f in cf.as_completed(futures)])
 print(np.mean(T_mrca))
 
->>> np.float64(1.7920618730043976)
+>>> np.float64(3.795412873593211)
 \end{pythoncode}
 
     In this example we create a list of 1000 seeds between 1 and $2^{32} -
@@ -414,15 +415,15 @@ per-generation per-site mutation rate. For example, the following code chunk sim
 
 \begin{pythoncode}
 ts = msprime.sim_ancestry(
-    3, ploidy=1, random_seed=7, sequence_length=2)
-ts = msprime.sim_mutations(ts, rate=1, random_seed=8)
+    2, random_seed=13, sequence_length=2)
+ts = msprime.sim_mutations(ts, rate=0.05, random_seed=2)
 tree = ts.first()
 tree.draw_svg()
 \end{pythoncode}
 
 As this code chunk suggests, simulating mutations on a tree sequence is a two-step process.
 First, we simulate the genealogy using \texttt{sim\_ancestry} and store the resulting
-tree sequence in the variable \texttt{ts}. Note that we specified a sequence length parameter;
+tree sequence in the variable \texttt{ts}. Note that we specified a \texttt{sequence\_length} parameter;
 this will specify the number of discrete sites in the sequence. After that, in the second
 line, we simulate mutations on this tree sequence using the \texttt{sim\_mutations} function.
 We specified a \texttt{rate} parameter for the \texttt{sim\_mutations} function; this
@@ -432,7 +433,7 @@ store the tree sequence twice in memory---once without mutations and once with m
 select the first and only tree in the tree sequence and plot it using the \texttt{draw\_svg()}
 method. The tree produced by this code chunk is shown in Figure~\ref{fig-tree-mutations}.
 
-Here we have two mutations, shown by the red "X"s.
+As Figure ~\ref{fig-tree-mutations} shows, this code simulated two mutations, shown by the red "X"s.
 Mutations occur above a given node in the tree, and all samples beneath
 this node will inherit the mutation. The mutational model used here, which is the default mutational
 model, is a Jukes-Cantor model (in the next section we will talk about other mutational models).
@@ -443,8 +444,8 @@ In the following code chunk, we investigate the mutations that have occurred in 
 \begin{pythoncode}
 for var in ts.variants():
     print(var.site.position, var.alleles, var.genotypes, sep="\t")
->>> 0.0	('A', 'G')	[1 0 1]
-    1.0	('C', 'T')	[0 1 0]
+>>> 0.0	('A', 'T')	[0 1 0 1]
+    1.0	('G', 'A')	[0 0 1 0]
 \end{pythoncode}
 
 Accessing genotype data is discussed in more detail in Section~\ref{processing-variants}.
@@ -537,8 +538,8 @@ print(np.mean(S))
 \end{pythoncode}
 
     Note that here we set the mutation rate to \(\theta / 2\) (to cancel out
-the factor of 2 in the definition of \(\theta\)) and \(ploidy = 1\) (so
-that time is measured in haploid coalescent time units). Such
+the factor of 2 in the definition of \(\theta\)) and \emph{ploidy = 1} (so
+that time is measured in haploid coalescent time units; the following section discusses the ploidy parameter in more detail). Such
 factor-of-two gymnastics are unfortunately unavoidable in coalescent
 theory.
 
@@ -569,8 +570,8 @@ def pairwise_T_mrca(population_size, ploidy):
     return np.mean(T_mrca)
 
 print(
-    pairwise_T_mrca(1), pairwise_T_mrca(10),
-    pairwise_T_mrca(100))
+    pairwise_T_mrca(1, 1), pairwise_T_mrca(10, 1),
+    pairwise_T_mrca(100, 1))
 
 >>> (np.float64(0.9965894759060011),
      np.float64(10.036428076042618),
@@ -634,8 +635,8 @@ def pairwise_T_mrca(growth_rate):
     demography.add_population(
         initial_size=1, growth_rate=growth_rate)
     replicates = msprime.sim_ancestry(
-        samples=2, demography=demography, num_replicates=N,
-        ploidy=1, random_seed=16)
+        samples=2, demography=demography,
+        num_replicates=N, random_seed=16)
 
     for j, ts in enumerate(replicates):
         tree = ts.first()
@@ -643,17 +644,17 @@ def pairwise_T_mrca(growth_rate):
     return np.mean(T_mrca)
 
 print(
-    pairwise_T_mrca(0.1), pairwise_T_mrca(0),
-    pairwise_T_mrca(-0.1))
->>> (np.float64(0.9309511916503714),
-     np.float64(1.0179152621046077),
-     np.float64(1.1532469384850648))
+    pairwise_T_mrca(0.05), pairwise_T_mrca(0),
+    pairwise_T_mrca(-0.05))
+>>> (np.float64(1.8619023833007429),
+     np.float64(2.0358305242092154),
+     np.float64(2.3064938769701295))
 \end{pythoncode}
 
     Here we simulate the pairwise \(T_{MRCA}\) for positive, zero and
-negative growth rates. When we have a growth rate of zero, we see that
-recover the usual result of 1.0 (as our initial size, and hence \(N_e\),
-is set to 1 haploid individuals). When the growth rate is positive, we see that the
+negative growth rates. When we have a growth rate of zero, we see that we
+recover the usual result of 2.0—as our ploidy-scaled initial size (two genomes x one individual), and hence \(N_e\),
+is set to 1 diploid individual. When the growth rate is positive, we see that the
 mean coalescence time is reduced, since the population size is getting
 smaller as we go backwards in time, resulting in an increased rate of
 coalescence. Conversely, when we have a negative growth rate, the
