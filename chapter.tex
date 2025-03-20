@@ -263,13 +263,17 @@ All code chunks in this chapter are included in the accompanying Jupyter
 notebook and are fully runnable.
 
 The output of one random realisation of this process is shown in
-Figure~\ref{fig-simple-tree}. The resulting tree has 7 nodes: nodes 0, 1, 2, and 3 are \emph{leaves}, and
-represent our samples. Node 4 is an \emph{internal} node, and is the
-parent of 1 and 3. Similarly, Node 5 is an internal node, and is the
-parent of 0 and 2. Node 6 is also an internal node, and is the root of
+Figure~\ref{fig-simple-tree}. The resulting tree has 7 nodes:
+nodes 0, 1, 2, and 3 are \emph{leaves} and
+represent our samples. Note here that 2 samples gave 4 nodes;
+that's because the default ploidy in \msprime\ is diploid.
+More details about ploidy in \msprime\ are in section~\ref{ploidy}.
+Node 4 is an \emph{internal} node and is the
+parent of 1 and 3. Similarly, Node 5 is an internal node and is the
+parent of 0 and 2. Node 6 is also an internal node and is the root of
 the tree. In \msprime, we always refer to nodes by their integer IDs and
 obtain information about these nodes by calling methods on the tree
-object. For example the code \texttt{tree.children(6)} will return the
+object. For example, the code \texttt{tree.children(6)} will return the
 tuple \texttt{(4,\ 5)} here, as these are the node IDs of the children
 of the root node. Similarly, \texttt{tree.parent(0)} will return
 \texttt{5}.
