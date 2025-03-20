@@ -247,13 +247,13 @@ using the \texttt{tree.draw\_svg()} method.}
 
 \begin{pythoncode}
 import msprime
-ts = msprime.sim_ancestry(3, ploidy=1)
+ts = msprime.sim_ancestry(2)
 tree = ts.first()
 tree.draw_svg()
 \end{pythoncode}
 
 This code chunk illustrates the basic approach required to draw a tree
-in a Jupyter notebook. We first generate a tree sequence object (\texttt{ts}),
+in a Jupyter notebook. We first generate a tree sequence object (\texttt{ts}), sampling 2 individuals from,
 and we then obtain the tree object representing the first (and only)
 tree in this sequence. Finally, using the \texttt{draw\_svg()} method, we plot
 the tree in SVG format. Another way to draw the tree is to use the
@@ -263,15 +263,16 @@ All code chunks in this chapter are included in the accompanying Jupyter
 notebook and are fully runnable.
 
 The output of one random realisation of this process is shown in
-Figure~\ref{fig-simple-tree}. The resulting tree has 5 nodes: nodes 0, 1 and 2 are \emph{leaves}, and
-represent our samples. Node 3 is an \emph{internal} node, and is the
-parent of 0 and 1. Node 4 is also an internal node, and is the root of
+Figure~\ref{fig-simple-tree}. The resulting tree has 7 nodes: nodes 0, 1, 2, and 3 are \emph{leaves}, and
+represent our samples. Node 4 is an \emph{internal} node, and is the
+parent of 1 and 3. Similarly, Node 5 is an internal node, and is the
+parent of 0 and 2. Node 6 is also an internal node, and is the root of
 the tree. In \msprime, we always refer to nodes by their integer IDs and
 obtain information about these nodes by calling methods on the tree
-object. For example the code \texttt{tree.children(4)} will return the
-tuple \texttt{(1,\ 3)} here, as these are the node IDs of the children
+object. For example the code \texttt{tree.children(6)} will return the
+tuple \texttt{(4,\ 5)} here, as these are the node IDs of the children
 of the root node. Similarly, \texttt{tree.parent(0)} will return
-\texttt{3}.
+\texttt{5}.
 
 The height of a tree node is determined by the \emph{time} at which the corresponding
 ancestor was born. So,
@@ -290,18 +291,18 @@ use the \texttt{num\_replicates} argument.
 import msprime
 N = 1000
 mean_T_mrca = 0
-for ts in msprime.sim_ancestry(10, num_replicates=N, ploidy=1):
+for ts in msprime.sim_ancestry(10, num_replicates=N):
     tree = ts.first()
     mean_T_mrca += tree.time(tree.root)
 mean_T_mrca = mean_T_mrca / N
 print(mean_T_mrca)
 
->>> 1.7591899369100823
+>>> 3.8478294094510166
 \end{pythoncode}
 
     In this example we run 1000 independent replicates of the coalescent for
 a sample of 10 chromosomes, and compute the mean time to the MRCA of the entire sample, i.e., the root of the
-tree. The value of 1.76 generations in the past we obtain is of course highly unrealistic.
+tree. The value of 3.85 generations in the past we obtain is of course highly unrealistic.
 However, by default, time is measured in units of \(4 N_e\) generations (see the section~\ref{Demography}
 for details on how to specify population models and interpret times). It is important to note here
 that although time is measured in units of generations, this is of course
@@ -335,14 +336,13 @@ import msprime
 import numpy as np
 N = 1000
 T_mrca = np.zeros(N)
-for j, ts in enumerate(msprime.sim_ancestry(10,
-        num_replicates=N,
-        ploidy=1)):
+for j, ts in enumerate(
+        msprime.sim_ancestry(10, num_replicates=N)):
     tree = ts.first()
     T_mrca[j] = tree.time(tree.root)
 print([np.mean(T_mrca), np.var(T_mrca)])
 
->>> (np.float64(1.855267280486074), np.float64(1.28673089924668))
+>>> (np.float64(3.836115509145935), np.float64(5.046041442780643))
 \end{pythoncode}
 
     Here we simulate 1000 replicates, storing the time to the MRCA for each replicate in the array \texttt{T\_mrca}.  We use the Python \texttt{enumerate} function to simplify the process of efficiently inserting values into this
@@ -366,20 +366,20 @@ processes are unique, it is best to manually specify them. For example,
 import concurrent.futures as cf
 
 def run_simulation(seed):
-    ts = msprime.sim_ancestry(10, random_seed=seed, ploidy=1)
+    ts = msprime.sim_ancestry(10, random_seed=seed)
     tree = ts.first()
     return tree.time(tree.root)
 
 N = 1000
 seeds = np.random.randint(1, 2**32 - 1, N)
 with cf.ProcessPoolExecutor(max_workers=4) as executor:
-    futures = [executor.submit(run_simulation, seed)
-        for seed in seeds]
-    T_mrca = np.array([f.result()
-        for f in cf.as_completed(futures)])
+    futures = [
+        executor.submit(run_simulation, seed) for seed in seeds]
+    T_mrca = np.array([
+        f.result() for f in cf.as_completed(futures)])
 print(np.mean(T_mrca))
 
->>> np.float64(1.7920618730043976)
+>>> np.float64(3.795412873593211)
 \end{pythoncode}
 
     In this example we create a list of 1000 seeds between 1 and $2^{32} -
@@ -402,12 +402,9 @@ seed in the examples in this tutorial for this reason.
 
 We cannot directly observe gene genealogies; rather, we observe mutations in a sample of sequences which ultimately have occurred on genealogical branches. We are
 therefore very often interested not just in the genealogies generated by the coalescent process, but also in the results of
-mutational processes imposed on these trees. \msprime\ simulates mutations under the infinitely many sites model by default
-(arbitrarily complex mutations are supported by the underlying data model, however). This is
-accessed by simulating mutations on the tree sequence using the \texttt{sim\_mutations} function. In its simplest form, this function takes
-a tree sequence object and a \texttt{mutation\_rate} parameter, then it returns a new tree sequence object with mutations added.
-As usual, this rate is the per-generation rate.
-
+mutational processes imposed on these trees. \msprime\ simulates mutations using the \texttt{sim\_mutations} function. In its simplest form, this function takes
+a tree sequence object and a \texttt{rate} parameter, then it returns a new tree sequence object with mutations added. This \texttt{rate} parameter specifies the
+per-generation per-site mutation rate. For example, the following code chunk simulates a tree with mutations:
 
 \begin{figure}[t]
 \begin{center}
@@ -417,41 +414,47 @@ As usual, this rate is the per-generation rate.
 \end{figure}
 
 \begin{pythoncode}
-ts = msprime.sim_ancestry(3, ploidy=1, random_seed=7)
-ts = msprime.sim_mutations(ts, rate=1, random_seed=7,
-    discrete_genome=False)
+ts = msprime.sim_ancestry(
+    2, random_seed=13, sequence_length=2)
+ts = msprime.sim_mutations(ts, rate=0.05, random_seed=2)
 tree = ts.first()
 tree.draw_svg()
 \end{pythoncode}
 
-The tree produced by this code chunk is shown in
-Figure~\ref{fig-tree-mutations}. Here we have two mutations, shown by the red "X"s.
+As this code chunk suggests, simulating mutations on a tree sequence is a two-step process.
+First, we simulate the genealogy using \texttt{sim\_ancestry} and store the resulting
+tree sequence in the variable \texttt{ts}. Note that we specified a \texttt{sequence\_length} parameter;
+this will specify the number of discrete sites in the sequence. After that, in the second
+line, we simulate mutations on this tree sequence using the \texttt{sim\_mutations} function.
+We specified a \texttt{rate} parameter for the \texttt{sim\_mutations} function; this
+parameter specifies the per-generation per-site mutation rate. We overwrote the \texttt{ts} variable
+with the new tree sequence object that now contains mutations to save memory, as otherwise we would
+store the tree sequence twice in memory---once without mutations and once with mutations. We then
+select the first and only tree in the tree sequence and plot it using the \texttt{draw\_svg()}
+method. The tree produced by this code chunk is shown in Figure~\ref{fig-tree-mutations}.
+
+As Figure ~\ref{fig-tree-mutations} shows, this code simulated two mutations, shown by the red "X"s.
 Mutations occur above a given node in the tree, and all samples beneath
-this node will inherit the mutation. The infinite sites mutations used
-here are simple binary mutations, that is, the ancestral state is 0 and
-the derived state is 1. One convenient way to access the resulting
-sample genotypes is to use the \texttt{genotype\_matrix()} method, which
-returns an \(m \times n\) NumPy array, if we have \(m\) variable sites
-and \(n\) samples. Thus, if \(G\) is the genotype matrix, \(G[j, k]\) is
-the state of the \(k\)th sample at the \(j\)th site. In our example
-above, the site 0 has a mutation over node 3, and site 1 has a mutation
-over node 1, and so we get the following matrix:
+this node will inherit the mutation. The mutational model used here, which is the default mutational
+model, is a Jukes-Cantor model (in the next section we will talk about other mutational models).
+One convenient way to access the resulting sample genotypes is to loop through variants in the
+tree sequence object. As each variant stores the position of the mutation, the alleles that are present
+In the following code chunk, we investigate the mutations that have occurred in the previous simulation:
 
 \begin{pythoncode}
-ts.genotype_matrix()
->>> array([[0, 1, 0],
-           [1, 0, 1]], dtype=int32)
+for var in ts.variants():
+    print(var.site.position, var.alleles, var.genotypes, sep="\t")
+>>> 0.0	('A', 'T')	[0 1 0 1]
+    1.0	('G', 'A')	[0 0 1 0]
 \end{pythoncode}
 
-    The genotype matrix gives a convenient way of accessing genotype
-information, but will consume a great deal of memory for larger
-simulations. See Section~\ref{processing-variants} for more information
-on how to access genotype data efficiently.
+Accessing genotype data is discussed in more detail in Section~\ref{processing-variants}.
 
 \runinhead{Other mutation models} \
 
-Beside a generic mutation model, \msprime\ also supports a list of mutation models: Table~\ref{tab:mutation-models}
-lists the available models. Moreover, \msprime\ allows for the specification of a custom mutation model—please refer
+Beside the Jukes-Cantor model mentioned before, the \msprime\ mutation generation engine supports a list of mutation models; Table~\ref{tab:mutation-models}
+lists these available models. These models include all the supported models by Seq-Gen~\citep{rambaut1997seq}, and they have been extensively tested against the
+output of Seq-Gen~\citep{rambaut1997seq} and Pylove~\citep{spielman2015pyvolve} to ensure their accuracy. Moreover, \msprime\ allows for the specification of a custom mutation model—please refer
 to the \msprime\ documentation for more in-depth information regarding creating a custom mutation model.
 
 \begin{table}[h]
@@ -491,14 +494,20 @@ SLiMMutationModel & An infinite-alleles model of mutation producing SLiM-style m
 \label{tab:mutation-models}
 \end{table}
 
-To specify a mutation model, we pass the model to the \texttt{sim\_mutations} function using the \texttt{model} parameter. For example,
-to use the Jukes-Cantor model, we would use the following code:
+To specify a mutation model, we pass the model to the \texttt{sim\_mutations} function using the \texttt{model} parameter. Some models
+require additional parameters to be specified. For example, the \texttt{HKY} model requires the transitions/transversions ratio to be specified.
+In the following code chunk, we simulate a tree with mutations using the \texttt{HKY} model:
 
 \begin{pythoncode}
-rate = 1.5e-3
+hky = msprime.HKY(kappa=0.75)
 ts = msprime.sim_ancestry(5, random_seed=5, sequence_length=1e6)
-ts = msprime.sim_mutations(ts, rate=rate, model="JC69", random_seed=7)
+ts = msprime.sim_mutations(
+    ts, rate=1e-6, model=hky, random_seed=7)
 \end{pythoncode}
+
+In this example, we first specified the mutational model in the first line as the \texttt{HKY} model. In this model, the \texttt{kappa} parameter specifies
+the transitions/transversions ratio. We then simulated a tree sequence with a sequence length of 1 million sites. We then simulated mutations on this tree
+sequence using the \texttt{HKY} model we specified with a mutation rate of \(10^{-6}\) per site per generation.
 
 \runinhead{Scaled mutation rate} \
 
@@ -516,12 +525,10 @@ N = 10000
 theta = 5
 S = np.zeros(N)
 replicates = msprime.sim_ancestry(2, population_size=1,
-    num_replicates=N,
-    ploidy=1,
-    discrete_genome=False)
+    num_replicates=N, ploidy=1, discrete_genome=False)
 for j, ts in enumerate(replicates):
-    ts = msprime.sim_mutations(ts, rate=theta/2,
-        discrete_genome=False)
+    ts = msprime.sim_mutations(
+        ts, rate=theta/2, discrete_genome=False)
     S[j] = ts.num_sites  # Number of segregrating sites.
 
 print(np.mean(S))
@@ -531,8 +538,8 @@ print(np.mean(S))
 \end{pythoncode}
 
     Note that here we set the mutation rate to \(\theta / 2\) (to cancel out
-the factor of 2 in the definition of \(\theta\)) and \(ploidy = 1\) (so
-that time is measured in haploid coalescent time units). Such
+the factor of 2 in the definition of \(\theta\)) and \emph{ploidy = 1} (so
+that time is measured in haploid coalescent time units; the following section discusses the ploidy parameter in more detail). Such
 factor-of-two gymnastics are unfortunately unavoidable in coalescent
 theory.
 
@@ -552,19 +559,19 @@ calculates a mean pairwise coalescence time for a sample of size 2 for different
 population sizes:
 
 \begin{pythoncode}
-def pairwise_T_mrca(population_size):
+def pairwise_T_mrca(population_size, ploidy):
     N = 10000
     T_mrca = np.zeros(N)
     for j, ts in enumerate(msprime.sim_ancestry(2,
             population_size=population_size,
-            num_replicates=N, ploidy=1)):
+            num_replicates=N, ploidy=ploidy)):
         tree = ts.first()
         T_mrca[j] = tree.time(tree.root)
     return np.mean(T_mrca)
 
 print(
-    pairwise_T_mrca(1), pairwise_T_mrca(10),
-    pairwise_T_mrca(100))
+    pairwise_T_mrca(1, 1), pairwise_T_mrca(10, 1),
+    pairwise_T_mrca(100, 1))
 
 >>> (np.float64(0.9965894759060011),
      np.float64(10.036428076042618),
@@ -572,30 +579,39 @@ print(
 
 \end{pythoncode}
 
-    Thus, when we specify \emph{population\_size = 10} we get a mean pairwise coalescence time of about
-10 generations, and with \emph{population\_size = 100}, the mean coalescence time is about
+    Thus, when we specify \emph{population\_size=10} we get a mean pairwise coalescence time of about
+10 generations, and with \emph{population\_size=100}, the mean coalescence time is about
 100 generations (when we simulate haploids). See \cite{wakely2008coalescent} for details on the
 biological interpretation of effective population size.
 
-By default, \(N_e = 1\) in \msprime, which is equivalent to measuring
+\runinhead{Ploidy and timescale}\label{ploidy} \
+
+The \texttt{sim\_ancestry} function accepts a ploidy parameter. Theoretically, ploidy referes the number of genomes per individual.
+In \msprime, the ploidy parameter determines the number of nodes per sample, and it scales time accordingly.
+
+By default, \emph{population\_size=1} in \msprime, which is equivalent to measuring
 time in units of \(N_e\) generations. It is very important to note that
-\(N_e\) in \msprime\ is the \emph{diploid} effective population size,
-which means that all times are scaled by \(2N_e\) (rather than $N_e$ for a
-haploid coalescent). Thus, if we wish to compare the results that are
-given in the literature for a haploid coalescent, then we must set
-\(N_e\) to $1/2$ to compensate, or set \(ploidy = 1\). For example, we know that the expected
+\texttt{population\_size} in \msprime\ is the \emph{ploidy} effective population size,
+which means that by default, all times are scaled by \(2N_e\), since the default ploidy is diploid. Similarly, however,
+if we set ploidy to 1, i.e., simulating haploids, time will be scaled by $N_e$. Thus, care about ploidy
+and population size is required when comparing results from \msprime\ with expectations from the literature, which
+are generally given in haploid coalescent time units. For example, we know that the expected
 coalescence time for a sample of size 2 is 1, and this is the value we
-obtain from the \texttt{pairwise\_T\_mrca} function when we have
-\(N_e = 0.5\) or when we set \(N_e = 1\) and \(ploidy = 1\). We will usually assume that we are working in haploid
-coalescent time units from here on, and so set \(N_e = 1\) and \(ploidy = 1\) in most
+obtain from the \texttt{pairwise\_T\_mrca} function when we set \emph{population\_size=1}, since \emph{ploidy}
+is set to 1. To obtain the same result for a diploid population, where ploidy is set to 2, first, we need to set
+sample size to 1 since we will get two nodes per sample instead of one node per sample. And second, we need to set population
+size to 0.5, as coalescence time is scaled by \(2N_e\) instead of \(N_e\).
+
+We will usually assume that we are working in haploid
+coalescent time units from here on and so set \emph{population\_size=1} and \emph{ploidy=1} in most
 examples. However, when running simulations of a specific organism and/or population, it
 is substantially more convenient to use an appropriate estimated value
-for \(N_e\) so that times are directly interpretable.
+for \emph{population\_size} so that times are directly interpretable.
 
 \runinhead{Exponentially growing/shrinking
 populations}\label{exponentially-growingshrinking-populations} \
 
-When we provide an \(N_e\) parameter, this specifies a fixed effective
+When we provide an \emph{population\_size} parameter, this specifies a fixed effective
 population size. We can also model populations that are exponentially
 growing or contracting at some rate over time. Given a population size
 at the present \(s\) and a growth rate \(\alpha\), the size of the
@@ -604,11 +620,9 @@ again that time and rates are measured in units of \emph{generations},
 not coalescent units.)
 
 In \msprime, the initial size and growth rate for a particular population
-are specified using a \texttt{Demography} object. A list
-of these objects (describing the different populations; see
-Section~\ref{population-structure}) are then provided to the
-\texttt{sim\_ancestry}
-function. When providing a list of
+are specified using a \texttt{Demography} object. A \texttt{Demography} object
+(describing the different populations; see Section~\ref{population-structure})
+is then provided to the \texttt{sim\_ancestry} function. When providing a list of
 \texttt{Demography} objects, the \texttt{population\_size} parameter to
 \texttt{sim\_ancestry} is not required, as the \texttt{initial\_size} of the
 \texttt{Demography} objects performs the same task. For example,
@@ -618,14 +632,11 @@ def pairwise_T_mrca(growth_rate):
     N = 10000
     T_mrca = np.zeros(N)
     demography = msprime.Demography()
-    demography.add_population(initial_size=1,
-        growth_rate=growth_rate)
+    demography.add_population(
+        initial_size=1, growth_rate=growth_rate)
     replicates = msprime.sim_ancestry(
-        samples=2,
-        demography=demography,
-        num_replicates=N,
-        ploidy=1,
-        random_seed=16)
+        samples=2, demography=demography,
+        num_replicates=N, random_seed=16)
 
     for j, ts in enumerate(replicates):
         tree = ts.first()
@@ -633,17 +644,17 @@ def pairwise_T_mrca(growth_rate):
     return np.mean(T_mrca)
 
 print(
-    pairwise_T_mrca(0.1), pairwise_T_mrca(0),
-    pairwise_T_mrca(-0.1))
->>> (np.float64(0.9309511916503714),
-     np.float64(1.0179152621046077),
-     np.float64(1.1532469384850648))
+    pairwise_T_mrca(0.05), pairwise_T_mrca(0),
+    pairwise_T_mrca(-0.05))
+>>> (np.float64(1.8619023833007429),
+     np.float64(2.0358305242092154),
+     np.float64(2.3064938769701295))
 \end{pythoncode}
 
     Here we simulate the pairwise \(T_{MRCA}\) for positive, zero and
-negative growth rates. When we have a growth rate of zero, we see that
-recover the usual result of 1.0 (as our initial size, and hence \(N_e\),
-is set to 1 haploid individuals). When the growth rate is positive, we see that the
+negative growth rates. When we have a growth rate of zero, we see that we
+recover the usual result of 2.0—as our ploidy-scaled initial size (two genomes x one individual), and hence \(N_e\),
+is set to 1 diploid individual. When the growth rate is positive, we see that the
 mean coalescence time is reduced, since the population size is getting
 smaller as we go backwards in time, resulting in an increased rate of
 coalescence. Conversely, when we have a negative growth rate, the
@@ -670,8 +681,8 @@ parameter specifies the growth rate of the population. Both parameters
 are lists, where each element corresponds to a population. In the
 following line, we set up a simple model of two populations in isolation:
 \begin{pythoncode}
-    demography = msprime.Demography.isolated_model([1, 1],
-        growth_rate=[0.01, 0.02])
+    demography = msprime.Demography.isolated_model(
+        [1, 1], growth_rate=[0.01, 0.02])
 \end{pythoncode}
 Although the two populations are simulated without migration, we can
 specify migration rates between populations using the \texttt{set\_migration\_rate()}
@@ -680,6 +691,10 @@ To add migration between populations 0 and 1, we use the following line:
 \begin{pythoncode}
     demography.set_migration_rate(source=0, dest=1, rate=0.1)
 \end{pythoncode}
+
+In this line, the source argument specifies the source population from which lineages originate. The
+dest argument specifies the destination population to which lineages migrate. The rate argument
+specifies the per-generation migration rate between the source and destination populations.
 
 \runinhead{Island model}\label{island-model} \
 
@@ -690,8 +705,8 @@ the same parameters as the \texttt{Demography.isolated\_model()} method in
 addition to the \texttt{migration\_rate} parameter. The following line sets up an
 \texttt{island\_model()} with three populations:
 \begin{pythoncode}
-    demography = msprime.Demography.island_model([1, 1, 1],
-        migration_rate=0.1)
+    demography = msprime.Demography.island_model(
+        [1, 1, 1], migration_rate=0.1)
 \end{pythoncode}
 
 This single line is equivalent to setting up an isolated model with three populations
@@ -722,8 +737,9 @@ formed by the admixture of two or more populations.
 \centering
 % \qquad
 \includegraphics[width=0.75\textwidth]{images/admixture.pdf}
-\caption{\label{fig:complex-demography} An example of a complex demography that could be
-simulated using \msprime.}
+\caption{\label{fig:complex-demography}An example of a complex demography that could be
+simulated using \msprime. This figure is generated by expressing demography using the
+\texttt{Demes} standard format and using the \texttt{demesdraw} package.}
 \end{figure}
 
 \runinhead{Complex demography}\label{Complex-demography} \
@@ -742,10 +758,10 @@ illustrates this model.
     demography.add_population(name="ADMIX", initial_size=100)
     demography.add_population(name="ANC", initial_size=100)
     demography.add_admixture(
-        time=10, derived="ADMIX",
-        ancestral=["A", "B"], proportions=[0.25, 0.75])
-    demography.add_population_split(time=20,
-        derived=["A", "B"], ancestral="ANC")
+        time=10, derived="ADMIX", ancestral=["A", "B"],
+        proportions=[0.25, 0.75])
+    demography.add_population_split(
+        time=20, derived=["A", "B"], ancestral="ANC")
 \end{pythoncode}
 
 In this example, we use the \texttt{add\_population()} method to add the four populations
@@ -759,10 +775,13 @@ populations, and the ancestral population.
 Simulating this model using the \texttt{sim\_ancestory} function is straightforward:
 \begin{pythoncode}
 ts = msprime.sim_ancestry(
-    samples={"A":1, "B":1, "ADMIX":1},
-    demography=demography,
-    )
+    samples={"A":1, "B":1, "ADMIX":1}, demography=demography)
 \end{pythoncode}
+
+In this line, we pass a dictionary as the \texttt{samples} parameter to the \texttt{sim\_ancestry} method to
+specify the number of samples drawn from each population. Here, we draw one sample from each of the populations
+\emph{A}, \emph{B}, and \emph{ADMIX}. The \texttt{demography} object that was set up in the previous code chunk
+is passed to the \texttt{sim\_ancestry} function to simulate the tree sequence under this complex demography.
 
 \runinhead{Demography debugger}\label{demography-debugger}\
 
@@ -786,57 +805,57 @@ demographic models, to facilitate interchange between simulators, as well as bet
 demographic inference software and simulators. Demes models are typically written as a
 YAML file, and loaded into Python using the demes library.
 
-Consider the following Demes model that describes two extant demes A and B, which
-have a common ancestor X.
+For example, the complex demography model described in section~\ref{Complex-demography} can be
+written in the Demes format as follows:
 
 \begin{footnotesize}
 \begin{minted}{yaml}
 time_units: generations
 defaults:
-    {epoch: {start_size: 5000}}
+    {epoch: {start_size: 100}}
 demes:
-    - {name: X, epochs: [{end_time: 1000}]}
-    - {name: A, ancestors: [X]}
-    - {name: B, ancestors: [X],
-        epochs: [{end_time: 500, start_size: 2000},
-        {end_time: 0, start_size: 400, end_size: 10000}]}
-migrations:
-    - {source: A, dest: B, rate: 1e-4}
-
+    - {name: ANC, epochs: [{end_time: 20}]}
+    - {name: A, ancestors: [ANC]}
+    - {name: B, ancestors: [ANC]}
+    - {name: ADMIX, ancestors: [A, B],
+        proportions: [0.25, 0.75], start_time: 10}
 \end{minted}
 \end{footnotesize}
 
-When visualised using \texttt{demesdraw}~\citep{gower_grahamgowerdemesdraw_2024},
-the demographic model is represented as shown in Figure~\ref{fig-demes-plot}.
- In this plot, arrows indicate movement of individuals as time proceeds from
-the past to the present.
+This YAML file can be loaded into Python using the demes library and can be represented
+easily using the \texttt{demesdraw} package. The following code chunk demonstrates how to
+load the Demes model from the YAML file and visualise it using \texttt{demesdraw}:
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\textwidth]{images/demes.pdf}
-\caption{\label{fig-demes-plot}A demes YAML file visualised using \texttt{demesdraw}.}
-\end{figure}
+\begin{pythoncode}
+graph = demes.load("admixture.yaml")
+demesdraw.tubes(graph)
+\end{pythoncode}
+
+This code chunk produces Figure~\ref{fig:complex-demography}. In this figure, arrows indicate
+the movement of individuals as time proceeds from the past to the present.
+
 
 To import demes from a YAML file, we can use the \texttt{demes.load()} function to
 load a demes graph object. Then, the \texttt{Demography.from\_demes()} method is used to convert a
 \texttt{demes graph} object into a \texttt{Demography} object. On the
 other hand, the \texttt{Demography.to\_demes()} method performs the opposite conversion; it
-converts a \texttt{Demography} object to a \texttt{demes graph} object, which can be then
+converts a \texttt{Demography} object to a \texttt{demes graph} object, which can then be
 exported as a YAML file.
 
 For example:
 
 \begin{pythoncode}
 import demes
-graph = demes.load("demes_example_01.yaml")
+graph = demes.load("admixture.yaml")
 demography = msprime.Demography.from_demes(graph)
-ts = msprime.sim_ancestry({"A":2, "B":3},
+ts = msprime.sim_ancestry(
+    {"A":2, "B":3, "ADMIX":2},
     demography=demography, random_seed=1234)
 \end{pythoncode}
 
-The previous code block loads the example demes model of figure~\ref{fig-demes-plot} from a YAML file. Then, a demography
+The previous code block loads the example demes model of Figure~\ref{fig:complex-demography} from a YAML file. Then, a demography
 object is created from the loaded deme graph. Finally, a tree is simulated using the demography object, with samples
-drawn from demes A and B.
+drawn from demes A, B, and ADMIX.
 
 
 \subsubsection{Drawing samples}\label{ancient-samples}
@@ -866,9 +885,7 @@ ts = msprime.sim_ancestry(
         msprime.SampleSet(1, population=1, time=0.75),
         # Ancient sample in deme 1
     ],
-    demography=demography,
-    ploidy=1,
-    random_seed=22)
+    demography=demography, ploidy=1, random_seed=22)
 tree = ts.first()
 \end{pythoncode}
 
@@ -900,10 +917,9 @@ Adding recombination to a simulation is simple, requiring very minor
 changes to the methods given above.
 
 \begin{pythoncode}
-ts = msprime.sim_ancestry(10, population_size=1e4,
-    sequence_length=1e5,
-    recombination_rate=1e-8,
-    random_seed=3)
+ts = msprime.sim_ancestry(
+    10, population_size=1e4, sequence_length=1e5,
+    recombination_rate=1e-8, random_seed=3)
 print(ts.num_trees)
 >>> 135
 \end{pythoncode}
@@ -912,15 +928,11 @@ print(ts.num_trees)
 defines the length of the genomic region to be simulated, and
 \texttt{recombination} \texttt{\_rate}, which defines the rate of recombination
 per unit of sequence length, per generation. It is often useful to
-think of both sequence lengths and recombination rates as defined in units of base-pairs. (Note, however, that these are continuous values, so this
-correspondence should not be taken too literally. Note also that because \msprime\ assumes an infinite sites mutation model
-the \texttt{length} parameter is not connected to the number
-of mutational \emph{sites}. Thus any number of mutations can occur on a
-given sequence length, depending on the mutation rate specified.)
-For this example, we
-defined a sequence length of 100kb, and a recombination rate of
+think of both sequence lengths and recombination rates as defined in units of base-pairs.
+
+For this example, we defined a sequence length of 100kb, and a recombination rate of
 \(10^{-8}\) per base per generation. The result of this particular simulation is a
-\emph{tree sequence} that contains 82 distinct trees. Other replicate
+\emph{tree sequence} that contains 135 distinct trees. Other replicate
 simulations with different random seeds will usually result in different
 numbers of trees.
 
@@ -970,15 +982,11 @@ from the simulation, and the density of breakpoints closely follows the
 recombination rate, as expected.
 
 \begin{pythoncode}
-# Read in the recombination map and run the simulation.
 infile = "genetic_map_GRCh37_chr22.txt"
 recomb_map = msprime.RateMap.read_hapmap(infile)
 ts = msprime.sim_ancestry(
-    samples=100,
-    population_size=10**4,
-    recombination_rate=recomb_map,
-    ploidy=1,
-    random_seed=1)
+    samples=100, population_size=10**4,
+    recombination_rate=recomb_map, ploidy=1, random_seed=1)
 \end{pythoncode}
 
 \begin{figure}
@@ -1055,11 +1063,8 @@ of the \texttt{sim} \texttt{\_ancestry} function. The following example shows ho
 
 \begin{pythoncode}
 ts1 = msprime.sim_ancestry(
-    10,
-    sequence_length=10,
-    recombination_rate=0.1,
-    model=msprime.SmcApproxCoalescent(),
-    random_seed=1234)
+    10, sequence_length=10, recombination_rate=0.1,
+    model=msprime.SmcApproxCoalescent(), random_seed=1234)
 \end{pythoncode}
 
 For non-parametric models, a string format of the model name can also be used. For example, the following code block gives exactly the
@@ -1067,11 +1072,8 @@ same result as the previous one.
 
 \begin{pythoncode}
 ts2 = msprime.sim_ancestry(
-    10,
-    sequence_length=10,
-    recombination_rate=0.1,
-    model="smc",
-    random_seed=1234)
+    10, sequence_length=10, recombination_rate=0.1,
+    model="smc", random_seed=1234)
 \end{pythoncode}
 
 The string format is not recommended to be used for multiple models, as specifying the model explicitly allows us to set the model's \texttt{duration}
@@ -1086,9 +1088,7 @@ is not reached. The following example shows how to simulate the coalescent proce
 \begin{pythoncode}
 
 ts = msprime.sim_ancestry(
-    3,
-    population_size=10,
-    start_time=5,
+    3, population_size=10, start_time=5,
     model=msprime.DiscreteTimeWrightFisher(duration=10),
     random_seed=1234)
 \end{pythoncode}
@@ -1112,14 +1112,12 @@ past, while the faster standard model can be used to simulate the more distant p
 
 \begin{pythoncode}
 ts = msprime.sim_ancestry(
-    2,
-    population_size=1000,
+    2, population_size=1000,
     model=[
         msprime.DiscreteTimeWrightFisher(duration=200),
         msprime.StandardCoalescent(),
     ],
-    random_seed=2953
-)
+    random_seed=2953)
 \end{pythoncode}
 
 In this code block, for example, we simulate the coalescent process for two samples under the \emph{DTWF} model for the first 200 generations
@@ -1147,9 +1145,7 @@ sweep_model = msprime.SweepGenicSelection(
     position=L / 2,  # middle of chrom
     start_frequency=1.0 / (2 * Ne),
     end_frequency=1.0 - (1.0 / (2 * Ne)),
-    s=0.25,
-    dt=1e-6,
-)
+    s=0.25, dt=1e-6)
 \end{pythoncode}
 
 In the above code block, we defined a hard sweep on the middle position of a 1 megabase region. This sweep starts with a frequency of 1/(2*Ne) and
@@ -1163,10 +1159,8 @@ msprime.sim_ancestry(
     5,
     model=[sweep_model,
            msprime.StandardCoalescent()],
-    population_size=Ne,
-    recombination_rate=1e-7,
-    sequence_length=L,
-)
+    population_size=Ne, recombination_rate=1e-7,
+    sequence_length=L)
 \end{pythoncode}
 
 This code block simulates the coalescent process for 5 samples using the selective sweep model and then runs the standard coalescent model until
@@ -1249,17 +1243,16 @@ from a simple two-population model with human-like parameters:
 
 \begin{pythoncode}
 demography = msprime.Demography.isolated_model([2*(10**4)]*2)
-demography.add_mass_migration(time=50000, source=1,
-    dest=0, proportion=1.0)
+demography.add_mass_migration(
+    time=50000, source=1, dest=0, proportion=1.0)
 
 ts = msprime.sim_ancestry(
     samples={0: 10**5, 1: 10**5},
     demography=demography, recombination_rate=1e-8,
-    sequence_length=10*10**6, random_seed=3,
-    ploidy=1)
+    sequence_length=10*10**6, random_seed=3, ploidy=1)
 
-ts = msprime.sim_mutations(ts, rate=1e-8,
-    random_seed=7, discrete_genome=False)
+ts = msprime.sim_mutations(
+    ts, rate=1e-8, random_seed=7, discrete_genome=False)
 print((ts.num_trees, ts.num_sites))
 
 >>> (93844, 102270)
@@ -1293,11 +1286,10 @@ def ibd_segments(ts, a, b):
     segment_lengths.append(ts.sequence_length - last_left)
     return np.array(segment_lengths) / ts.sequence_length
 
-sns.histplot(ibd_segments(ts, 0, 1), label="Within population",
-    kde=True, stat="density")
+sns.histplot(
+    ibd_segments(ts, 0, 1), label="Within population", kde=True)
 sns.histplot(ibd_segments(ts, 0, 10**5),
-    label="Between populations",
-    kde=True, stat="density")
+    label="Between populations", kde=True)
 plt.xlim(-0.0001, 0.003)
 plt.legend()
 plt.ylabel("Count")
@@ -1414,9 +1406,9 @@ method:
 \begin{pythoncode}
 samples = [1, 3, 5, 7]
 ts_subset = ts.simplify(samples)
-print((
+print(
     ts_subset.num_sites, ts_subset.num_trees,
-    ts.num_sites, ts.num_trees))
+    ts.num_sites, ts.num_trees)
 >>> (11925, 5323, 102783, 93598)
 \end{pythoncode}
 
@@ -1633,8 +1625,7 @@ T_total_col = np.zeros(ns.shape[0] * num_reps)
 row = 0
 for n in ns:
     for ts in msprime.sim_ancestry(n, population_size=1,
-            num_replicates=num_reps,
-            ploidy=1):
+            num_replicates=num_reps, ploidy=1):
 
         tree = ts.first()
         n_col[row] = n
@@ -1748,8 +1739,7 @@ n = 20
 T_total_20 = T_total_col[n_col == n]
 ts = np.linspace(0, np.max(T_total_20), 25)
 t_densities = np.array([T_total_density(n, t) for t in ts])
-sns.histplot(T_total_20, kde=True,
-    stat="density")
+sns.histplot(T_total_20, kde=True, stat="density")
 plt.plot(ts, t_densities, marker="o", label="Analytical")
 plt.xlabel("T_total")
 plt.legend();
@@ -1785,8 +1775,7 @@ for j, ts in enumerate(replicates):
     simulation[j] = ts.num_sites  # number of seg. sites
 ks = np.arange(np.max(simulation))
 analytical = np.array([S_dist(n, theta, k) for k in ks])
-sns.histplot(simulation, kde=True,
-    stat="density")
+sns.histplot(simulation, kde=True, stat="density")
 plt.plot(ks, analytical, marker='o', label="Analytical")
 plt.xlabel("Segregating sites")
 plt.legend();
@@ -1837,17 +1826,14 @@ rho_col = np.zeros(N)
 s_col = np.zeros(N)
 row = 0
 for rho in rhos:
-    replicates = msprime.sim_ancestry(1,
-        num_replicates=num_replicates,
-        recombination_rate=rho/2,
-        population_size=0.5,
-        discrete_genome=False, sequence_length=1
-        )
+    replicates = msprime.sim_ancestry(
+        1, num_replicates=num_replicates,
+        recombination_rate=rho/2, population_size=0.5,
+        discrete_genome=False, sequence_length=1)
 
     for ts in replicates:
-        ts = msprime.sim_mutations(ts, rate=theta/2,
-            discrete_genome=False)
-
+        ts = msprime.sim_mutations(
+            ts, rate=theta/2, discrete_genome=False)
         rho_col[row] = rho
         s_col[row] = ts.num_sites
         row += 1
@@ -1865,10 +1851,8 @@ time scales).
 \begin{pythoncode}
 def pairwise_S_mean(theta):
     return theta
-
 def f2(rho):
     return (rho + 18) / (rho**2 + 13 * rho + 18)
-
 def pairwise_S_var(theta, rho):
     integral = scipy.integrate.quad(lambda x: (rho-x)*f2(x),0,rho)
     return theta + 2 * theta**2 * integral[0] / rho**2
@@ -1930,25 +1914,21 @@ true_m = 0.3
 num_loci = 200
 
 def run_sims(m, num_loci=1, theta=0):
-    demography = msprime.Demography.island_model([1, 1],
-        migration_rate=m)
-    replicates = msprime.sim_ancestry({0: nsamp, 1:nsamp},
-        demography=demography,
-        num_replicates=num_loci,
-        ploidy=1,
-        discrete_genome=False,
-        sequence_length=1)
+    demography = msprime.Demography.island_model(
+        [1, 1], migration_rate=m)
+    replicates = msprime.sim_ancestry(
+        {0: nsamp, 1:nsamp}, demography=demography,
+        num_replicates=num_loci, ploidy=1,
+        discrete_genome=False, sequence_length=1)
     for ts in replicates:
-        yield msprime.sim_mutations(ts, rate=theta,
-            discrete_genome=False)
+        yield msprime.sim_mutations(
+            ts, rate=theta, discrete_genome=False)
 
 def get_joint_site_frequency_spectra(reps):
     data = np.zeros((num_loci, nsamp + 1, nsamp + 1))
     for rep_index, ts in enumerate(reps):
         data[rep_index] = ts.allele_frequency_spectrum([
-            [0, 1],
-            [2,3]],
-            polarised=True)
+            [0, 1], [2,3]], polarised=True)
     return data
 
 truth = get_joint_site_frequency_spectra(
@@ -2009,23 +1989,21 @@ import tskit
 num_reps = 100
 num_prior_draws = 10000
 prior_m = np.random.exponential(0.1, num_prior_draws)
-
 def approx_jSFS(m):
-  reps = run_sims(m, num_loci=num_reps)
-  B = np.zeros((num_reps, nsamp + 1, nsamp + 1))
-  for rep_index, ts in enumerate(reps):
-      B[rep_index] = ts.allele_frequency_spectrum([[0,1],[2,3]],
-        mode='branch',
-        polarised=True,
-        span_normalise=False)
-  data = np.mean(B, axis=0)
-  return data / np.sum(data)
+    reps = run_sims(m, num_loci=num_reps)
+    B = np.zeros((num_reps, nsamp + 1, nsamp + 1))
+    for rep_index, ts in enumerate(reps):
+        B[rep_index] = ts.allele_frequency_spectrum(
+            [[0,1],[2,3]], mode='branch',
+            polarised=True, span_normalise=False)
+    data = np.mean(B, axis=0)
+    return data / np.sum(data)
 
 with cf.ProcessPoolExecutor(max_workers=4) as executor:
-  futures = [executor.submit(approx_jSFS, prior)
-    for prior in prior_m]
-  prior_jSFS = np.array([f.result()
-    for f in cf.as_completed(futures)])
+    futures = [
+        executor.submit(approx_jSFS, prior) for prior in prior_m]
+    prior_jSFS = np.array([
+        f.result() for f in cf.as_completed(futures)])
 
 print(prior_jSFS[0])
 \end{pythoncode}
@@ -2092,11 +2070,8 @@ keep = np.where(distances < cutoff)
 post_m = prior_m[keep]
 mean_m = np.mean(post_m)
 ci_m = np.percentile(post_m, 2.5), np.percentile(post_m, 95.75)
-sns.histplot(prior_m, label="Prior", kde=True,
-    stat="density")
-sns.histplot(post_m, label="Posterior", kde=True,
-    stat="density")
-# Plotting code omitted.
+sns.histplot(prior_m, label="Prior", kde=True, stat="density")
+sns.histplot(post_m, label="Posterior", kde=True, stat="density")
 \end{pythoncode}
 
 The mean and the 95\% approximate posterior credible interval for \(m\)
