@@ -599,7 +599,7 @@ time in units of \(N_e\) generations. It is very important to note that
 which means that by default, all times are scaled by \(2N_e\), since the default ploidy is diploid. Similarly, however,
 if we set ploidy to 1, i.e., simulating haploids, time will be scaled by $N_e$. Thus, care about ploidy
 and population size is required when comparing results from \msprime\ with expectations from the literature, which
-are generally given in haploid coalescent time units. For example, we know that the expected
+are generally given in diploid coalescent time units. For example, we know that the expected
 coalescence time for a sample of size 2 is 1, and this is the value we
 obtain from the \texttt{pairwise\_T\_mrca} function when we set \emph{population\_size=1}, since \emph{ploidy}
 is set to 1. To obtain the same result for a diploid population, where ploidy is set to 2, first, we need to set
