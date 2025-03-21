@@ -703,6 +703,13 @@ In this line, the source argument specifies the source population from which lin
 dest argument specifies the destination population to which lineages migrate. The rate argument
 specifies the per-generation migration rate between the source and destination populations.
 
+Note that the migration rate defined by \msprime\ is the lineage migrationn rate, not the individual
+migration rate: While the individual migration rate is the proportion of individuals in the source
+population that migrate to the destination population in each generation, the lineage migration rate
+is defined as this proportion (individual migration rate) multiplied by the ratio between the source
+population size and the destination population size. Please refer to the \msprime\ documentation for
+more information on the migration rate.
+
 \runinhead{Island model}\label{island-model} \
 
 When the migration rate is the same between simulated populations, we don't
