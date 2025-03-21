@@ -58,10 +58,13 @@
 
 \title*{Coalescent simulation with msprime}
 \titlerunning{Coalescent simulation with msprime}
-\author{Jerome Kelleher and Konrad Lohse}
+\author{Jerome Kelleher, Hossameldin Loay, and Konrad Lohse}
 \institute{Jerome Kelleher \at
 Big Data Institute, Li Ka Shing Centre for Health Information and Discovery,
 University of Oxford, Oxford, OX3 7FZ, UK. \email{jerome.kelleher@bdi.ox.ac.uk}
+\and Hossameldin Loay \at
+Big Data Institute, Li Ka Shing Centre for Health Information and Discovery,
+University of Oxford, Oxford, OX3 7FZ, UK. \email{Hossam.ali@well.ox.ac.uk}
 \and Konrad Lohse \at Institute of Evolutionary Biology, University of Edinburgh,
 King's Buildings, Edinburgh EH9 3FL, UK. \email{konrad.lohse@ed.ac.uk}}
 %
@@ -263,13 +266,17 @@ All code chunks in this chapter are included in the accompanying Jupyter
 notebook and are fully runnable.
 
 The output of one random realisation of this process is shown in
-Figure~\ref{fig-simple-tree}. The resulting tree has 7 nodes: nodes 0, 1, 2, and 3 are \emph{leaves}, and
-represent our samples. Node 4 is an \emph{internal} node, and is the
-parent of 1 and 3. Similarly, Node 5 is an internal node, and is the
-parent of 0 and 2. Node 6 is also an internal node, and is the root of
+Figure~\ref{fig-simple-tree}. The resulting tree has 7 nodes:
+nodes 0, 1, 2, and 3 are \emph{leaves} and
+represent our samples. Note here that 2 samples gave 4 nodes;
+that's because the default ploidy in \msprime\ is diploid.
+More details about ploidy in \msprime\ are in section~\ref{ploidy}.
+Node 4 is an \emph{internal} node and is the
+parent of 1 and 3. Similarly, Node 5 is an internal node and is the
+parent of 0 and 2. Node 6 is also an internal node and is the root of
 the tree. In \msprime, we always refer to nodes by their integer IDs and
 obtain information about these nodes by calling methods on the tree
-object. For example the code \texttt{tree.children(6)} will return the
+object. For example, the code \texttt{tree.children(6)} will return the
 tuple \texttt{(4,\ 5)} here, as these are the node IDs of the children
 of the root node. Similarly, \texttt{tree.parent(0)} will return
 \texttt{5}.
@@ -415,8 +422,8 @@ per-generation per-site mutation rate. For example, the following code chunk sim
 
 \begin{pythoncode}
 ts = msprime.sim_ancestry(
-    2, random_seed=13, sequence_length=2)
-ts = msprime.sim_mutations(ts, rate=0.05, random_seed=2)
+    2, random_seed=13, sequence_length=10)
+ts = msprime.sim_mutations(ts, rate=0.01, random_seed=2)
 tree = ts.first()
 tree.draw_svg()
 \end{pythoncode}
@@ -444,8 +451,8 @@ In the following code chunk, we investigate the mutations that have occurred in 
 \begin{pythoncode}
 for var in ts.variants():
     print(var.site.position, var.alleles, var.genotypes, sep="\t")
->>> 0.0	('A', 'T')	[0 1 0 1]
-    1.0	('G', 'A')	[0 0 1 0]
+>>> 3.0	('A', 'T')	[0 1 0 1]
+    9.0	('G', 'A')	[0 0 1 0]
 \end{pythoncode}
 
 Accessing genotype data is discussed in more detail in Section~\ref{processing-variants}.
@@ -454,7 +461,7 @@ Accessing genotype data is discussed in more detail in Section~\ref{processing-v
 
 Beside the Jukes-Cantor model mentioned before, the \msprime\ mutation generation engine supports a list of mutation models; Table~\ref{tab:mutation-models}
 lists these available models. These models include all the supported models by Seq-Gen~\citep{rambaut1997seq}, and they have been extensively tested against the
-output of Seq-Gen~\citep{rambaut1997seq} and Pylove~\citep{spielman2015pyvolve} to ensure their accuracy. Moreover, \msprime\ allows for the specification of a custom mutation model—please refer
+output of Seq-Gen~\citep{rambaut1997seq} and Pyvolve~\citep{spielman2015pyvolve} to ensure their accuracy. Moreover, \msprime\ allows for the specification of a custom mutation model—please refer
 to the \msprime\ documentation for more in-depth information regarding creating a custom mutation model.
 
 \begin{table}[h]
@@ -595,7 +602,7 @@ time in units of \(N_e\) generations. It is very important to note that
 which means that by default, all times are scaled by \(2N_e\), since the default ploidy is diploid. Similarly, however,
 if we set ploidy to 1, i.e., simulating haploids, time will be scaled by $N_e$. Thus, care about ploidy
 and population size is required when comparing results from \msprime\ with expectations from the literature, which
-are generally given in haploid coalescent time units. For example, we know that the expected
+are generally given in diploid coalescent time units. For example, we know that the expected
 coalescence time for a sample of size 2 is 1, and this is the value we
 obtain from the \texttt{pairwise\_T\_mrca} function when we set \emph{population\_size=1}, since \emph{ploidy}
 is set to 1. To obtain the same result for a diploid population, where ploidy is set to 2, first, we need to set
@@ -622,10 +629,10 @@ not coalescent units.)
 In \msprime, the initial size and growth rate for a particular population
 are specified using a \texttt{Demography} object. A \texttt{Demography} object
 (describing the different populations; see Section~\ref{population-structure})
-is then provided to the \texttt{sim\_ancestry} function. When providing a list of
-\texttt{Demography} objects, the \texttt{population\_size} parameter to
+is then provided to the \texttt{sim\_ancestry} function. When providing a
+\texttt{Demography} object, setting a \texttt{population\_size} to
 \texttt{sim\_ancestry} is not required, as the \texttt{initial\_size} of the
-\texttt{Demography} objects performs the same task. For example,
+\texttt{Demography} object performs the same task. For example,
 
 \begin{pythoncode}
 def pairwise_T_mrca(growth_rate):
@@ -695,6 +702,13 @@ To add migration between populations 0 and 1, we use the following line:
 In this line, the source argument specifies the source population from which lineages originate. The
 dest argument specifies the destination population to which lineages migrate. The rate argument
 specifies the per-generation migration rate between the source and destination populations.
+
+Note that the migration rate defined by \msprime\ is the lineage migrationn rate, not the individual
+migration rate: While the individual migration rate is the proportion of individuals in the source
+population that migrate to the destination population in each generation, the lineage migration rate
+is defined as this proportion (individual migration rate) multiplied by the ratio between the source
+population size and the destination population size. Please refer to the \msprime\ documentation for
+more information on the migration rate.
 
 \runinhead{Island model}\label{island-model} \
 
