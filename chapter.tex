@@ -229,7 +229,7 @@ At the simplest level, coalescent simulation is about generating trees (or genea
 These trees (which are always rooted) represent the simulated history of a sample of individuals
 drawn from an idealised population (in later sections we show how to
 vary the properties of this idealised population). The function
-\texttt{msprime.sim\_ancestry} runs these simulations and the parameters
+\texttt{msprime.sim\_ancestry} runs these simulations, and the parameters
 that we provide define the simulation that is
 run. It returns a \texttt{TreeSequence} object, which represents the
 full coalescent history of the sample. In later sections we discuss the
@@ -238,14 +238,14 @@ sequence of correlated trees. For now, we focus on non-recombining sequences and
 use the method \texttt{first()} to obtain the
 tree object from this tree sequence. (In general, we can use the \texttt{trees()} iterator
 to get all trees; see Section~\ref{recombination}.) For example, here we simulate a
-history for a sample of three chromosomes:
+history for a sample of two individuals:
 
 \begin{figure}[t]
 \begin{center}
 \includegraphics[width=0.4\textwidth]{images/plot_1.pdf}
 \end{center}
-\caption{\label{fig-simple-tree} Coalescent tree with mutations.
-using the \texttt{tree.draw\_svg()} method.}
+\caption{\label{fig-simple-tree} Coalescent tree simulated by \msprime.
+The tree is plotted using the \texttt{tree.draw\_svg()} method.}
 \end{figure}
 
 \begin{pythoncode}
@@ -315,7 +315,7 @@ for details on how to specify population models and interpret times). It is impo
 that although time is measured in units of generations, this is of course
 an approximation and we may have fractional values. Internally,
 during a simulation time is scaled into coalescent units
-using the \texttt{Ne} parameter and once the
+using the \texttt{population\_size} parameter and once the
 simulation is complete, times are scaled back into units of generations
 before being presented to the user. This removes the burden of such
 tedious time scaling calculations from the user. We discuss these time
@@ -513,7 +513,7 @@ ts = msprime.sim_mutations(
 \end{pythoncode}
 
 In this example, we first specified the mutational model in the first line as the \texttt{HKY} model. In this model, the \texttt{kappa} parameter specifies
-the transitions/transversions ratio. We then simulated a tree sequence with a sequence length of 1 million sites. We then simulated mutations on this tree
+the transitions/transversions ratio. We then simulated a tree sequence with a sequence length of 1 million sites. After that we simulated mutations on this tree
 sequence using the \texttt{HKY} model we specified with a mutation rate of \(10^{-6}\) per site per generation.
 
 \runinhead{Scaled mutation rate} \
@@ -577,8 +577,8 @@ def pairwise_T_mrca(population_size, ploidy):
     return np.mean(T_mrca)
 
 print(
-    pairwise_T_mrca(1, 1), pairwise_T_mrca(10, 1),
-    pairwise_T_mrca(100, 1))
+    pairwise_T_mrca(1, ploidy=1), pairwise_T_mrca(10, ploidy=1),
+    pairwise_T_mrca(100, ploidy=1))
 
 >>> (np.float64(0.9965894759060011),
      np.float64(10.036428076042618),
@@ -618,7 +618,7 @@ for \emph{population\_size} so that times are directly interpretable.
 \runinhead{Exponentially growing/shrinking
 populations}\label{exponentially-growingshrinking-populations} \
 
-When we provide an \emph{population\_size} parameter, this specifies a fixed effective
+When we provide a \emph{population\_size} parameter, this specifies a fixed effective
 population size. We can also model populations that are exponentially
 growing or contracting at some rate over time. Given a population size
 at the present \(s\) and a growth rate \(\alpha\), the size of the
@@ -660,7 +660,7 @@ print(
 
     Here we simulate the pairwise \(T_{MRCA}\) for positive, zero and
 negative growth rates. When we have a growth rate of zero, we see that we
-recover the usual result of 2.0—as our ploidy-scaled initial size (two genomes x one individual), and hence \(N_e\),
+recover the usual result of 2.0—as our ploidy-scaled initial size (two genomes x one individual), and hence \emph{population\_size},
 is set to 1 diploid individual. When the growth rate is positive, we see that the
 mean coalescence time is reduced, since the population size is getting
 smaller as we go backwards in time, resulting in an increased rate of
@@ -675,7 +675,7 @@ approaches to inference from real data.)
 
 
 \subsubsection{Population structure}\label{population-structure}
-To facilitate population modelling, \msprime\ implements
+To facilitate population structure modelling, \msprime\ implements
 predefined theoretical models. The simplest model is the isolated model,
 where populations are simulated in isolation, i.e., without migration.
 
@@ -699,8 +699,8 @@ To add migration between populations 0 and 1, we use the following line:
     demography.set_migration_rate(source=0, dest=1, rate=0.1)
 \end{pythoncode}
 
-In this line, the source argument specifies the source population from which lineages originate. The
-dest argument specifies the destination population to which lineages migrate. The rate argument
+In this line, the \texttt{source} argument specifies the source population from which lineages originate. The
+\texttt{dest} argument specifies the destination population to which lineages migrate. The \texttt{rate} argument
 specifies the per-generation migration rate between the source and destination populations.
 
 Note that the migration rate defined by \msprime\ is the lineage migrationn rate, not the individual
@@ -753,7 +753,7 @@ formed by the admixture of two or more populations.
 \includegraphics[width=0.75\textwidth]{images/admixture.pdf}
 \caption{\label{fig:complex-demography}An example of a complex demography that could be
 simulated using \msprime. This figure is generated by expressing demography using the
-\texttt{Demes} standard format and using the \texttt{demesdraw} package.}
+\texttt{Demes} standard format and plotted using the \texttt{demesdraw} package.}
 \end{figure}
 
 \runinhead{Complex demography}\label{Complex-demography} \
@@ -912,15 +912,15 @@ with ancient samples.}
 
 The tree produced by this code chunk is shown in Figure~\ref{fig-tree-ancient-samples}.
 All of the trees that we previously considered had leaf nodes at time
-zero. In this case, the samples 0, 1 and 2 are taken at time 0 in
-population 0, but node 3 is sampled at time 0.75 in population 1.
+zero. In this case, the samples 0, 1 and 2 are taken at time 0 from
+population 0, but node 3 is sampled at time 0.75 from population 1.
 
 Note that sampled individuals and nodes are defined sequentially based
 on the order in which they are provided to the \texttt{samples} parameter. Also, it is vital
 to note that changing the ploidy parameter only affects the number of samples drawn from
 the population, not the actual simulation; simulations will be performed on the
-haploid coalescent scale by default. The ploidy of the simulation can be changed by the
-\texttt{ploidy} parameter in the \texttt{sim\_ancestry} function.
+haploid coalescent scale as set for the \texttt{sim\_ancestry} function; the ploidy of the simulation can be changed by changing the
+\texttt{ploidy} parameter for the \texttt{sim\_ancestry} function.
 
 
 \subsection{Recombination}\label{recombination}
@@ -1143,7 +1143,7 @@ simulated by this example; we can see a polytomy (where three lineages coalesce 
 \begin{center}
 \includegraphics[width=0.48\textwidth]{images/polytomy.pdf}
 \end{center}
-\caption{\label{fig:polytomy} Tree simulated with a combination of the \emph{DTWF} model and a \emph{StandardCoalescent} model. polytomy is observed.}
+\caption{\label{fig:polytomy} Tree simulated with a combination of the \emph{DTWF} model and a \emph{StandardCoalescent} model. Polytomy is observed.}
 \end{figure}
 
 \runinhead{Selective sweeps}\
@@ -1162,7 +1162,7 @@ sweep_model = msprime.SweepGenicSelection(
     s=0.25, dt=1e-6)
 \end{pythoncode}
 
-In the above code block, we defined a hard sweep on the middle position of a 1 megabase region. This sweep starts with a frequency of 1/(2*Ne) and
+In the above code block, we defined a hard sweep on the middle position of a 1 megabase region. This sweep starts with a frequency of \(1/(2*N_e)\) and
 until it almost reaches fixation. We set the selection coefficient to be 0.25 and dt, which is the small increment of time for stepping through the sweep
 phase of the model, to be 1e-6.
 
