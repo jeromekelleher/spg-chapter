@@ -577,8 +577,8 @@ def pairwise_T_mrca(population_size, ploidy):
     return np.mean(T_mrca)
 
 print(
-    pairwise_T_mrca(1, 1), pairwise_T_mrca(10, 1),
-    pairwise_T_mrca(100, 1))
+    pairwise_T_mrca(1, ploidy=1), pairwise_T_mrca(10, ploidy=1),
+    pairwise_T_mrca(100, ploidy=1))
 
 >>> (np.float64(0.9965894759060011),
      np.float64(10.036428076042618),
