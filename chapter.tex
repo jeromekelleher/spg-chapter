@@ -1257,8 +1257,8 @@ from a simple two-population model with human-like parameters:
 
 \begin{pythoncode}
 demography = msprime.Demography.isolated_model([2*(10**4)]*2)
-demography.add_mass_migration(
-    time=50000, source=1, dest=0, proportion=1.0)
+demography.add_migration_rate_change(
+    time=50000, source=1, dest=0, rate=1.0)
 
 ts = msprime.sim_ancestry(
     samples={0: 10**5, 1: 10**5},
