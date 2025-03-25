@@ -1272,7 +1272,11 @@ print((ts.num_trees, ts.num_sites))
 >>> (93844, 102270)
 \end{pythoncode}
 
-This simulation required about 20 seconds to complete.
+This simulation required about 20 seconds to complete. Note that we set the
+\texttt{discrete\_genome} parameter of the \texttt{sim\_mutations} method to
+\texttt{False} to simulate mutations using an infinitely many sites model.
+We will leverage the features of this model, where identical by state
+mutations are identical by descent, to compute summary statistics.
 
 
 \subsection{Computing MRCAs}\label{computing-mrcas}
@@ -1364,15 +1368,12 @@ of the derived allele at each site using the \texttt{num\_samples}
 method, which returns the number of samples subtending a given
 node. The underlying implementation ensures that this operation requires
 constant time, and so it is \emph{very} efficient. We see that such rare alleles are common.
-(We reiterate that \msprime\ currently
-generates mutations under the infinitely many sites model so that each mutation occurs at a
-unique site. Future versions of \msprime\ or other software packages may produce
-tree sequences with back or recurrent mutations, where
-this simple approach will not work.
-To emphasise this point and to ensure that the above code chunk is not
-accidentally applied in such sitations we have included an
-\texttt{assert} statement. We use asserts in a similar way in later
-code chunks.)
+(Since we are using the infinitely many sites model, we can be confident that
+each mutation occurs at a unique site. Using other mutation models may produce
+tree sequences with back or recurrent mutations, where this simple approach
+will not work. To emphasise this point and to ensure that
+the above code chunk is not accidentally applied in such sitations, we have included an
+\texttt{assert} statement. We use asserts in a similar way in later code chunks.)
 
 A powerful feature of this sample-counting approach is that we can
 perform the same operation over an arbitrary subset of the samples. For
