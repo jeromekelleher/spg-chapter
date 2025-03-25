@@ -49,6 +49,7 @@
 %%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\msprime}[0]{\texttt{msprime}}
+\newcommand{\tskit}[0]{\texttt{tskit}}
 \newcommand{\ms}[0]{\texttt{ms}}
 \newcommand{\apiref}[1]{\texttt{#1}}
 
@@ -137,50 +138,49 @@ Cornuet2008} or approximate likelihoods can be based either on single nucleotide
 ~\citep{excoffier2013} or multilocus data~\citep{becquet2007new, Beeravolu2017}.
 
 This chapter is a tutorial for running and analysing coalescent simulations
-using \msprime~\citep{kelleher2016efficient}.
+using \msprime~\citep{kelleher2016efficient,baumdicker2022efficient}.
 As the name implies, \msprime\ is heavily indebted to the classical
 \ms\ program~\citep{hudson2002generating}, and largely follows the
-simulation model that it popularised. The methods for representing
-genealogies that underlie \msprime\ are based on earlier work on simulating coalescent
-processes in a spatial
-continuum~\citep{kelleher2013coalescent,kelleher2014coalescent}.
+simulation model that it popularised. 
+% The methods for representing
+% genealogies that underlie \msprime\ are based on earlier work on simulating coalescent
+% processes in a spatial
+% continuum~\citep{kelleher2013coalescent,kelleher2014coalescent}.
 There are many other coalescent simulators available---see~\citep{carvajal2008simulation,liu2008survey,arenas2012simulation,
 yuan2012overview,hoban2012computer} for reviews---but \msprime\ has
-some distinct advantages. Firstly, \msprime\ is capable of simulating
+some distinct advantages.
+Firstly, \msprime\ is capable of simulating
 sample sizes far larger than any other simulator, and is generally
-extremely efficient. The ability to simulate
-hundreds of thousands of realistic human genomes has already enabled simulation studies that were hitherto impossible~\citep{martin2017human}.
-Secondly, \msprime\ can simulate realistic models of recombination over
-whole chromosomes without resorting to approximations. The
-Sequentially Markov Coalescent (SMC)
-approximation~\citep{mcvean2005approximating} was largely motivated by the
-need to efficiently simulate chromosome-length sequences under the effects of
-recombination,
-which was unfeasible with simulators such as \ms~\citep{hudson2002generating}.
-However, for large sample sizes, \msprime\ is significantly
-faster than the most efficient SMC simulator~\citep{staab2014scrm},
-rendering this approximation unnecessary for simulation
-purposes~\citep{kelleher2016efficient}.
-(The SMC is an important analytic approximation, however, and has lead to many important advances in inference; see e.g.~\citep{
-li2011inference,
-harris2013inferring,
-schiffels2014inferring,
-rasmussen2014genome}. See also Chapter 1 in this volume for formal definitions
-of the SMC approximation, and Chapters 7, 8 and 10 for further applications.)
+very efficient. This efficiency has enabled, for example,
+very large-scale simulation
+studies with hundreds of
+thousands~\citep{martin2017human,martin2020correction,ragsdale2020lessons}
+and even millions of human chromosomes~\citep{andersontrocme2023genes}.
+Secondly, \msprime\ is feature-rich, combining the functionality of 
+several different simulators into a single
+package~\citep{baumdicker2022efficient}.
 Thirdly, the data structure that \msprime\ uses
-to represent the results of simulations is extremely concise and
-can be efficiently processed. This data structure is known as a
+to represent the results of simulations is a concise and
+efficient encoding of  history of a sample, often referred
+to as an Ancestral Recombination Graph or ARG~\citep{wong2024general} 
+(see the Discussion).
+This data structure is known as a
 \emph{succinct tree sequence} (or tree sequence for brevity),
-and its applications to other areas
-of population genomics is an active research
-topic~\citep{kelleher2018efficient}. The tree sequence data
-structure reduces the amount of space
-required to store simulations and removes the significant
-overhead of loading and parsing large volumes of text in order to analyse
-simulation data. As we see in Section~\ref{processing-results}, it also
-leads to powerful algorithms for analysing variation data. Finally,
-\msprime's primary interface is through a simple but powerful Python
+and is the basis of the \tskit\ library used by \msprime.
+Using \tskit\ provides many benefits, including access to efficient
+algorithms (see Section~\ref{processing-results} for more details)
+and the ability to interoperate with forwards-time 
+simulators~\citep{kelleher2018efficient,haller2018tree}.
+Finally, \msprime's primary interface is through a simple but powerful Python
 API, providing many advantages over command-line or GUI based alternatives.
+This interface has enabled many downstream applications building 
+on msprime APIs. For example to provide easy access to 
+realistic simulations across a range of
+species~\citep{adrion2020stdpopsim,lauterbur2023expanding,gower2025accessible}
+and other more specialised simulation 
+scenarios~\citep{mckenzie2020ipcoal,rivera2021simulation,petrslendr2023}.
+[ABC and deep learning.]
+
 One of the advantages of this approach is the ease with which we
 can integrate with state-of-the-art analysis tools from the Python
 ecosystem such as NumPy~\citep{walt2011numpy}, SciPy~\citep{jones-2018-scipy},
@@ -2114,7 +2114,8 @@ that these methods can be very efficient, allowing us to easily analyse
 chromosome scale data for hundreds of thousands of samples.
 The data structures and APIs used in \msprime\ are
 currently being developed to increase their generality
-and applicability. Recent work~\citep{kelleher2018efficient,haller2018tree} has shown
+and applicability. 
+Recent work~\citep{kelleher2018efficient,haller2018tree} has shown
 that forward-time simulations can also benefit from these methods. By
 recording all genealogical information for the simulated population
 in the form of a succinct tree sequence,
