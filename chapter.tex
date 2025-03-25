@@ -815,7 +815,7 @@ format. Figure~\ref{fig:DemographyDebugger} shows the \texttt{demography.debug()
 
 \subsubsection{Using Demes standard format}\label{using-demes-standard-format}
 
-The Demes format~\citep{gower_demes_2022} is a standard for writing
+The Demes format~\citep{gower2022demes} is a standard for writing
 demographic models, to facilitate interchange between simulators, as well as between
 demographic inference software and simulators. Demes models are typically written as a
 YAML file, and loaded into Python using the demes library.
@@ -2031,7 +2031,8 @@ computations over the available CPU cores.
 
 Once this has completed, we compute the Euclidean distance between the estimated branch-jSFS for each
 draw from the prior (\texttt{prior\_jSFS}) and the site-jSFS in the (pseudo)observed
-data (\texttt{truth\_mean}), as both values should be similar~\citep{ralph_efficiently_2020}.
+data (\texttt{truth\_mean}), as both values should be
+similar~\citep{ralph2020efficiently}.
 \begin{pythoncode}
 distances = np.zeros(num_prior_draws)
 for j in range(num_prior_draws):
@@ -2107,50 +2108,33 @@ Figure~\ref{fig-abc-b} shows the mean and the root mean square error (RMSE) of \
 
 \section{Discussion}
 \label{sec:discussion}
-In this chapter we have focused on the usage of \msprime\ as a coalescent
-simulator, and illustrated its flexibility through concrete examples.
-While many examples discuss how to create and run the simulations themselves, others are concerned with how we analyse the \emph{output} of
-these simulations. We have shown particularly in Section~\ref{processing-results}
-that these methods can be very efficient, allowing us to easily analyse
-chromosome scale data for hundreds of thousands of samples.
-The data structures and APIs used in \msprime\ are
-currently being developed to increase their generality
-and applicability. 
-Recent work~\citep{kelleher2018efficient,haller2018tree} has shown
-that forward-time simulations can also benefit from these methods. By
-recording all genealogical information for the simulated population
-in the form of a succinct tree sequence,
-we avoid the need to generate and carry forward neutral mutations;
-by definition, they do not affect the genealogies, and can therefore
-be placed on them afterwards. Not only does
-this provide us with much more complete information about the forward-time
-simulation, it also leads to substantially faster running times
-(up to 50X faster, in the simulations performed). Through the use
-of a well documented interchange API and thoroughly specified
-data formats, forward-time simulators can output data that
-is compatible with the \msprime\ API, and precisely the same
-techniques described here can be used to analyse the results.
-Thus, code written to analyse coalescent simulations can equally
-be applied to analyse forwards simulations.
-
-There is currently a great deal of activity from a growing community
-around \msprime. We plan to separate the tree sequence processing code
-from the simulator and create a library, provisionally known
-as \texttt{tskit}. This standalone library (C and Python interfaces
-are planned) will greatly facilitate integration with
-forwards-time simulators, allowing them to easily offload
-tree sequence processing to \texttt{tskit}. Algorithms for efficiently
-calculating statistics using the incremental techniques outlined
-in Section~\ref{incremental-calculations} are in development, and
-promise to be significantly more efficient that the state-of-the-art.
-Also in development are methods to estimate the tree sequence data
-structure from real data, which would allow us to use these
-efficient algorithms on observed as well as simulated data. New
-features are being added to the \msprime\ simulator also, with
-support for a discrete time Wright-Fisher model and a family of
-multiple-merger coalescent models in development. We hope that
-in the coming years a diverse ecosystem of tools and applications
-using these APIs and data structures will emerge.
+\texttt{Msprime} simulates the complete history of a sample of genomes under
+the influence of recombination. Although there has been some confusion about 
+the precise meaning of the term, the recent consensus has been to loosely 
+refer to such structures as Ancestral Recombination Graphs, or
+ARGs~\citep{wong2024general}. Since \msprime\ was first released in 2014
+there has been an explosion of interest in ARGs, with four separate 
+review articles published in 2024~\citep{brandt2024promise,
+lewanski2024era,nielsen2024inference,wong2024general}. 
+This has largely been
+driven by exciting developments in inference, with great strides being
+made in both statistically rigorous Bayesian sampling 
+approaches~\citep{rasmussen2014genome,deng2024robust} 
+and large-scale hueristic
+methods~\cite{speidel2019method,kelleher2019inferring,
+zhang2023biobank,gunnarsson2024scalable},
+their potential combination~\citep{bisschop2025likelihoods},
+along with important auxiliary inference tasks such as node
+dating~\cite{wohns2022unified,deng2025general}.
+Sophisticated simulation tools, however, have also played an important
+role. The ability to generate truth data at scale 
+under a range of complex demographic
+models~\citep{adrion2020stdpopsim,gower2022demes,lauterbur2023expanding}
+and arbitrary patterns of
+selection~\citep{kelleher2018efficient,haller2018tree,gower2025accessible}
+is critical to evaluate these inference methods.
+\texttt{Msprime} is likely to continue playing a significant role 
+in this ongoing ARG revolution.
 
 \section*{Acknowledgments}
 
