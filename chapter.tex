@@ -152,7 +152,7 @@ some distinct advantages.
 Firstly, \msprime\ is capable of simulating
 sample sizes far larger than any other simulator, and is generally
 very efficient. This efficiency has enabled, for example,
-very large-scale simulation
+simulation
 studies with hundreds of
 thousands~\citep{martin2017human,martin2020correction,ragsdale2020lessons}
 and even millions of human chromosomes~\citep{andersontrocme2023genes}.
@@ -161,29 +161,31 @@ several different simulators into a single
 package~\citep{baumdicker2022efficient}.
 Thirdly, the data structure that \msprime\ uses
 to represent the results of simulations is a concise and
-efficient encoding of  history of a sample, often referred
-to as an Ancestral Recombination Graph or ARG~\citep{wong2024general} 
-(see the Discussion).
-This data structure is known as a
-\emph{succinct tree sequence} (or tree sequence for brevity),
+efficient encoding of the complete genetic history of a sample.
+This data structure, the \emph{succinct tree sequence},
+is a concise and efficient encoding of 
+Ancestral Recombination Graphs~\citep{wong2024general}
+(see the Discussion),
 and is the basis of the \tskit\ library used by \msprime.
 Using \tskit\ provides many benefits, including access to efficient
-algorithms (see Section~\ref{processing-results} for more details)
+data processing algorithms~\citep{ralph2020efficiently,lehmann2025on}
 and the ability to interoperate with forwards-time 
 simulators~\citep{kelleher2018efficient,haller2018tree}.
 Finally, \msprime's primary interface is through a simple but powerful Python
-API, providing many advantages over command-line or GUI based alternatives.
+API, providing significant advantages over command-line or GUI based alternatives.
 This interface has enabled many downstream applications building 
-on msprime APIs. For example to provide easy access to 
+on msprime APIs, for example to provide easy access to 
 realistic simulations across a range of
 species~\citep{adrion2020stdpopsim,lauterbur2023expanding,gower2025accessible}
 and other more specialised simulation 
-scenarios~\citep{mckenzie2020ipcoal,rivera2021simulation,petrslendr2023}.
-[ABC and deep learning.]
-
-One of the advantages of this approach is the ease with which we
-can integrate with state-of-the-art analysis tools from the Python
-ecosystem such as NumPy~\citep{walt2011numpy}, SciPy~\citep{jones-2018-scipy},
+scenarios~\citep{mckenzie2020ipcoal,rivera2021simulation,petrslendr2023},
+% Could cite a bunch more stuff here but can't be bothered
+Approximate Bayesian Computation (ABC)~\citep{huang2025estimating}
+and deep learning~\cite{korfmann2023deep}.
+These applications have been facilitated by the ease with 
+which we can integrate with state-of-the-art tools from the 
+Python data science ecosystem such as NumPy~\citep{walt2011numpy}, 
+SciPy~\citep{jones-2018-scipy},
 Matplotlib~\citep{hunter2007matplotlib}, Pandas~\citep{mckinney2010data},
 Seaborn~\citep{michael_waskom_2017_883859}, and
 Jupyter Notebooks~\citep{perez2007ipython}. Part of the goal
@@ -206,15 +208,14 @@ Section~\ref{processing-results} illustrates by way of simple examples how we ca
 of such simulations, with particular emphasis on the methods
 required to work with large sample sizes. We then provide
 some examples of how to compare simulations with analytic
-predictions in Section~\ref{validating-analytical-predictions},
-emphasising idiomatic ways of interacting with toolkits such as
-Pandas and Seaborn. In Section~\ref{sec:inference}, we show
+predictions in Section~\ref{validating-analytical-predictions}.
+In Section~\ref{sec:inference}, we show
 how \msprime\ can be used to set up a simple ABC inference.
 Inference tools are generally implemented with a command line or graphical
 user interface and designed for a more or less narrow set of inference
 problems. Thus the aim of Section~\ref{sec:inference} is to illustrate how
-\msprime's flexible Python API can be used to build inference tools for arbitrary demographic histories from first principle.
-Finally, we outline some future plans for \msprime\ in Section~\ref{sec:discussion}.
+\msprime's flexible Python API can be used to build inference tools for 
+arbitrary demographic histories from first principles.
 
 \section{Running simulations}
 \label{running-simulations}
