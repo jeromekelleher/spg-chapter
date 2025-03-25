@@ -1767,7 +1767,7 @@ mutations occur randomly along tree branches. One simple summary of the
 mutational process is the total number of segregating sites, that is, the number of
 sites at which we observe variation. We can obtain this very
 easily from simulations simply by specifying a mutation rate parameter.
-(Note again that we set \(N_e=1/2\) and our mutation rate
+(Note again that we set \emph{ploidy = 1} and our mutation rate
 \(= \theta / 2\) in order to convert to \msprime's time scales.)
 
 \begin{pythoncode}
@@ -1842,8 +1842,8 @@ s_col = np.zeros(N)
 row = 0
 for rho in rhos:
     replicates = msprime.sim_ancestry(
-        1, num_replicates=num_replicates,
-        recombination_rate=rho/2, population_size=0.5,
+        2, num_replicates=num_replicates, ploidy=1,
+        recombination_rate=rho/2, population_size=1,
         discrete_genome=False, sequence_length=1)
 
     for ts in replicates:
@@ -1859,7 +1859,7 @@ In this code chunk we again run $10^4$ replicate simulations for a range
 of input parameters, and store the results in a Pandas data frame. We
 are interested in the effects of recombination rate in this example,
 and so the parameter that we vary is the scaled recombination rate
-$\rho$ (noting, again, that we set $N_e = 1/2$ and
+$\rho$ (noting, again, that we set \emph{ploidy = 1} and
 \texttt{recombination\_rate} = $\rho / 2$ to convert to \msprime's
 time scales).
 
