@@ -1257,8 +1257,8 @@ from a simple two-population model with human-like parameters:
 
 \begin{pythoncode}
 demography = msprime.Demography.isolated_model([2*(10**4)]*2)
-demography.add_mass_migration(
-    time=50000, source=1, dest=0, proportion=1.0)
+demography.add_migration_rate_change(
+    time=50000, source=1, dest=0, rate=1.0)
 
 ts = msprime.sim_ancestry(
     samples={0: 10**5, 1: 10**5},
@@ -1272,7 +1272,11 @@ print((ts.num_trees, ts.num_sites))
 >>> (93844, 102270)
 \end{pythoncode}
 
-This simulation required about 20 seconds to complete.
+This simulation required about 20 seconds to complete. Note that we set the
+\texttt{discrete\_genome} parameter of the \texttt{sim\_mutations} method to
+\texttt{False} to simulate mutations using an infinitely many sites model.
+We will leverage the features of this model, where identical by state
+mutations are identical by descent, to compute summary statistics.
 
 
 \subsection{Computing MRCAs}\label{computing-mrcas}
@@ -1364,15 +1368,12 @@ of the derived allele at each site using the \texttt{num\_samples}
 method, which returns the number of samples subtending a given
 node. The underlying implementation ensures that this operation requires
 constant time, and so it is \emph{very} efficient. We see that such rare alleles are common.
-(We reiterate that \msprime\ currently
-generates mutations under the infinitely many sites model so that each mutation occurs at a
-unique site. Future versions of \msprime\ or other software packages may produce
-tree sequences with back or recurrent mutations, where
-this simple approach will not work.
-To emphasise this point and to ensure that the above code chunk is not
-accidentally applied in such sitations we have included an
-\texttt{assert} statement. We use asserts in a similar way in later
-code chunks.)
+(Since we are using the infinitely many sites model, we can be confident that
+each mutation occurs at a unique site. Using other mutation models may produce
+tree sequences with back or recurrent mutations, where this simple approach
+will not work. To emphasise this point and to ensure that
+the above code chunk is not accidentally applied in such sitations, we have included an
+\texttt{assert} statement. We use asserts in a similar way in later code chunks.)
 
 A powerful feature of this sample-counting approach is that we can
 perform the same operation over an arbitrary subset of the samples. For
@@ -1596,7 +1597,7 @@ statistics you are interested in, it's straightforward to export the
 variant data into other libraries using the \texttt{genotype\_matrix()}
 or \texttt{variants()} methods. We recommend the excellent
 \texttt{scikit-allel}~\citep{miles2017scikit} and
-\texttt{pylibseq} [\url{https://pypi.python.org/pypi/pylibseq}],
+\texttt{pylibseq} [\url{https://pypi.python.org/} \url{pypi/pylibseq}],
 libraries (\texttt{pylibseq} is a Python interface to
 \texttt{libsequence}~\citep{thornton2003libsequence}). If you wish to export data to
 external programs, VCF may be best option, which is supported using the
@@ -1628,7 +1629,7 @@ All analytic predictions are taken from \cite{wakely2008coalescent}.
 \subsection{Total branch length and segregating sites}
 The first properties we are interested in are the mean and the
 variance of the total branch length of coalescent trees. (Note that, as
-before, we set \(N_e=1/2\) to convert between \msprime's diploid time
+before, we set \emph{ploidy=1} to convert between \msprime's default diploid time
 scaling to the haploid time scaling of these analytic results.)
 
 \begin{pythoncode}
@@ -1766,7 +1767,7 @@ mutations occur randomly along tree branches. One simple summary of the
 mutational process is the total number of segregating sites, that is, the number of
 sites at which we observe variation. We can obtain this very
 easily from simulations simply by specifying a mutation rate parameter.
-(Note again that we set \(N_e=1/2\) and our mutation rate
+(Note again that we set \emph{ploidy = 1} and our mutation rate
 \(= \theta / 2\) in order to convert to \msprime's time scales.)
 
 \begin{pythoncode}
@@ -1841,8 +1842,8 @@ s_col = np.zeros(N)
 row = 0
 for rho in rhos:
     replicates = msprime.sim_ancestry(
-        1, num_replicates=num_replicates,
-        recombination_rate=rho/2, population_size=0.5,
+        2, num_replicates=num_replicates, ploidy=1,
+        recombination_rate=rho/2, population_size=1,
         discrete_genome=False, sequence_length=1)
 
     for ts in replicates:
@@ -1858,7 +1859,7 @@ In this code chunk we again run $10^4$ replicate simulations for a range
 of input parameters, and store the results in a Pandas data frame. We
 are interested in the effects of recombination rate in this example,
 and so the parameter that we vary is the scaled recombination rate
-$\rho$ (noting, again, that we set $N_e = 1/2$ and
+$\rho$ (noting, again, that we set \emph{ploidy = 1} and
 \texttt{recombination\_rate} = $\rho / 2$ to convert to \msprime's
 time scales).
 
