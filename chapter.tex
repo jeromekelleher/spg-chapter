@@ -1280,26 +1280,25 @@ is extensive and authoritative.
 
 In the previous section we showed how to run simulations in \msprime, and
 how to construct population models and demographic histories. In this
-section we show how to process the results of simulations. This is not a
-comprehensive review of the capabilities of the \msprime\ Python API, but
+section we show how to process the results of simulations using
+a \tskit\ \texttt{TreeSequence}. This is not a
+comprehensive review of the capabilities of the \tskit\ Python API, but
 concentrates on some useful examples.
 \msprime\ is specifically designed to enable very large simulations, and
 the processing methods we demonstrate below are all very efficient. To
-illustrate this, we consider a simulation of 200,000 samples of 10 megabases
-from a simple two-population model with human-like parameters:
+illustrate this, we consider a simulation of 100,000 diploid samples of 10 megabases
+from a simple three-population model with human-like parameters:
 
 \begin{pythoncode}
-demography = msprime.Demography.isolated_model([2*(10**4)]*2)
-demography.add_migration_rate_change(
-    time=50000, source=1, dest=0, rate=1.0)
-
+Ne = 10_000
+demography = msprime.Demography.isolated_model([Ne, Ne, Ne])
+demography.add_population_split(
+    time=50_000, derived=[0, 1], ancestral=2)
 ts = msprime.sim_ancestry(
-    samples={0: 10**5, 1: 10**5},
+    samples={0: 50_000, 1: 50_000},
     demography=demography, recombination_rate=1e-8,
-    sequence_length=10*10**6, random_seed=3, ploidy=1)
-
-ts = msprime.sim_mutations(
-    ts, rate=1e-8, random_seed=7, discrete_genome=False)
+    sequence_length=10*10**6, random_seed=3)
+ts = msprime.sim_mutations(ts, rate=1e-8, random_seed=7)
 print((ts.num_trees, ts.num_sites))
 
 >>> (93844, 102270)
@@ -1313,12 +1312,11 @@ mutations are identical by descent, to compute summary statistics.
 
 
 \subsection{Computing MRCAs}\label{computing-mrcas}
-
 We are often interested in finding the most recent common ancestor (MRCA)
 of a pair (or many pairs) of samples. For example, identity-by-descent
-(IBD) tracts are defined as contiguous stretches of genome in which the
+(IBD) tracts can be defined as contiguous stretches of genome in which the
 MRCA for a pair of samples is the same. Computing IBD segments for a
-pair of samples is very straightforward:
+pair of samples under this definition is straightforward:
 
 \begin{pythoncode}
 def ibd_segments(ts, a, b):
@@ -1366,7 +1364,8 @@ samples from different populations. The results are shown in
 Figure~\ref{fig:ibd_segments}. As we might expect, the tract
 lengths are shorter for the between population pair.
 
-Of course, we would need to sample many such pairs of samples or longer sequences to get a reasonable approximation of the real distribution of block lengths.
+Of course, we would need to sample many such pairs of samples or longer sequences to
+get a reasonable approximation of the real distribution of block lengths.
 Because the main cost of this function is the iteration over all the
 trees in the sequence, it would be more efficient to keep track of the MRCAs
 for different pairs in a single iteration rather than repeatedly
