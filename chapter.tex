@@ -1934,7 +1934,7 @@ the variance.
 
 \section{Example inference scheme}\label{sec:inference}
 
-    The analytical challenges of deriving likelihood functions even under
+The analytical challenges of deriving likelihood functions even under
 highly idealized models of population structure and history have led to
 the development of likelihood-free inference methods, in particular
 Approximate Bayesian Computation (ABC)~\citep{Beaumont2002}.
@@ -1948,8 +1948,10 @@ given the flexibility of \msprime, it should be
 relatively straightforward to implement more a realistic framework focused
 on specific inference applications.
 
-We assume that data for 200 loci or sequence blocks (these could be RAD
-loci in practice) for a single diploid individual have been generated
+We assume that data for 200 loci or sequence blocks
+% Assuming this is out of date now:
+% (these could be RAD loci in practice)
+for a single diploid individual have been generated
 from each of two populations. We would like to infer the amount of gene
 flow between the two populations. For the sake of simplicity we will
 assume the simplest possible model of population structure; that is, two
@@ -1973,8 +1975,7 @@ def run_sims(m, num_loci=1, theta=0):
         [1, 1], migration_rate=m)
     replicates = msprime.sim_ancestry(
         {0: nsamp, 1:nsamp}, demography=demography,
-        num_replicates=num_loci, ploidy=1,
-        discrete_genome=False, sequence_length=1)
+        num_replicates=num_loci, ploidy=1)
     for ts in replicates:
         yield msprime.sim_mutations(
             ts, rate=theta/2, discrete_genome=False)
@@ -2039,8 +2040,6 @@ draw 10,000 \(M\) values from the prior and use the functions
  replicate. We assume an exponential distribution, a common choice of prior \citep{hey2004multilocus}.
 
 \begin{pythoncode}
-import tskit
-
 num_reps = 100
 num_prior_draws = 10000
 prior_m = np.random.exponential(0.1, num_prior_draws)
