@@ -1512,7 +1512,8 @@ returns a \texttt{Variant} object for each site in the tree sequence. A
 (b) the \texttt{alleles} at this site (the strings representing the
 actual states); and (c) the \texttt{genotypes} representing the observed
 state for each sample. The \texttt{genotypes} are encoded in a NumPy
-array, such that \texttt{variant.alleles{[}variant.genotypes{[}j{]}{]}}
+array, such that
+\texttt{variant.alleles[variant.genotypes[j]]}
 gives the allelic state for sample ID \texttt{j}. The values in the
 \texttt{genotypes} array are therefore indexes into the \texttt{alleles}
 list. The ancestral state at a given site is guaranteed to be the first
@@ -1676,9 +1677,9 @@ n_col = np.zeros(ns.shape[0] * num_reps)
 T_total_col = np.zeros(ns.shape[0] * num_reps)
 row = 0
 for n in ns:
-    for ts in msprime.sim_ancestry(n, population_size=1,
-            num_replicates=num_reps, ploidy=1):
-
+    reps = msprime.sim_ancestry(
+        n, num_replicates=num_reps, ploidy=1)
+    for ts in reps:
         tree = ts.first()
         n_col[row] = n
         T_total_col[row] = tree.total_branch_length
@@ -1805,7 +1806,9 @@ mutational process is the total number of segregating sites, that is, the number
 sites at which we observe variation. We can obtain this very
 easily from simulations simply by specifying a mutation rate parameter.
 (Note again that we set \emph{ploidy = 1} and our mutation rate
-\(= \theta / 2\) in order to convert to \msprime's time scales.)
+\(= \theta / 2\) in order to convert to \msprime's time scales
+is \emph{discrete\_genome=False} to simulate infinite sites
+mutations.)
 
 \begin{pythoncode}
 def S_dist(n, theta, k):
@@ -1820,10 +1823,11 @@ n = 20
 theta = 5
 num_replicates = 1000
 simulation = np.zeros(num_replicates)
-replicates = msprime.sim_ancestry(
-    n, population_size=1, num_replicates=num_replicates, ploidy=1)
-for j, ts in enumerate(replicates):
-    ts = msprime.mutate(ts, rate=theta/2)
+reps = msprime.sim_ancestry(
+    n, num_replicates=num_replicates, ploidy=1)
+for j, ts in enumerate(reps):
+    ts = msprime.sim_mutations(
+        ts, rate=theta/2, discrete_genome=False)
     simulation[j] = ts.num_sites  # number of seg. sites
 ks = np.arange(np.max(simulation))
 analytical = np.array([S_dist(n, theta, k) for k in ks])
@@ -1881,8 +1885,7 @@ for rho in rhos:
     replicates = msprime.sim_ancestry(
         2, num_replicates=num_replicates, ploidy=1,
         recombination_rate=rho/2, population_size=1,
-        discrete_genome=False, sequence_length=1)
-
+        discrete_genome=False)
     for ts in replicates:
         ts = msprime.sim_mutations(
             ts, rate=theta/2, discrete_genome=False)
