@@ -1941,7 +1941,7 @@ def run_sims(m, num_loci=1, theta=0):
         discrete_genome=False, sequence_length=1)
     for ts in replicates:
         yield msprime.sim_mutations(
-            ts, rate=theta, discrete_genome=False)
+            ts, rate=theta/2, discrete_genome=False)
 
 def get_joint_site_frequency_spectra(reps):
     data = np.zeros((num_loci, nsamp + 1, nsamp + 1))
