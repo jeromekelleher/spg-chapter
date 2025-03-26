@@ -957,11 +957,11 @@ print(ts.num_trees)
 >>> 135
 \end{pythoncode}
 
-    In this case, we provide two extra parameters: \texttt{sequence\_length}, which
+In this case, we provide two extra parameters: \texttt{sequence\_length}, which
 defines the length of the genomic region to be simulated, and
-\texttt{recombination} \texttt{\_rate}, which defines the rate of recombination
-per unit of sequence length, per generation. It is often useful to
-think of both sequence lengths and recombination rates as defined in units of base-pairs.
+\texttt{recombination\_rate}, which defines the rate of recombination
+per base per generation. (It is also possible to specify a variable
+rate of recombination along the genome; see the online documentation.)
 
 For this example, we defined a sequence length of 100kb, and a recombination rate of
 \(10^{-8}\) per base per generation. The result of this particular simulation is a
@@ -972,7 +972,7 @@ numbers of trees.
 Up to this point we have focused on simulations that returned a single
 tree representing the genealogy of a sample. The inclusion of
 recombination, however, means that there may be more than one tree
-relating our samples. The \texttt{TreeSequence} object returned by
+relating our samples. The \tskit\ \texttt{TreeSequence} object returned by
 \msprime\ is a very concise and efficient representation of these highly
 correlated trees. To process the trees, we simply consider
 them one at a time, using the \texttt{trees()} iterator.
@@ -999,63 +999,65 @@ a sample across a 100kb region.}
 This code generates the plot in Figure~\ref{fig:tree_tmrcas} showing the time of the MRCA of the sample for each tree across the
 sequence. We find the \(T_{MRCA}\) as before, and plot this against the
 left coordinate of the genomic interval that each tree covers. A full description of
-\emph{tree sequences} and the methods for working with them is beyond the scope of this chapter (but see the online documentation for more details).
+\tskit\ tree sequences and the methods for working with them is
+beyond the scope of this chapter.
 
-It is also possible to simulate data with recombination rates varying
-across the genome (for example, in recombination hotspots). To do this, we
-first create a \texttt{RecombinationMap} instance that describes the
-properties of the recombination landscape that we wish to simulate. We
-then supply this object to \texttt{sim\_ancestry} using the
-\texttt{recombination\_map} argument. In the following example, we
-simulate 100 samples using the human chromosome 22 recombination map
-from the HapMap project~\citep{international2003international}.
-Figure~\ref{fig:variable_recombination} shows the
-recombination rate and the locations of breakpoints
-from the simulation, and the density of breakpoints closely follows the
-recombination rate, as expected.
 
-\begin{pythoncode}
-infile = "genetic_map_GRCh37_chr22.txt"
-recomb_map = msprime.RateMap.read_hapmap(infile)
-ts = msprime.sim_ancestry(
-    samples=100, population_size=10**4,
-    recombination_rate=recomb_map, ploidy=1, random_seed=1)
-\end{pythoncode}
 
-\begin{figure}
-\begin{center}
-\includegraphics[width=\textwidth]{images/plot_11.pdf}
-\end{center}
-\caption{\label{fig:variable_recombination} The HapMap
-genetic map for chromosome 22 (blue) matches the density of breakpoints for a simulated chromosome (green) well.}
-\end{figure}
+% It is also possible to simulate data with recombination rates varying
+% across the genome (for example, in recombination hotspots). To do this, we
+% first create a \texttt{RecombinationMap} instance that describes the
+% properties of the recombination landscape that we wish to simulate. We
+% then supply this object to \texttt{sim\_ancestry} using the
+% \texttt{recombination\_map} argument. In the following example, we
+% simulate 100 samples using the human chromosome 22 recombination map
+% from the HapMap project~\citep{international2003international}.
+% Figure~\ref{fig:variable_recombination} shows the
+% recombination rate and the locations of breakpoints
+% from the simulation, and the density of breakpoints closely follows the
+% recombination rate, as expected.
 
-By default, \msprime\ simulates a discrete genome, where recombination
-events occur at integer positions.
+% \begin{pythoncode}
+% infile = "genetic_map_GRCh37_chr22.txt"
+% recomb_map = msprime.RateMap.read_hapmap(infile)
+% ts = msprime.sim_ancestry(
+%     samples=100, population_size=10**4,
+%     recombination_rate=recomb_map, ploidy=1, random_seed=1)
+% \end{pythoncode}
 
-\begin{pythoncode}
-recomb_map = msprime.RateMap.uniform(sequence_length=10, rate=1)
-ts = msprime.sim_ancestry(2, recombination_rate=recomb_map)
-print(list(ts.breakpoints()))
->>> [0, 1.0, 2.0, 3.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
-\end{pythoncode}
+% \begin{figure}
+% \begin{center}
+% \includegraphics[width=\textwidth]{images/plot_11.pdf}
+% \end{center}
+% \caption{\label{fig:variable_recombination} The HapMap
+% genetic map for chromosome 22 (blue) matches the density of breakpoints for a simulated chromosome (green) well.}
+% \end{figure}
 
-    Here we simulate the history of two samples in a system with 10 loci, each of
-length 1 with a recombination rate of 1 between adjacent loci per
-generation. In the output, we see that the breakpoints between trees now
-occur exactly at the integer boundaries between these loci. It is also possible to simulate
-a standard continuous genome by setting the \texttt{discrete\_genome} parameter for the \texttt{sim\_ancestry} function
-to \texttt{False}.
+% By default, \msprime\ simulates a discrete genome, where recombination
+% events occur at integer positions.
+
+% \begin{pythoncode}
+% recomb_map = msprime.RateMap.uniform(sequence_length=10, rate=1)
+% ts = msprime.sim_ancestry(2, recombination_rate=recomb_map)
+% print(list(ts.breakpoints()))
+% >>> [0, 1.0, 2.0, 3.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+% \end{pythoncode}
+
+%     Here we simulate the history of two samples in a system with 10 loci, each of
+% length 1 with a recombination rate of 1 between adjacent loci per
+% generation. In the output, we see that the breakpoints between trees now
+% occur exactly at the integer boundaries between these loci. It is also possible to simulate
+% a standard continuous genome by setting the \texttt{discrete\_genome} parameter for the \texttt{sim\_ancestry} function
+% to \texttt{False}.
 
 \subsubsection{Gene conversion}\label{gene-conversion}
-
-Beside simulating recombination, \msprime\ also supports gene conversion events. To simulate gene conversion,
-two parameters are required: the gene conversion rate and the tract length distribution. By default, tract lengths are drawn
-from a genometric distribution with a mean of 1.
-
-Gene conversion can be simulated independently, or it can be simulated alongside recombination, provided that both rates are constants.
-The following example shows a simulation with gene conversion and recombination.
-
+To simulate gene conversion in \msprime,
+two parameters are required: the gene conversion rate and the tract length distribution.
+In the following example, gene conversion events are initiated at a rate of
+0.02 per base per generation, and the tract lengths drawn from a
+genometric distribution with a mean of 1.
+% Gene conversion can be simulated independently, or it can be simulated alongside recombination, provided that both rates are constants.
+% The following example shows a simulation with gene conversion and recombination.
 \begin{pythoncode}
 ts = msprime.sim_ancestry(
     3, gene_conversion_rate=0.02, gene_conversion_tract_length=1,
@@ -1066,13 +1068,13 @@ ts = msprime.sim_ancestry(
 \begin{center}
 \includegraphics[width=\textwidth]{images/gene_conversion.pdf}
 \end{center}
-\caption{\label{fig:gene_conversion} An example of the effect of gene conversion on simulations.}
+\caption{\label{fig:gene_conversion} An example of simulated gene conversion.}
 \end{figure}
-
-In this example, as shown in Figure~\ref{fig:gene_conversion}, we see the gene conversion-specific effect; trees on either side of the event are identical.
+Figure~\ref{fig:gene_conversion} shows the output of this example. We can see
+that the trees on either side of the genome are identical, which would not
+happen with crossover recombination.
 
 \subsection{Ancestry Models}\label{ancestry-models}
-
 By default, \msprime\ simulates the coalescent process based on the Hudson model \citep{hudson1983properties}, referred to as the
 \emph{StandardCoalescent model}. However, \msprime\ is able to simulate the coalescent process using other models.
 
