@@ -248,20 +248,22 @@ drawn from an idealised population (in later sections we show how to
 vary the properties of this idealised population). The function
 \texttt{msprime.sim\_ancestry} runs these simulations, and the parameters
 that we provide define the simulation that is
-run. It returns a \texttt{TreeSequence} object, which represents the
+run. It returns a \tskit\ \texttt{TreeSequence} object, which represents the
 full coalescent history of the sample. In later sections we discuss the
-effects of recombination, when this \texttt{TreeSequence} contains a
+effects of recombination, when this \texttt{TreeSequence} represents a
 sequence of correlated trees. For now, we focus on non-recombining sequences and
 use the method \texttt{first()} to obtain the
 tree object from this tree sequence. (In general, we can use the \texttt{trees()} iterator
-to get all trees; see Section~\ref{recombination}.) For example, here we simulate a
-history for a sample of two individuals:
+to get all trees; see Section~\ref{recombination}.)
+For example, here we simulate a
+history for a sample of two diploid individuals (or four chromosomes):
 
 \begin{figure}[t]
 \begin{center}
 \includegraphics[width=0.4\textwidth]{images/plot_1.pdf}
 \end{center}
-\caption{\label{fig-simple-tree} Coalescent tree simulated by \msprime.
+\caption{\label{fig-simple-tree} Coalescent tree for two diploid samples
+simulated by \msprime.
 The tree is plotted using the \texttt{tree.draw\_svg()} method.}
 \end{figure}
 
@@ -273,27 +275,31 @@ tree.draw_svg()
 \end{pythoncode}
 
 This code chunk illustrates the basic approach required to draw a tree
-in a Jupyter notebook. We first generate a tree sequence object (\texttt{ts}), sampling 2 individuals from,
+in a Jupyter notebook. We first generate a tree sequence object (\texttt{ts}),
+sampling 2 individuals from,
 and we then obtain the tree object representing the first (and only)
 tree in this sequence. Finally, using the \texttt{draw\_svg()} method, we plot
-the tree in SVG format. Another way to draw the tree is to use the
-\texttt{draw\_text()} method. This method prints the tree to the console
-as a string, which could be a very useful debugging tool.
+the tree in SVG format.
 All code chunks in this chapter are included in the accompanying Jupyter
 notebook and are fully runnable.
+% Another way to draw the tree is to use the
+% \texttt{draw\_text()} method. This method prints the tree to the console
+% as a string, which could be a very useful debugging tool.
 
 The output of one random realisation of this process is shown in
 Figure~\ref{fig-simple-tree}. The resulting tree has 7 nodes:
 nodes 0, 1, 2, and 3 are \emph{leaves} and
-represent our samples. Note here that 2 samples gave 4 nodes;
-that's because the default ploidy in \msprime\ is diploid.
-More details about ploidy in \msprime\ are in section~\ref{ploidy}.
+represent our samples.
+Because \msprime\ assumes ploidy level of two (diploidy) by default,
+the two sample \emph{individuals} specified resulted in four
+sample \emph{nodes}
+(see Section~\ref{ploidy} for more details on ploidy).
 Node 4 is an \emph{internal} node and is the
 parent of 1 and 3. Similarly, Node 5 is an internal node and is the
 parent of 0 and 2. Node 6 is also an internal node and is the root of
-the tree. In \msprime, we always refer to nodes by their integer IDs and
+the tree. In \msprime\ (and \tskit), we always refer to nodes by their integer IDs and
 obtain information about these nodes by calling methods on the tree
-object. For example, the code \texttt{tree.children(6)} will return the
+(or tree sequence) object. For example, the code \texttt{tree.children(6)} will return the
 tuple \texttt{(4,\ 5)} here, as these are the node IDs of the children
 of the root node. Similarly, \texttt{tree.parent(0)} will return
 \texttt{5}.
@@ -324,19 +330,20 @@ print(mean_T_mrca)
 >>> 3.8478294094510166
 \end{pythoncode}
 
-    In this example we run 1000 independent replicates of the coalescent for
-a sample of 10 chromosomes, and compute the mean time to the MRCA of the entire sample, i.e., the root of the
+In this example we run 1000 independent replicates of the coalescent for
+a sample of 10 diploid individuals (20 chromosomes),
+and compute the mean time to the MRCA of the entire sample, i.e., the root of the
 tree. The value of 3.85 generations in the past we obtain is of course highly unrealistic.
-However, by default, time is measured in units of \(4 N_e\) generations (see the section~\ref{Demography}
+However, by default, time is measured in units of \(2 N_e\) generations (see Section~\ref{Demography}
 for details on how to specify population models and interpret times). It is important to note here
 that although time is measured in units of generations, this is of course
 an approximation and we may have fractional values. Internally,
 during a simulation time is scaled into coalescent units
-using the \texttt{population\_size} parameter and once the
+using the \texttt{population\_size} and \texttt{ploidy} parameters and once the
 simulation is complete, times are scaled back into units of generations
 before being presented to the user. This removes the burden of such
 tedious time scaling calculations from the user. We discuss these time
-scaling issues in more detail in the next section.
+scaling issues in more detail in later sections.
 
 The
 \texttt{sim\_ancestry} function behaves slightly differently when it is
@@ -360,8 +367,8 @@ import msprime
 import numpy as np
 N = 1000
 T_mrca = np.zeros(N)
-for j, ts in enumerate(
-        msprime.sim_ancestry(10, num_replicates=N)):
+reps = msprime.sim_ancestry(10, num_replicates=N)
+for j, ts in enumerate(reps):
     tree = ts.first()
     T_mrca[j] = tree.time(tree.root)
 print([np.mean(T_mrca), np.var(T_mrca)])
@@ -369,44 +376,52 @@ print([np.mean(T_mrca), np.var(T_mrca)])
 >>> (np.float64(3.836115509145935), np.float64(5.046041442780643))
 \end{pythoncode}
 
-    Here we simulate 1000 replicates, storing the time to the MRCA for each replicate in the array \texttt{T\_mrca}.  We use the Python \texttt{enumerate} function to simplify the process of efficiently inserting values into this
-array, which simply ensures that \texttt{j} is \texttt{0} for the first replicate,
-\texttt{1} for the second, and so on. Thus, by the time we finish the
+Here we simulate 1000 replicates, storing the time to the MRCA for each replicate in the array \texttt{T\_mrca}.
+Here we use the \texttt{reps} variable
+to represent the simulation replicates (which are still generated dynamically
+on demand behind the scenes) to simplify the code.
+We also use the Python \texttt{enumerate} function to simplify the process of efficiently inserting values into
+the results array, which simply ensures that \texttt{j} is \texttt{0} for the first replicate,
+\texttt{1} for the second, and so on.
+Thus, by the time we finish the
 loop, the array has been filled with $T_{MRCA}$ values generated
 under the coalescent. We then use the NumPy library (which has
 an extensive suite of statistical functions) to compute the mean and
 variance of this array. This example is idiomatic, and we will use this
-type of approach throughout. In the interest of brevity, we will omit all
-further \texttt{import} statements from code chunks.
+type of approach throughout.
+In the interest of brevity, we will omit all
+further \texttt{import} statements for \texttt{msprime} and \texttt{numpy}
+from code chunks.
 
 It is usually more convenient to use the \texttt{num\_replicates}
 argument to perform replication, but there are situations in which it is
 desirable to specify random seeds manually. For example, if simulations
 require a long time to run, we may wish to use multiple processes to
 run these simulations. To ensure that the seeds used in these different
-processes are unique, it is best to manually specify them. For example,
+processes are unique, it is best to manually specify them.
 
 \begin{pythoncode}
 import concurrent.futures as cf
 
-def run_simulation(seed):
+def run_sim(seed):
     ts = msprime.sim_ancestry(10, random_seed=seed)
     tree = ts.first()
     return tree.time(tree.root)
 
 N = 1000
 seeds = np.random.randint(1, 2**32 - 1, N)
-with cf.ProcessPoolExecutor(max_workers=4) as executor:
-    futures = [
-        executor.submit(run_simulation, seed) for seed in seeds]
-    T_mrca = np.array([
+
+with cf.ProcessPoolExecutor(max_workers=4) as exe:
+     futures = [exe.submit(run_sim, seed) for seed in seeds]
+     T_mrca = np.array([
         f.result() for f in cf.as_completed(futures)])
-print(np.mean(T_mrca))
+
+np.mean(T_mrca)
 
 >>> np.float64(3.795412873593211)
 \end{pythoncode}
 
-    In this example we create a list of 1000 seeds between 1 and $2^{32} -
+In this example we create a list of 1000 seeds between 1 and $2^{32} -
 1$ (the range accepted by \msprime) randomly. We then use the
 concurrent.futures module to create a process pool of four workers, and
 run our different replicates in parallel. The results are then
@@ -424,11 +439,16 @@ seed in the examples in this tutorial for this reason.
 
 \subsection{Mutations}\label{mutations}
 
-We cannot directly observe gene genealogies; rather, we observe mutations in a sample of sequences which ultimately have occurred on genealogical branches. We are
-therefore very often interested not just in the genealogies generated by the coalescent process, but also in the results of
-mutational processes imposed on these trees. \msprime\ simulates mutations using the \texttt{sim\_mutations} function. In its simplest form, this function takes
-a tree sequence object and a \texttt{rate} parameter, then it returns a new tree sequence object with mutations added. This \texttt{rate} parameter specifies the
-per-generation per-site mutation rate. For example, the following code chunk simulates a tree with mutations:
+We cannot directly observe gene genealogies; rather, we observe mutations in a
+sample of sequences which ultimately have occurred on genealogical branches. We
+are therefore very often interested not just in the genealogies generated by
+the coalescent process, but also in the results of mutational processes imposed
+on these trees. \msprime\ simulates mutations using the \texttt{sim\_mutations}
+function. In its simplest form, this function takes a tree sequence object and
+a \texttt{rate} parameter, and returns a new tree sequence object with
+mutations added. This \texttt{rate} parameter specifies the per-generation
+per-site mutation rate. For example, the following code chunk simulates a tree
+with mutations:
 
 \begin{figure}[t]
 \begin{center}
@@ -438,8 +458,7 @@ per-generation per-site mutation rate. For example, the following code chunk sim
 \end{figure}
 
 \begin{pythoncode}
-ts = msprime.sim_ancestry(
-    2, random_seed=13, sequence_length=10)
+ts = msprime.sim_ancestry(2, random_seed=13, sequence_length=10)
 ts = msprime.sim_mutations(ts, rate=0.01, random_seed=2)
 tree = ts.first()
 tree.draw_svg()
@@ -448,22 +467,22 @@ tree.draw_svg()
 As this code chunk suggests, simulating mutations on a tree sequence is a two-step process.
 First, we simulate the genealogy using \texttt{sim\_ancestry} and store the resulting
 tree sequence in the variable \texttt{ts}. Note that we specified a \texttt{sequence\_length} parameter;
-this will specify the number of discrete sites in the sequence. After that, in the second
+this determines the number of discrete sites in the sequence at which mutation
+may occur. After that, in the second
 line, we simulate mutations on this tree sequence using the \texttt{sim\_mutations} function.
 We specified a \texttt{rate} parameter for the \texttt{sim\_mutations} function; this
 parameter specifies the per-generation per-site mutation rate. We overwrote the \texttt{ts} variable
 with the new tree sequence object that now contains mutations to save memory, as otherwise we would
-store the tree sequence twice in memory---once without mutations and once with mutations. We then
+store the tree sequence twice---once without mutations and once with mutations. We then
 select the first and only tree in the tree sequence and plot it using the \texttt{draw\_svg()}
 method. The tree produced by this code chunk is shown in Figure~\ref{fig-tree-mutations}.
 
-As Figure ~\ref{fig-tree-mutations} shows, this code simulated two mutations, shown by the red "X"s.
+As Figure ~\ref{fig-tree-mutations} shows, this code simulated two mutations,
+shown by the red ``X''s.
 Mutations occur above a given node in the tree, and all samples beneath
-this node will inherit the mutation. The mutational model used here, which is the default mutational
-model, is a Jukes-Cantor model (in the next section we will talk about other mutational models).
+this node will inherit the mutation.
 One convenient way to access the resulting sample genotypes is to loop through variants in the
-tree sequence object. As each variant stores the position of the mutation, the alleles that are present
-In the following code chunk, we investigate the mutations that have occurred in the previous simulation:
+tree sequence object:
 
 \begin{pythoncode}
 for var in ts.variants():
@@ -471,17 +490,9 @@ for var in ts.variants():
 >>> 3.0	('A', 'T')	[0 1 0 1]
     9.0	('G', 'A')	[0 0 1 0]
 \end{pythoncode}
-
 Accessing genotype data is discussed in more detail in Section~\ref{processing-variants}.
 
-\runinhead{Other mutation models} \
-
-Beside the Jukes-Cantor model mentioned before, the \msprime\ mutation generation engine supports a list of mutation models; Table~\ref{tab:mutation-models}
-lists these available models. These models include all the supported models by Seq-Gen~\citep{rambaut1997seq}, and they have been extensively tested against the
-output of Seq-Gen~\citep{rambaut1997seq} and Pyvolve~\citep{spielman2015pyvolve} to ensure their accuracy. Moreover, \msprime\ allows for the specification of a custom mutation model—please refer
-to the \msprime\ documentation for more in-depth information regarding creating a custom mutation model.
-
-\begin{table}[h]
+\begin{table}
 \centering
 \begin{tabular}{|l|p{8cm}|}
 \hline
@@ -518,23 +529,30 @@ SLiMMutationModel & An infinite-alleles model of mutation producing SLiM-style m
 \label{tab:mutation-models}
 \end{table}
 
-To specify a mutation model, we pass the model to the \texttt{sim\_mutations} function using the \texttt{model} parameter. Some models
-require additional parameters to be specified. For example, the \texttt{HKY} model requires the transitions/transversions ratio to be specified.
-In the following code chunk, we simulate a tree with mutations using the \texttt{HKY} model:
+The mutational model used in the previous example (the
+default) is a Jukes-Cantor model, and
+\msprime\ supports many other mutation models
+including all the models provided by
+Seq-Gen~\citep{rambaut1997seq}
+(Table~\ref{tab:mutation-models}).
+% These models include all the supported models by
+% Seq-Gen~\citep{rambaut1997seq}, and they have been extensively tested against the
+% output of Seq-Gen~\citep{rambaut1997seq} and Pyvolve~\citep{spielman2015pyvolve} to ensure their accuracy.
+% Moreover, \msprime\ allows for the specification of a custom mutation model—please refer
+% to the \msprime\ documentation for more in-depth information regarding creating a custom mutation model.
+To specify a mutation model, we pass a \texttt{model} parameter to \texttt{sim\_mutations}.
+Some models
+require additional parameters to be specified.
+For example, the \texttt{HKY} model requires the transition/transversion
+ratio $\kappa$:
 
 \begin{pythoncode}
 hky = msprime.HKY(kappa=0.75)
 ts = msprime.sim_ancestry(5, random_seed=5, sequence_length=1e6)
-ts = msprime.sim_mutations(
-    ts, rate=1e-6, model=hky, random_seed=7)
+ts = msprime.sim_mutations(ts, rate=1e-6, model=hky, random_seed=7)
 \end{pythoncode}
 
-In this example, we first specified the mutational model in the first line as the \texttt{HKY} model. In this model, the \texttt{kappa} parameter specifies
-the transitions/transversions ratio. We then simulated a tree sequence with a sequence length of 1 million sites. After that we simulated mutations on this tree
-sequence using the \texttt{HKY} model we specified with a mutation rate of \(10^{-6}\) per site per generation.
-
-\runinhead{Scaled mutation rate} \
-
+\runinhead{Scaled mutation rate}
 When comparing simulations to analytic results, it is very important to be aware of the way in which the
 mutation rates are defined in coalescent theory. For historical reasons,
 the scaled mutation rate \(\theta\) is defined as \(2N_e \mu\), where
@@ -548,11 +566,10 @@ example, the mean number of segregating sites for a sample of two is
 N = 10000
 theta = 5
 S = np.zeros(N)
-replicates = msprime.sim_ancestry(2, population_size=1,
-    num_replicates=N, ploidy=1, discrete_genome=False)
+replicates = msprime.sim_ancestry(2, num_replicates=N, ploidy=1)
 for j, ts in enumerate(replicates):
-    ts = msprime.sim_mutations(
-        ts, rate=theta/2, discrete_genome=False)
+    ts = msprime.sim_mutations(ts, rate=theta/2,
+        discrete_genome=False)
     S[j] = ts.num_sites  # Number of segregrating sites.
 
 print(np.mean(S))
@@ -561,10 +578,12 @@ print(np.mean(S))
 
 \end{pythoncode}
 
-    Note that here we set the mutation rate to \(\theta / 2\) (to cancel out
+Note that we set \emph{discrete\_genome=False} in this example so that
+we are simulating mutations under the infinitely-many sites model.
+Note also that we set the mutation rate to \(\theta / 2\) (to cancel out
 the factor of 2 in the definition of \(\theta\)) and \emph{ploidy = 1} (so
-that time is measured in haploid coalescent time units; the following section discusses the ploidy parameter in more detail). Such
-factor-of-two gymnastics are unfortunately unavoidable in coalescent
+that time is measured in haploid coalescent time units).
+Such factor-of-two gymnastics are unfortunately unavoidable in coalescent
 theory.
 
 \subsection{Demography}\label{Demography}
@@ -579,23 +598,21 @@ unspecified, has little connection with
 biological reality. The most fundamental population parameter is the \emph{effective population size}, or
 \(N_e\). This parameter simply rescales time; larger effective
 population sizes correspond to older coalescence times. The following code chunk
-calculates a mean pairwise coalescence time for a sample of size 2 for different
-population sizes:
+calculates a mean pairwise coalescence time for a sample of two chromosomes
+for different population sizes:
 
 \begin{pythoncode}
-def pairwise_T_mrca(population_size, ploidy):
+def pairwise_T_mrca(population_size):
     N = 10000
     T_mrca = np.zeros(N)
-    for j, ts in enumerate(msprime.sim_ancestry(2,
-            population_size=population_size,
-            num_replicates=N, ploidy=ploidy)):
+    reps = msprime.sim_ancestry(2, population_size=population_size,
+        num_replicates=N, ploidy=1)
+    for j, ts in enumerate(reps):
         tree = ts.first()
         T_mrca[j] = tree.time(tree.root)
     return np.mean(T_mrca)
 
-print(
-    pairwise_T_mrca(1, ploidy=1), pairwise_T_mrca(10, ploidy=1),
-    pairwise_T_mrca(100, ploidy=1))
+pairwise_T_mrca(1), pairwise_T_mrca(10), pairwise_T_mrca(100)
 
 >>> (np.float64(0.9965894759060011),
      np.float64(10.036428076042618),
@@ -603,9 +620,12 @@ print(
 
 \end{pythoncode}
 
-    Thus, when we specify \emph{population\_size=10} we get a mean pairwise coalescence time of about
+Thus, when we specify \emph{population\_size=10} we get a mean pairwise coalescence time of about
 10 generations, and with \emph{population\_size=100}, the mean coalescence time is about
-100 generations (when we simulate haploids). See \cite{wakely2008coalescent} for details on the
+100 generations. It is important to note that we set \emph{ploidy=1} in
+this example, so that we sample two nodes and also to ensure that the timescale
+is in units of $N_e$ generations (see the next section).
+See \cite{wakely2008coalescent} for details on the
 biological interpretation of effective population size.
 
 \runinhead{Ploidy and timescale}\label{ploidy} \
@@ -1163,7 +1183,7 @@ simulated by this example; we can see a polytomy (where three lineages coalesce 
 \caption{\label{fig:polytomy} Tree simulated with a combination of the \emph{DTWF} model and a \emph{StandardCoalescent} model. Polytomy is observed.}
 \end{figure}
 
-\runinhead{Selective sweeps}\
+\runinhead{Selective sweeps}
 
 Selective sweeps are usually simulated using a combination of the selective sweep model that runs for a specific
 period and a neutral model (usually the standard coalescent model) that runs until coalescence. In this example,
