@@ -591,7 +591,7 @@ theory.
 \subsubsection{Population size}\label{population-models}
 
 In the previous section the only parameters we supplied to
-\texttt{sim\_ancestry} were the \texttt{sample\_size} and
+\texttt{sim\_ancestry} were the \texttt{samples} and
 \texttt{num\_replicates} parameters. This allows us to randomly sample
 trees with a given number of nodes, but, as it leaves the population
 unspecified, has little connection with
@@ -628,24 +628,26 @@ is in units of $N_e$ generations (see the next section).
 See \cite{wakely2008coalescent} for details on the
 biological interpretation of effective population size.
 
-\runinhead{Ploidy and timescale}\label{ploidy} \
-
-The \texttt{sim\_ancestry} function accepts a ploidy parameter. Theoretically, ploidy referes the number of genomes per individual.
-In \msprime, the ploidy parameter determines the number of nodes per sample, and it scales time accordingly.
+\runinhead{Ploidy and timescale}\label{ploidy}
+The \texttt{sim\_ancestry} function accepts a ploidy parameter, which defines
+the number of ``genomes'' per individual~\cite{wong2024general}.
+In \msprime, this has two effects: it determines the number of nodes
+per sample, and how time is scaled.
 
 By default, \emph{population\_size=1} in \msprime, which is equivalent to measuring
-time in units of \(N_e\) generations. It is very important to note that
+time in units of $\mbox{ploidy}\times N_e$ generations. Thus,
 \texttt{population\_size} in \msprime\ is the \emph{ploidy} effective population size,
-which means that by default, all times are scaled by \(2N_e\), since the default ploidy is diploid. Similarly, however,
-if we set ploidy to 1, i.e., simulating haploids, time will be scaled by $N_e$. Thus, care about ploidy
+which means that by default (diploids), all times are scaled by \(2N_e\).
+Similarly, however, if we set ploidy to 1, i.e., simulating haploids, time will be scaled by $N_e$.
+Thus, care about ploidy
 and population size is required when comparing results from \msprime\ with expectations from the literature, which
-are generally given in diploid coalescent time units. For example, we know that the expected
-coalescence time for a sample of size 2 is 1, and this is the value we
-obtain from the \texttt{pairwise\_T\_mrca} function when we set \emph{population\_size=1}, since \emph{ploidy}
-is set to 1. To obtain the same result for a diploid population, where ploidy is set to 2, first, we need to set
-sample size to 1 since we will get two nodes per sample instead of one node per sample. And second, we need to set population
-size to 0.5, as coalescence time is scaled by \(2N_e\) instead of \(N_e\).
-
+are generally given in diploid coalescent time units.
+% For example, we know that the expected
+% coalescence time for a sample of size 2 is 1, and this is the value we
+% obtain from the \texttt{pairwise\_T\_mrca} function when we set \emph{population\_size=1}, since \emph{ploidy}
+% is set to 1. To obtain the same result for a diploid population, where ploidy is set to 2, first, we need to set
+% sample size to 1 since we will get two nodes per sample instead of one node per sample. And second, we need to set population
+% size to 0.5, as coalescence time is scaled by \(2N_e\) instead of \(N_e\).
 We will usually assume that we are working in haploid
 coalescent time units from here on and so set \emph{population\_size=1} and \emph{ploidy=1} in most
 examples. However, when running simulations of a specific organism and/or population, it
@@ -653,8 +655,7 @@ is substantially more convenient to use an appropriate estimated value
 for \emph{population\_size} so that times are directly interpretable.
 
 \runinhead{Exponentially growing/shrinking
-populations}\label{exponentially-growingshrinking-populations} \
-
+populations}\label{exponentially-growingshrinking-populations}
 When we provide a \emph{population\_size} parameter, this specifies a fixed effective
 population size. We can also model populations that are exponentially
 growing or contracting at some rate over time. Given a population size
@@ -676,12 +677,9 @@ def pairwise_T_mrca(growth_rate):
     N = 10000
     T_mrca = np.zeros(N)
     demography = msprime.Demography()
-    demography.add_population(
-        initial_size=1, growth_rate=growth_rate)
-    replicates = msprime.sim_ancestry(
-        samples=2, demography=demography,
-        num_replicates=N, random_seed=16)
-
+    demography.add_population(initial_size=1, growth_rate=growth_rate)
+    replicates = msprime.sim_ancestry(2, demography=demography,
+        num_replicates=N, ploidy=1)
     for j, ts in enumerate(replicates):
         tree = ts.first()
         T_mrca[j] = tree.time(tree.root)
@@ -690,15 +688,12 @@ def pairwise_T_mrca(growth_rate):
 print(
     pairwise_T_mrca(0.05), pairwise_T_mrca(0),
     pairwise_T_mrca(-0.05))
->>> (np.float64(1.8619023833007429),
-     np.float64(2.0358305242092154),
-     np.float64(2.3064938769701295))
+>>> (0.9467834257720961, 1.0097107587262422, 1.0593821137038801)
 \end{pythoncode}
 
-    Here we simulate the pairwise \(T_{MRCA}\) for positive, zero and
+Here we simulate the pairwise \(T_{MRCA}\) for positive, zero and
 negative growth rates. When we have a growth rate of zero, we see that we
-recover the usual result of 2.0—as our ploidy-scaled initial size (two genomes x one individual), and hence \emph{population\_size},
-is set to 1 diploid individual. When the growth rate is positive, we see that the
+recover the usual result of 1.0. When the growth rate is positive, we see that the
 mean coalescence time is reduced, since the population size is getting
 smaller as we go backwards in time, resulting in an increased rate of
 coalescence. Conversely, when we have a negative growth rate, the
