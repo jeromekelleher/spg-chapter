@@ -118,30 +118,32 @@ genealogies for realistic models and samples sizes, the results are
 cumbersome and generally rely on automation using symbolic mathematics software~\citep{Lohse2016}. Second, and
 perhaps more fundamentally, dealing with recombination has proven
 extremely challenging and we still lack analytic results for basic population genetic quantities for a linear sequence with recombination even under the simplest null models of
-genetic drift. Thus, inference methods that
-incorporate linkage information~\citep{li2011inference,harris2013inferring} generally rely on substantial simplifying
-assumptions about recombination~\citep{mcvean2005approximating}.
-
+genetic drift.
+% Thus, inference methods that
+% incorporate linkage information~\citep{li2011inference,harris2013inferring} generally rely on substantial simplifying
+% assumptions about recombination~\citep{mcvean2005approximating}.
 Because analytic approaches relating sequence variation to mechanistic models
 of population structure and history are severely limited, simulations---in particular, coalescent
-simulations---have become an integral part of inference in a number of ways.
-First, comparisons between analytic results and simulations serve as an important
-sanity check for both. Second, while it is often possible to use analytic
-approaches to obtain unbiased point estimates of demographic parameters by
-ignoring linkage~\citep{gutenkunst2009inferring}, quantifying the uncertainty
-and potential biases in such estimates requires parametric bootstrapping on
-data simulated with linkage. Finally, a range of inference methods directly rely on
-coalescent simulations to approximate the likelihood (or in a Bayesian setting,
-the posterior) of parameters under arbitrarily complex models of demography.
-Inference based on approximate Bayesian computation (ABC)~\citep{Beaumont2002,
-Cornuet2008} or approximate likelihoods can be based either on single nucleotide polymorphisms (SNPs)
-~\citep{excoffier2013} or multilocus data~\citep{becquet2007new, Beeravolu2017}.
+simulations---have become an integral part of population genetics research.
+
+% of inference in a number of ways.
+% First, comparisons between analytic results and simulations serve as an important
+% sanity check for both. Second, while it is often possible to use analytic
+% approaches to obtain unbiased point estimates of demographic parameters by
+% ignoring linkage~\citep{gutenkunst2009inferring}, quantifying the uncertainty
+% and potential biases in such estimates requires parametric bootstrapping on
+% data simulated with linkage. Finally, a range of inference methods directly rely on
+% coalescent simulations to approximate the likelihood (or in a Bayesian setting,
+% the posterior) of parameters under arbitrarily complex models of demography.
+% Inference based on approximate Bayesian computation (ABC)~\citep{Beaumont2002,
+% Cornuet2008} or approximate likelihoods can be based either on single nucleotide polymorphisms (SNPs)
+% ~\citep{excoffier2013} or multilocus data~\citep{becquet2007new, Beeravolu2017}.
 
 This chapter is a tutorial for running and analysing coalescent simulations
 using \msprime~\citep{kelleher2016efficient,baumdicker2022efficient}.
 As the name implies, \msprime\ is heavily indebted to the classical
 \ms\ program~\citep{hudson2002generating}, and largely follows the
-simulation model that it popularised. 
+simulation model that it popularised.
 % The methods for representing
 % genealogies that underlie \msprime\ are based on earlier work on simulating coalescent
 % processes in a spatial
@@ -156,38 +158,37 @@ simulation
 studies with hundreds of
 thousands~\citep{martin2017human,martin2020correction,ragsdale2020lessons}
 and even millions of human chromosomes~\citep{andersontrocme2023genes}.
-Secondly, \msprime\ is feature-rich, combining the functionality of 
+Secondly, \msprime\ is feature-rich, combining the functionality of
 several different simulators into a single
 package~\citep{baumdicker2022efficient}.
 Thirdly, the data structure that \msprime\ uses
-to represent the results of simulations is a concise and
-efficient encoding of the complete genetic history of a sample.
-This data structure, the \emph{succinct tree sequence},
-is a concise and efficient encoding of 
-Ancestral Recombination Graphs~\citep{wong2024general}
+to represent results,
+the \emph{succinct tree sequence},
+is a concise and efficient encoding of
+an Ancestral Recombination Graph~\citep{wong2024general}
 (see the Discussion),
 and is the basis of the \tskit\ library used by \msprime.
 Using \tskit\ provides many benefits, including access to efficient
 data processing algorithms~\citep{ralph2020efficiently,lehmann2025on}
-and the ability to interoperate with forwards-time 
+and the ability to interoperate with forwards-time
 simulators~\citep{kelleher2018efficient,haller2018tree}.
-A diverse ecosystem of downstream tools is also developing around 
+A diverse ecosystem of downstream utilities is also developing around
 \tskit~\cite{fan2022genealogical,nowbandegani2023extremely,tsambos2023link,
 tagami2024tstrait,fritze2024forest}.
 Finally, \msprime's primary interface is through a simple but powerful Python
 API, providing significant advantages over command-line or GUI based alternatives.
-This interface has enabled many downstream applications building 
-on msprime APIs, for example to provide easy access to 
+This interface has enabled many applications building
+on \msprime\ APIs, for example to provide easy access to
 realistic simulations across a range of
 species~\citep{adrion2020stdpopsim,lauterbur2023expanding,gower2025accessible}
-and other more specialised simulation 
+and other more specialised simulation
 scenarios~\citep{mckenzie2020ipcoal,rivera2021simulation,petrslendr2023},
 % Could cite a bunch more stuff here but can't be bothered
 Approximate Bayesian Computation (ABC)~\citep{huang2025estimating}
 and deep learning~\cite{korfmann2023deep}.
-These applications have been facilitated by the ease with 
-which we can integrate with state-of-the-art tools from the 
-Python data science ecosystem such as NumPy~\citep{walt2011numpy}, 
+These applications have been facilitated by the ease with
+which we can integrate with state-of-the-art tools from the
+Python data science ecosystem such as NumPy~\citep{walt2011numpy},
 SciPy~\citep{jones-2018-scipy},
 Matplotlib~\citep{hunter2007matplotlib}, Pandas~\citep{mckinney2010data},
 Seaborn~\citep{michael_waskom_2017_883859}, and
@@ -205,6 +206,17 @@ tutorial that is part of the official documentation.
 We also assume a basic knowledge of coalescent theory;
 \cite{wakely2008coalescent} is an excellent introduction.
 
+The online documentation for \msprime\ and \tskit\ is extensive and
+authoritative (see the Online Resources), and this chapter is not intended as an exhaustive reference.
+We do not cover all features of \msprime\ or \tskit\ here, but rather
+attempt to give a good understanding of the most fundamental features,
+and provide idiomatic examples that can be extended. For a high-level
+description of the algorithms and features of \msprime,
+see~\cite{kelleher2016efficient,baumdicker2022efficient}.
+See the corresponding publications for descriptions of
+the Discrete Time Wright-Fisher~\cite{nelson2020accounting},
+and fixed-pedigree~\cite{andersontrocme2023genes} models.
+
 The chapter is organised as follows.
 Section~\ref{running-simulations} provides an overview of how to run coalescent simulations in \msprime, including some of the most important extensions to the basic model.
 Section~\ref{processing-results} illustrates by way of simple examples how we can efficiently process the results
@@ -213,11 +225,12 @@ required to work with large sample sizes. We then provide
 some examples of how to compare simulations with analytic
 predictions in Section~\ref{validating-analytical-predictions}.
 In Section~\ref{sec:inference}, we show
-how \msprime\ can be used to set up a simple ABC inference.
-Inference tools are generally implemented with a command line or graphical
-user interface and designed for a more or less narrow set of inference
-problems. Thus the aim of Section~\ref{sec:inference} is to illustrate how
-\msprime's flexible Python API can be used to build inference tools for 
+how \msprime\ can be used to set up a simple ABC inference,
+illustrating how
+% Inference tools are generally implemented with a command line or graphical
+% user interface and designed for a more or less narrow set of inference
+% problems. Thus the aim of Section~\ref{sec:inference} is to illustrate how
+\msprime's flexible Python API can be used to build inference tools for
 arbitrary demographic histories from first principles.
 
 \section{Running simulations}
@@ -2112,17 +2125,17 @@ Figure~\ref{fig-abc-b} shows the mean and the root mean square error (RMSE) of \
 \section{Discussion}
 \label{sec:discussion}
 \texttt{Msprime} simulates the complete history of a sample of genomes under
-the influence of recombination. Although there has been some confusion about 
-the precise meaning of the term, the recent consensus has been to loosely 
+the influence of recombination. Although there has been some confusion about
+the precise meaning of the term, the recent consensus has been to loosely
 refer to such structures as Ancestral Recombination Graphs, or
 ARGs~\citep{wong2024general}. Since \msprime\ was first released in 2014
-there has been an explosion of interest in ARGs, with four separate 
+there has been an explosion of interest in ARGs, with four separate
 review articles published in 2024~\citep{brandt2024promise,
-lewanski2024era,nielsen2024inference,wong2024general}. 
+lewanski2024era,nielsen2024inference,wong2024general}.
 This has largely been
 driven by exciting developments in inference, with great strides being
-made in both statistically rigorous Bayesian sampling 
-approaches~\citep{rasmussen2014genome,mahmoudi2022bayesian,deng2024robust} 
+made in both statistically rigorous Bayesian sampling
+approaches~\citep{rasmussen2014genome,mahmoudi2022bayesian,deng2024robust}
 and large-scale hueristic
 methods~\cite{speidel2019method,kelleher2019inferring,
 zhang2023biobank,gunnarsson2024scalable},
@@ -2130,13 +2143,13 @@ their potential combination~\citep{bisschop2025likelihoods},
 along with important auxiliary inference tasks such as node
 dating~\cite{wohns2022unified,deng2025general}.
 Sophisticated simulation tools, however, have also played an important
-role. The ability to generate truth data at scale 
+role. The ability to generate truth data at scale
 under a range of complex demographic
 models~\citep{adrion2020stdpopsim,gower2022demes,lauterbur2023expanding}
 and arbitrary patterns of
 selection~\citep{kelleher2018efficient,haller2018tree,gower2025accessible}
 is critical to evaluate these inference methods.
-\texttt{Msprime} is likely to continue playing a significant role 
+\texttt{Msprime} is likely to continue playing a significant role
 in this ongoing ARG revolution.
 
 \section*{Acknowledgments}
