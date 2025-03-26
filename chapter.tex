@@ -1305,11 +1305,13 @@ print((ts.num_trees, ts.num_sites))
 \end{pythoncode}
 
 This simulation required about 20 seconds to complete. Note that we set the
-\texttt{discrete\_genome} parameter of the \texttt{sim\_mutations} method to
+\texttt{discrete\_genome} parameter of \texttt{sim\_mutations} to
 \texttt{False} to simulate mutations using an infinitely many sites model.
-We will leverage the features of this model, where identical by state
-mutations are identical by descent, to compute summary statistics.
-
+This is convenient for the purposes of this chapter as we can assume
+that all sites have a single mutation, simplifying some logic. As many
+of the operations described here are implemented in full generality
+within \tskit\, the code snippets provided here are mainly for pedagogical
+purposes.
 
 \subsection{Computing MRCAs}\label{computing-mrcas}
 We are often interested in finding the most recent common ancestor (MRCA)
@@ -1335,9 +1337,9 @@ def ibd_segments(ts, a, b):
     segment_lengths.append(ts.sequence_length - last_left)
     return np.array(segment_lengths) / ts.sequence_length
 
-sns.histplot(
-    ibd_segments(ts, 0, 1), label="Within population", kde=True)
-sns.histplot(ibd_segments(ts, 0, 10**5),
+sns.histplot(ibd_segments(ts, 0, 1),
+    label="Within population", kde=True)
+sns.histplot(ibd_segments(ts, 0, ts.samples()[-1]),
     label="Between populations", kde=True)
 plt.xlim(-0.0001, 0.003)
 plt.legend()
@@ -1373,7 +1375,8 @@ call the above \texttt{ibd\_segments} function.
 
 \subsection{Sample counts}\label{sample-counts}
 
-The \msprime\ API provides an extremely efficient way to count the number of samples that are beneath a particular node in a tree. This can be used,
+The \tskit\ API provides an efficient way to count the number of samples that
+descent from  a particular node in a tree. This can be used,
 for example, to compute allele frequencies efficiently and is the basis
 for many of the fast algorithms in the API. As a simple illustration of
 this technique, consider the following code to compute the number of
@@ -1394,7 +1397,7 @@ print((num_rare_derived, num_rare_derived / ts.num_sites))
 >>> (65292, 0.635241236391232)
 \end{pythoncode}
 
-    In this example we iterate over all the trees in the tree sequence, and
+In this example we iterate over all the trees in the tree sequence, and
 then iterate over all the sites in each tree. We find the frequency
 of the derived allele at each site using the \texttt{num\_samples}
 method, which returns the number of samples subtending a given
@@ -1479,7 +1482,7 @@ in the new tree sequence.
 ts_subset, node_map = ts.simplify(samples, map_nodes=True)
 tree = ts_subset.first()
 node_labels = {
-    node_map[j]: "{}({})".format(node_map[j], str(j))
+    node_map[j]: f"{node_map[j]}({j})"
     for j in range(ts.num_nodes)}
 tree.draw_svg(node_labels=node_labels)
 \end{pythoncode}
@@ -1495,6 +1498,8 @@ The result of running this code chunk is show in Figure~\ref{fig-tree-subset}.
 Here we draw the first tree in the subset tree sequence, showing the new
 node IDs along with the IDs from the original tree sequence in
 parentheses. The number of nodes is greatly reduced from the original.
+Simplification is a powerful tool with many applications---see
+\cite{wong2024general} for a discussion.
 
 \subsection{Processing variants}\label{processing-variants}
 
@@ -1578,15 +1583,16 @@ time.
 
 \begin{pythoncode}
 def get_total_branch_length(ts):
-  current = 0
-  total_branch_length = np.zeros(ts.num_trees)
-  for j, (_, edges_out, edges_in) in enumerate(ts.edge_diffs()):
-    for e in edges_out:
-        current -= ts.node(e.parent).time-ts.node(e.child).time
-    for e in edges_in:
-        current += ts.node(e.parent).time-ts.node(e.child).time
-    total_branch_length[j] = current
-  return total_branch_length
+    current = 0
+    T = ts.nodes_time
+    total_branch_length = np.zeros(ts.num_trees)
+    for index, (_, edges_out, edges_in) in enumerate(ts.edge_diffs()):
+        for edge in edges_out:
+            current -= T[edge.parent] - T[edge.child]
+        for edge in edges_in:
+            current += T[edge.parent] - T[edge.child]
+        total_branch_length[index] = current
+    return total_branch_length
 \end{pythoncode}
 
     This function returns the total branch length value for each tree in the
@@ -1599,7 +1605,8 @@ list of the edges that are removed for each tree transition
 length is then simply a case of subtracting the branch lengths for all
 outgoing edges and adding the branch lengths for all incoming edges.
 This is extremely efficient because, after the first tree has been
-constructed there is at most four incoming and outgoing edges~\citep{kelleher2016efficient}. Thus,
+constructed there is at most four incoming and outgoing
+edges~\citep{kelleher2016efficient}. Thus,
 each tree transition costs \emph{constant time}.
 
 \begin{pythoncode}
@@ -1615,32 +1622,30 @@ when we have a large sample size. In this example, computing the array of branch
 using the incremental approach given here took 8 seconds. Computing the
 same array using the \texttt{tree.total\_branch\_length} for each tree
 in a straightforward way still had not completed after \emph{twenty
-minutes}. (This is because \msprime\ currently implements this operation
-by a full traversal in Python; in future this may change to using the
-algorithm given here.) Full tree traversals of large trees are
+minutes}.  Full tree traversals of large trees are
 expensive, and great gains can be made if calculations can be expressed
 in an incremental manner using \texttt{edge\_diffs}.
 
 
-\subsection{Exporting variant data}\label{exporting-variant-data}
+% \subsection{Exporting variant data}\label{exporting-variant-data}
 
-If the \msprime\ API doesn't provide methods to easily calculate the
-statistics you are interested in, it's straightforward to export the
-variant data into other libraries using the \texttt{genotype\_matrix()}
-or \texttt{variants()} methods. We recommend the excellent
-\texttt{scikit-allel}~\citep{miles2017scikit} and
-\texttt{pylibseq} [\url{https://pypi.python.org/} \url{pypi/pylibseq}],
-libraries (\texttt{pylibseq} is a Python interface to
-\texttt{libsequence}~\citep{thornton2003libsequence}). If you wish to export data to
-external programs, VCF may be best option, which is supported using the
-\texttt{write\_vcf} method. The \texttt{simplify} method is useful here
-if you wish to export data from a subset of the simulated samples.
+% If the \tskit\ API doesn't provide methods to easily calculate the
+% statistics you are interested in, it's straightforward to export the
+% variant data into other libraries using the \texttt{genotype\_matrix()}
+% or \texttt{variants()} methods. We recommend the excellent
+% \texttt{scikit-allel}~\citep{miles2017scikit} and
+% \texttt{pylibseq} [\url{https://pypi.python.org/} \url{pypi/pylibseq}],
+% libraries (\texttt{pylibseq} is a Python interface to
+% \texttt{libsequence}~\citep{thornton2003libsequence}). If you wish to export data to
+% external programs, VCF may be best option, which is supported using the
+% \texttt{write\_vcf} method. The \texttt{simplify} method is useful here
+% if you wish to export data from a subset of the simulated samples.
 
-However, it is worth noting that for large sample sizes, exporting
-genotype data may require a great deal of memory and take some time. One
-of the advantages of the \msprime\ API is that we do not need to
-explicitly generate genotypes in order to compute many
-statistics of interest.
+% However, it is worth noting that for large sample sizes, exporting
+% genotype data may require a great deal of memory and take some time. One
+% of the advantages of the \msprime\ API is that we do not need to
+% explicitly generate genotypes in order to compute many
+% statistics of interest.
 
 \section{Validating analytic predictions}\label{validating-analytical-predictions}
 
