@@ -693,7 +693,7 @@ print(
 
 Here we simulate the pairwise \(T_{MRCA}\) for positive, zero and
 negative growth rates. When we have a growth rate of zero, we see that we
-recover the usual result of 1.0. When the growth rate is positive, we see that the
+recover the usual result of around 1.0. When the growth rate is positive, we see that the
 mean coalescence time is reduced, since the population size is getting
 smaller as we go backwards in time, resulting in an increased rate of
 coalescence. Conversely, when we have a negative growth rate, the
@@ -705,45 +705,32 @@ is also possible that the simulator will keep generating events
 indefinitely. This is particularly important in simulation based
 approaches to inference from real data.)
 
-
 \subsubsection{Population structure}\label{population-structure}
-To facilitate population structure modelling, \msprime\ implements
-predefined theoretical models. The simplest model is the isolated model,
-where populations are simulated in isolation, i.e., without migration.
+Msprime has a fully-featured API for modelling demography, which
+is thoroughly described in the online documenation. Here, we give a few examples
+of how to use this API for simple theoretical models as well as
+defining a more complex example.
 
-\runinhead{Isolated model}\label{isolated-model} \
-
+\runinhead{Isolated model}\label{isolated-model}
 The method \texttt{msprime.Demography.isolated\_model()} is used to
-simulate populations in isolation. The \texttt{initial\_size} parameter
-specifies the initial population size, and the \texttt{growth\_rate}
-parameter specifies the growth rate of the population. Both parameters
-are lists, where each element corresponds to a population. In the
-following line, we set up a simple model of two populations in isolation:
+simulate populations in isolation,
+using the  \texttt{initial\_size} and
+\texttt{growth\_rate} parameters to specify the per-population
+values.
+Here, we set up a simple model of two populations with an asymmetric
+migration rate:
 \begin{pythoncode}
     demography = msprime.Demography.isolated_model(
         [1, 1], growth_rate=[0.01, 0.02])
-\end{pythoncode}
-Although the two populations are simulated without migration, we can
-specify migration rates between populations using the \texttt{set\_migration\_rate()}
-method. This method takes the source and destination populations and the migration rate as arguments.
-To add migration between populations 0 and 1, we use the following line:
-\begin{pythoncode}
     demography.set_migration_rate(source=0, dest=1, rate=0.1)
 \end{pythoncode}
+The two populations initially have no migration, and we
+define the migration rates between populations using the \texttt{set\_migration\_rate()}
+method. The interpretation of source and destination populations
+as well as the rate parameter is subtle and confusing; please see
+the online documentation for both precise and intuitive descriptions.
 
-In this line, the \texttt{source} argument specifies the source population from which lineages originate. The
-\texttt{dest} argument specifies the destination population to which lineages migrate. The \texttt{rate} argument
-specifies the per-generation migration rate between the source and destination populations.
-
-Note that the migration rate defined by \msprime\ is the lineage migrationn rate, not the individual
-migration rate: While the individual migration rate is the proportion of individuals in the source
-population that migrate to the destination population in each generation, the lineage migration rate
-is defined as this proportion (individual migration rate) multiplied by the ratio between the source
-population size and the destination population size. Please refer to the \msprime\ documentation for
-more information on the migration rate.
-
-\runinhead{Island model}\label{island-model} \
-
+\runinhead{Island model}\label{island-model}
 When the migration rate is the same between simulated populations, we don't
 need to specify the migration rate between each pair of populations. Instead,
 we can use the \texttt{island\_model()}. The \texttt{Demography.island\_model()} accepts
@@ -754,48 +741,35 @@ addition to the \texttt{migration\_rate} parameter. The following line sets up a
     demography = msprime.Demography.island_model(
         [1, 1, 1], migration_rate=0.1)
 \end{pythoncode}
-
 This single line is equivalent to setting up an isolated model with three populations
 and setting up migration rate of 0.1 between each pair of populations.
 
-\runinhead{Stepping stone model}\label{stepping-stone-model} \
+% \runinhead{Stepping stone model}\label{stepping-stone-model}
+% Similar to the \texttt{island\_model()}, the \texttt{stepping\_stone\_model()}
+% accepts a single migration rate parameter. However, the stepping stone model simulates
+% migration between adjacent populations exclusively. This model considers populations to be
+% adjacent in a linear fashion.
 
-Similar to the \texttt{island\_model()}, the \texttt{stepping\_stone\_model()}
-accepts a single migration rate parameter. However, the stepping stone model simulates
-migration between adjacent populations exclusively. This model considers populations to be
-adjacent in a linear fashion.
+% \subsubsection{Demographic events}\label{demographic-events}
 
-\subsubsection{Demographic events}\label{demographic-events}
+% Demographic events allow us to model more complex histories involving
+% changes to the population structure over time and are specified using
+% a \texttt{demography} object. Each
+% demographic event occurs at a specific time, and we recommend specifying them
+% in the order they occur (backwards in time). There are a
+% number of different types of demographic events that msprime supports, for example
+% \texttt{add\_population\_parameters\_change()} changes the growth rate or size of a population;
+% \texttt{add\_population\_split()} simulates a scenario where a population is derived from a
+% specific population at a certain time (split event);
+% and \texttt{add\_admixture()} simulates a population admixture event, where a population is
+% formed by the admixture of two or more populations.
 
-Demographic events allow us to model more complex histories involving
-changes to the population structure over time and are specified using
-a \texttt{demography} object. Each
-demographic event occurs at a specific time, and we recommend specifying them
-in the order they occur (backwards in time). There are a
-number of different types of demographic events that msprime supports, for example
-\texttt{add\_population\_parameters\_change()} changes the growth rate or size of a population;
-\texttt{add\_population\_split()} simulates a scenario where a population is derived from a
-specific population at a certain time (split event);
-and \texttt{add\_admixture()} simulates a population admixture event, where a population is
-formed by the admixture of two or more populations.
-
-\begin{figure}[t]
-\centering
-% \qquad
-\includegraphics[width=0.75\textwidth]{images/admixture.pdf}
-\caption{\label{fig:complex-demography}An example of a complex demography that could be
-simulated using \msprime. This figure is generated by expressing demography using the
-\texttt{Demes} standard format and plotted using the \texttt{demesdraw} package.}
-\end{figure}
-
-\runinhead{Complex demography}\label{Complex-demography} \
-
+\runinhead{Complex demography}\label{Complex-demography}
 To simulate complex demography, we use the \texttt{Demography} class to specify different
-demographic events that make this complex model. In the following example, we will
-simulate an ancestral population (ANC) that splits into two populations (A and B) at time
+populations and demographic events. In the following example, we define
+an ancestral population (ANC) that splits into two populations (A and B) at time
 20 generations ago. After 10 generations, populations A and B admix with proportions of 0.25
-and 0.75, respectively, to form population (ADMIX). Figure~\ref{fig:complex-demography}
-illustrates this model.
+and 0.75, respectively, to form population (ADMIX).
 
 \begin{pythoncode}
     demography = msprime.Demography()
@@ -818,25 +792,17 @@ The method \texttt{add\_population\_split()} is used to specify the population s
 similar to the \texttt{add\_admixture()} method, it takes the time of the event, the derived
 populations, and the ancestral population.
 
-Simulating this model using the \texttt{sim\_ancestory} function is straightforward:
+Simulating this model using the \texttt{sim\_ancestry} function is straightforward:
 \begin{pythoncode}
 ts = msprime.sim_ancestry(
     samples={"A":1, "B":1, "ADMIX":1}, demography=demography)
 \end{pythoncode}
-
-In this line, we pass a dictionary as the \texttt{samples} parameter to the \texttt{sim\_ancestry} method to
-specify the number of samples drawn from each population. Here, we draw one sample from each of the populations
-\emph{A}, \emph{B}, and \emph{ADMIX}. The \texttt{demography} object that was set up in the previous code chunk
-is passed to the \texttt{sim\_ancestry} function to simulate the tree sequence under this complex demography.
-
-\runinhead{Demography debugger}\label{demography-debugger}\
-
-Keeping track of complex models can be challenging, and \msprime, for this reason,
-provides the \texttt{DemographyDebugger} class. This class provides a visual summary of
-the demographic history by splitting time into epochs and displaying the demographic
-events that take place in each epoch. In the previous example, to use the \texttt{DemographyDebugger} class,
-we simply use \texttt{demography.debug()}, which displays the demographic history in an \texttt{HTML}
-format. Figure~\ref{fig:DemographyDebugger} shows the \texttt{demography.debug()} output for the example in section~\ref{Complex-demography}.
+In this line, we pass a dictionary as the \texttt{samples} parameter to \texttt{sim\_ancestry} to
+specify the number of samples drawn from each population, as well as the
+\texttt{demography} just defined.
+We draw one sample from each of the populations
+\emph{A}, \emph{B}, and \emph{ADMIX}, and simulate their ancestry under this
+demographic model.
 
 \begin{figure}[t]
 \centering
@@ -844,14 +810,22 @@ format. Figure~\ref{fig:DemographyDebugger} shows the \texttt{demography.debug()
 \caption{\label{fig:DemographyDebugger}The \texttt{DemographyDebugger} output for a complex demography.}
 \end{figure}
 
-\subsubsection{Using Demes standard format}\label{using-demes-standard-format}
+\runinhead{Demography debugger}\label{demography-debugger}
+Keeping track of complex models can be challenging, and \msprime, for this reason,
+provides the \texttt{DemographyDebugger} class. This class provides a visual summary of
+the demographic history by splitting time into epochs and displaying the demographic
+events that take place in each epoch. In the previous example, to use the \texttt{DemographyDebugger} class,
+we simply use \texttt{demography.debug()}, which displays the demographic history in an \texttt{HTML}
+format. Figure~\ref{fig:DemographyDebugger} shows the \texttt{demography.debug()} output
+for the example model.
 
+\runinhead{Using Demes standard format}
 The Demes format~\citep{gower2022demes} is a standard for writing
 demographic models, to facilitate interchange between simulators, as well as between
 demographic inference software and simulators. Demes models are typically written as a
 YAML file, and loaded into Python using the demes library.
 
-For example, the complex demography model described in section~\ref{Complex-demography} can be
+For example, the complex demography model described in the previous section can be
 written in the Demes format as follows:
 
 \begin{footnotesize}
@@ -872,87 +846,100 @@ This YAML file can be loaded into Python using the demes library and can be repr
 easily using the \texttt{demesdraw} package. The following code chunk demonstrates how to
 load the Demes model from the YAML file and visualise it using \texttt{demesdraw}:
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{images/admixture.pdf}
+\caption{\label{fig:complex-demography}An example of a complex demography that could be
+simulated using \msprime. This figure is generated by expressing demography using the
+\texttt{Demes} standard format and plotted using the \texttt{demesdraw} package.}
+\end{figure}
+
 \begin{pythoncode}
 graph = demes.load("admixture.yaml")
 demesdraw.tubes(graph)
 \end{pythoncode}
-
 This code chunk produces Figure~\ref{fig:complex-demography}. In this figure, arrows indicate
 the movement of individuals as time proceeds from the past to the present.
 
-
 To import demes from a YAML file, we can use the \texttt{demes.load()} function to
 load a demes graph object. Then, the \texttt{Demography.from\_demes()} method is used to convert a
-\texttt{demes graph} object into a \texttt{Demography} object. On the
-other hand, the \texttt{Demography.to\_demes()} method performs the opposite conversion; it
-converts a \texttt{Demography} object to a \texttt{demes graph} object, which can then be
-exported as a YAML file.
-
+\texttt{demes graph} object into a \texttt{Demography} object.
 For example:
+% On the
+% other hand, the \texttt{Demography.to\_demes()} method performs the opposite conversion; it
+% converts a \texttt{Demography} object to a \texttt{demes graph} object, which can then be
+% exported as a YAML file.
 
 \begin{pythoncode}
 import demes
 graph = demes.load("admixture.yaml")
 demography = msprime.Demography.from_demes(graph)
 ts = msprime.sim_ancestry(
-    {"A":2, "B":3, "ADMIX":2},
-    demography=demography, random_seed=1234)
+    {"A":1, "B":1, "ADMIX":1},
+    demography=demography)
 \end{pythoncode}
 
-The previous code block loads the example demes model of Figure~\ref{fig:complex-demography} from a YAML file. Then, a demography
-object is created from the loaded deme graph. Finally, a tree is simulated using the demography object, with samples
-drawn from demes A, B, and ADMIX.
+The previous code block loads the example demes model of
+Figure~\ref{fig:complex-demography} from a YAML file. Then, a demography object
+is created from the loaded deme graph. Finally, a tree sequence is simulated using the
+demography object, with samples drawn from demes A, B, and ADMIX. This is
+equivalent to running the earlier example defined using the \msprime\
+demography API.
 
+Describing complex population models is an error-prone
+process~\citep{ragsdale2020lessons}, and we would generally recommand using
+pre-defined models from \texttt{stdpopsim}~\citep{
+adrion2020stdpopsim,lauterbur2023expanding,gower2025accessible} when available,
+and the higher-level tools provided by Demes where applicable.
 
-\subsubsection{Drawing samples}\label{ancient-samples}
+% \subsubsection{Drawing samples}\label{ancient-samples}
+% The samples drawn from a simulation can be defined in one of three ways: by
+% simply providing an integer as the number of samples drawn from a single population,
+% by providing a dictionary with population names as keys and the number of
+% samples as values, or by providing a list of \texttt{SampleSet} objects.
+% An \msprime\ \texttt{SampleSet} object can be used to specify the sampling
+% time, the population, and the ploidy of a set of samples, making it the more
+% versatile option. However, in most cases, it is sufficient to define samples
+% using an integer or a dictionary.
 
-The samples drawn from a simulation can be defined in one of three ways: by
-simply providing an integer as the number of samples drawn from a single population,
-by providing a dictionary with population names as keys and the number of
-samples as values, or by providing a list of \texttt{SampleSet} objects.
-An \msprime\ \texttt{SampleSet} object can be used to specify the sampling
-time, the population, and the ploidy of a set of samples, making it the more
-versatile option. However, in most cases, it is sufficient to define samples
-using an integer or a dictionary.
+% Up to this point we have assumed that all samples are taken at the
+% present time. However, \msprime\ allows us to specify arbitrary sampling
+% times and locations, allowing us to simulate (for example) ancient
+% samples.
 
-Up to this point we have assumed that all samples are taken at the
-present time. However, \msprime\ allows us to specify arbitrary sampling
-times and locations, allowing us to simulate (for example) ancient
-samples.
+% \begin{pythoncode}
+% demography = msprime.Demography.island_model(initial_size=[1, 1],
+%     migration_rate=1)
+% ts = msprime.sim_ancestry(
+%     samples=[
+%         msprime.SampleSet(1, population=0, time=0),
+%         msprime.SampleSet(1, population=0, time=0),
+%         msprime.SampleSet(1, population=0, time=0),
+%         msprime.SampleSet(1, population=1, time=0.75),
+%         # Ancient sample in deme 1
+%     ],
+%     demography=demography, ploidy=1, random_seed=22)
+% tree = ts.first()
+% \end{pythoncode}
 
-\begin{pythoncode}
-demography = msprime.Demography.island_model(initial_size=[1, 1],
-    migration_rate=1)
-ts = msprime.sim_ancestry(
-    samples=[
-        msprime.SampleSet(1, population=0, time=0),
-        msprime.SampleSet(1, population=0, time=0),
-        msprime.SampleSet(1, population=0, time=0),
-        msprime.SampleSet(1, population=1, time=0.75),
-        # Ancient sample in deme 1
-    ],
-    demography=demography, ploidy=1, random_seed=22)
-tree = ts.first()
-\end{pythoncode}
+% \begin{figure}[t]
+% \centering
+% \includegraphics[width=0.48\textwidth]{images/plot_9.pdf}
+% \caption{\label{fig-tree-ancient-samples} Example tree produced by simulation
+% with ancient samples.}
+% \end{figure}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.48\textwidth]{images/plot_9.pdf}
-\caption{\label{fig-tree-ancient-samples} Example tree produced by simulation
-with ancient samples.}
-\end{figure}
+% The tree produced by this code chunk is shown in Figure~\ref{fig-tree-ancient-samples}.
+% All of the trees that we previously considered had leaf nodes at time
+% zero. In this case, the samples 0, 1 and 2 are taken at time 0 from
+% population 0, but node 3 is sampled at time 0.75 from population 1.
 
-The tree produced by this code chunk is shown in Figure~\ref{fig-tree-ancient-samples}.
-All of the trees that we previously considered had leaf nodes at time
-zero. In this case, the samples 0, 1 and 2 are taken at time 0 from
-population 0, but node 3 is sampled at time 0.75 from population 1.
-
-Note that sampled individuals and nodes are defined sequentially based
-on the order in which they are provided to the \texttt{samples} parameter. Also, it is vital
-to note that changing the ploidy parameter only affects the number of samples drawn from
-the population, not the actual simulation; simulations will be performed on the
-haploid coalescent scale as set for the \texttt{sim\_ancestry} function; the ploidy of the simulation can be changed by changing the
-\texttt{ploidy} parameter for the \texttt{sim\_ancestry} function.
+% Note that sampled individuals and nodes are defined sequentially based
+% on the order in which they are provided to the \texttt{samples} parameter. Also, it is vital
+% to note that changing the ploidy parameter only affects the number of samples drawn from
+% the population, not the actual simulation; simulations will be performed on the
+% haploid coalescent scale as set for the \texttt{sim\_ancestry} function; the ploidy of the simulation can be changed by changing the
+% \texttt{ploidy} parameter for the \texttt{sim\_ancestry} function.
 
 
 \subsection{Recombination}\label{recombination}
