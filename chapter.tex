@@ -84,7 +84,7 @@ King's Buildings, Edinburgh EH9 3FL, UK. \email{konrad.lohse@ed.ac.uk}}
 Coalescent simulation is a fundamental tool in modern population genetics.
 The \msprime\ library provides
 unprecedented scalablity in terms of both the simulations
-that can be performed
+that can be performed,
 as well as the efficiency with which the results can be processed. We show
 how coalescent models for population structure and demography can be
 constructed using a simple Python API, as well as how we can process
@@ -124,7 +124,7 @@ genetic drift.
 % assumptions about recombination~\citep{mcvean2005approximating}.
 Because analytic approaches relating sequence variation to mechanistic models
 of population structure and history are severely limited, simulations---in particular, coalescent
-simulations---have become an integral part of population genetics research.
+simulations---have become an integral part of population genetics and genomics research.
 
 % of inference in a number of ways.
 % First, comparisons between analytic results and simulations serve as an important
@@ -182,7 +182,7 @@ on \msprime\ APIs, for example to provide easy access to
 realistic simulations across a range of
 species~\citep{adrion2020stdpopsim,lauterbur2023expanding,gower2025accessible}
 and other more specialised simulation
-scenarios~\citep{mckenzie2020ipcoal,rivera2021simulation,petrslendr2023},
+scenarios~\citep{mckenzie2020ipcoal,rivera2021simulation,petrslendr2023, laetsch2023gimble},
 % Could cite a bunch more stuff here but can't be bothered
 Approximate Bayesian Computation (ABC)~\citep{huang2025estimating}
 and deep learning~\cite{korfmann2023deep}.
@@ -237,7 +237,7 @@ arbitrary demographic histories from first principles.
 \label{running-simulations}
 In the following subsections we examine some basic examples of running
 simulations with \msprime, starting with the simplest possible models
-and adding the various complexities required to model biological populations.
+and adding the various complexities required to model ancestry in biological populations.
 We use a notebook-like approach throughout, where we
 intersperse code chunks and their results freely within the text.
 
@@ -275,9 +275,8 @@ tree.draw_svg()
 \end{pythoncode}
 
 This code chunk illustrates the basic approach required to draw a tree
-in a Jupyter notebook. We first generate a tree sequence object (\texttt{ts}),
-sampling 2 individuals from,
-and we then obtain the tree object representing the first (and only)
+in a Jupyter notebook. We first generate a tree sequence object (\texttt{ts}) for a sample of two individuals,
+and then obtain the tree object representing the first (and only)
 tree in this sequence. Finally, using the \texttt{draw\_svg()} method, we plot
 the tree in SVG format.
 All code chunks in this chapter are included in the accompanying Jupyter
@@ -290,8 +289,8 @@ The output of one random realisation of this process is shown in
 Figure~\ref{fig-simple-tree}. The resulting tree has 7 nodes:
 nodes 0, 1, 2, and 3 are \emph{leaves} and
 represent our samples.
-Because \msprime\ assumes ploidy level of two (diploidy) by default,
-the two sample \emph{individuals} specified resulted in four
+Because \msprime\ assumes a ploidy level of two (diploidy) by default,
+the two sample \emph{individuals} specified correspond to four
 sample \emph{nodes}
 (see Section~\ref{ploidy} for more details on ploidy).
 Node 4 is an \emph{internal} node and is the
@@ -314,8 +313,8 @@ When we run a single simulation, the resulting tree is a single random
 sample drawn from the probability distribution of coalescent trees. Since a
 single random draw from any distribution is usually uninformative, we
 nearly always need to run many different \emph{replicate} simulations to
-obtain useful information. This simplest way to do this in \msprime\ is to
-use the \texttt{num\_replicates} argument.
+obtain useful information. The simplest way to do this in \msprime\ is to
+use the \texttt{num\_replicates} argument:
 
 \begin{pythoncode}
 import msprime
@@ -336,12 +335,11 @@ and compute the mean time to the MRCA of the entire sample, i.e., the root of th
 tree. The value of 3.85 generations in the past we obtain is of course highly unrealistic.
 However, by default, time is measured in units of \(2 N_e\) generations (see Section~\ref{Demography}
 for details on how to specify population models and interpret times). It is important to note here
-that although time is measured in units of generations, this is of course
-an approximation and we may have fractional values. Internally,
+that although time is measured in units of generations by default time is modelled as a continuous variable. Internally,
 during a simulation time is scaled into coalescent units
 using the \texttt{population\_size} and \texttt{ploidy} parameters and once the
 simulation is complete, times are scaled back into units of generations
-before being presented to the user. This removes the burden of such
+before being presented to the user. This removes the burden of
 tedious time scaling calculations from the user. We discuss these time
 scaling issues in more detail in later sections.
 
@@ -425,7 +423,7 @@ In this example we create a list of 1000 seeds between 1 and $2^{32} -
 1$ (the range accepted by \msprime) randomly. We then use the
 concurrent.futures module to create a process pool of four workers, and
 run our different replicates in parallel. The results are then
-collected together in an numpy array so that we can easily process them.
+collected together in a NumPy array so that we can easily process them.
 This approach is a straightforward way to utilise modern
 multi-core processors.
 
@@ -468,16 +466,15 @@ As this code chunk suggests, simulating mutations on a tree sequence is a two-st
 First, we simulate the genealogy using \texttt{sim\_ancestry} and store the resulting
 tree sequence in the variable \texttt{ts}. Note that we specified a \texttt{sequence\_length} parameter;
 this determines the number of discrete sites in the sequence at which mutation
-may occur. After that, in the second
-line, we simulate mutations on this tree sequence using the \texttt{sim\_mutations} function.
+may occur. After that, we simulate mutations on this tree sequence using the \texttt{sim\_mutations} function.
 We specified a \texttt{rate} parameter for the \texttt{sim\_mutations} function; this
 parameter specifies the per-generation per-site mutation rate. We overwrote the \texttt{ts} variable
 with the new tree sequence object that now contains mutations to save memory, as otherwise we would
 store the tree sequence twice---once without mutations and once with mutations. We then
-select the first and only tree in the tree sequence and plot it using the \texttt{draw\_svg()}
+select the first (and only) tree in the tree sequence and plot it using the \texttt{draw\_svg()}
 method. The tree produced by this code chunk is shown in Figure~\ref{fig-tree-mutations}.
 
-As Figure ~\ref{fig-tree-mutations} shows, this code simulated two mutations,
+As Figure~\ref{fig-tree-mutations} shows, this code simulated two mutations,
 shown by the red ``X''s.
 Mutations occur above a given node in the tree, and all samples beneath
 this node will inherit the mutation.
@@ -553,7 +550,7 @@ ts = msprime.sim_mutations(ts, rate=1e-6, model=hky, random_seed=7)
 \end{pythoncode}
 
 \runinhead{Scaled mutation rate}
-When comparing simulations to analytic results, it is very important to be aware of the way in which the
+When comparing simulations to analytic results, it is important to be aware of the way in which the
 mutation rates are defined in coalescent theory. For historical reasons,
 the scaled mutation rate \(\theta\) is defined as \(2N_e \mu\), where
 \(\mu\) is the per-generation mutation rate. Since all times and rates
@@ -578,7 +575,7 @@ print(np.mean(S))
 
 \end{pythoncode}
 
-Note that we set \emph{discrete\_genome=False} in this example so that
+Note that we set \emph{discrete\_genome=False} in this example, that is,
 we are simulating mutations under the infinitely-many sites model.
 Note also that we set the mutation rate to \(\theta / 2\) (to cancel out
 the factor of 2 in the definition of \(\theta\)) and \emph{ploidy = 1} (so
