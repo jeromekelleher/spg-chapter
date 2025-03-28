@@ -2013,7 +2013,7 @@ measures of divergence and diversity such as \(D_{XY}\) \citep{Nei1972} and
 statistics~\citep{Durand2009,patterson2012ancient}, which are often
 used in ABC inference are, just further (and lossy) summaries of the jSFS.
 Efficient methods to compute these population genetic summaries from tree sequences
-are available in \tskit\.
+are available in \tskit.
 
 Since \msprime\ simulates rooted trees, the columns and rows
 of the unfolded jSFS correspond to the frequency of derived mutations in
@@ -2027,7 +2027,8 @@ print(truth[0])
      [ 8.  1.  0.]]
 \end{pythoncode}
 
-    One could base inference on the bSFS \citep{Lohse2016, Beeravolu2017, HahnMishr2025}, but we will for the sake of simplicity use a simpler (and lossy)
+One could base inference on the bSFS \citep{Lohse2016, Beeravolu2017, HahnMishr2025}, 
+but we will for the sake of simplicity use a simpler (and lossy)
 summary of the data: the average jSFS across loci. For analyses based on
 SNPs, it is convenient to normalize the jSFS by the total number of
 mutations:
@@ -2158,7 +2159,7 @@ Figure~\ref{fig-abc-b} shows the mean and the root mean square error (RMSE) of \
 
 \section{Discussion}
 \label{sec:discussion}
-\texttt{msprime} simulates the complete history of a sample of genomes under
+\texttt{Msprime} simulates the complete history of a sample of genomes under
 the influence of recombination. Although there has been some confusion about
 the precise meaning of the term, the recent consensus has been to loosely
 refer to the resulting structures as Ancestral Recombination Graphs, or
@@ -2174,7 +2175,8 @@ methods~\cite{speidel2019method,kelleher2019inferring,
 zhang2023biobank,gunnarsson2024scalable},
 their potential combination~\citep{bisschop2025likelihoods},
 along with important auxiliary inference tasks such as node
-dating~\cite{wohns2022unified,deng2025general} and the calculation of ARG based summaries~\cite{ignatieva2025haplotype}.
+dating~\cite{wohns2022unified,deng2025general} 
+and the calculation of ARG based summaries~\cite{ignatieva2025length}.
 Sophisticated simulation tools, however, have also played an important
 role. The ability to generate truth data at scale
 under a range of complex demographic
@@ -2182,7 +2184,7 @@ models~\citep{adrion2020stdpopsim,gower2022demes,lauterbur2023expanding}
 and arbitrary patterns of
 selection~\citep{kelleher2018efficient,haller2018tree,gower2025accessible}
 is critical to evaluate these inference methods.
-\texttt{msprime} is likely to continue to play a significant role
+\texttt{Msprime} is likely to continue to play a significant role
 in this ongoing ARG revolution.
 
 \section*{Acknowledgments}
