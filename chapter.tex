@@ -83,7 +83,7 @@ King's Buildings, Edinburgh EH9 3FL, UK. \email{konrad.lohse@ed.ac.uk}}
 \abstract{
 Coalescent simulation is a fundamental tool in modern population genetics.
 The \msprime\ library provides
-unprecedented scalablity in terms of both the simulations
+unprecedented scalability in terms of both the simulations
 that can be performed,
 as well as the efficiency with which the results can be processed. We show
 how coalescent models for population structure and demography can be
@@ -104,7 +104,7 @@ populations from sequence variation. The
 coalescent~\citep{hudson1983testing,kingman1982coalescent,Tajima1983Evolutionary}
 gives an
 elegant mathematical description of the ancestry of a sample of
-sequences from a more or less idealized population and, given its focus
+sequences from a more or less idealised population and, given its focus
 on samples, has become the backbone of modern population
 genetics~\citep{hudson1990gene,wakely2008coalescent}.
 However, despite the flood of sequence data and the plethora of
@@ -710,7 +710,7 @@ approaches to inference from real data.)
 
 \subsubsection{Population structure}\label{population-structure}
 \msprime\ has a fully-featured API for modelling demography, which
-is thoroughly described in the online documenation. Here, we give a few examples
+is thoroughly described in the online documentation. Here, we give a few examples
 of how to use this API for simple theoretical models as well as
 defining a more complex example.
 
@@ -1416,7 +1416,7 @@ constant time, and so it is \emph{very} efficient. We see that such rare alleles
 each mutation occurs at a unique site. Using other mutation models may produce
 tree sequences with back or recurrent mutations, where this simple approach
 will not work. To emphasise this point and to ensure that
-the above code chunk is not accidentally applied in such sitations, we have included an
+the above code chunk is not accidentally applied in such situations, we have included an
 \texttt{assert} statement. We use asserts in a similar way in later code chunks.)
 
 A powerful feature of this sample-counting approach is that we can
@@ -1484,7 +1484,7 @@ state). These can be retained by using the
 
 Note that the node IDs in the simplified tree sequence are not the same as in the
 original. The \texttt{map\_nodes} argument allows us to obtain the
-mapping from IDs in the original tree sequence to their equivalant nodes
+mapping from IDs in the original tree sequence to their equivalent nodes
 in the new tree sequence:
 
 \begin{pythoncode}
@@ -1878,7 +1878,7 @@ In the previous section we saw how to simulate trees
 under the single-locus coalescent and compare these
 with analytic predictions. This assumes that our data is unaffected
 by recombination, which is often unrealistic. Here we show how to
-compute empirical distributions of the number of segregarting sites, and compare
+compute empirical distributions of the number of segregating sites, and compare
 these with classic results. Since analytic
 results for many quantities do not exist for the coalescent with recombination, we limit ourselves to pairwise samples:
 
@@ -1944,7 +1944,7 @@ the variance.
 \section{Example inference scheme}\label{sec:inference}
 
 The analytical challenges of deriving likelihood functions even under
-highly idealized models of population structure and history have led to
+highly idealised models of population structure and history have led to
 the development of likelihood-free, simulation based inference methods, in particular
 Approximate Bayesian Computation (ABC)~\citep{Beaumont2002} and deep learning~\cite{korfmann2023deep} methods.
 ABC approximates the posterior distribution of model parameters by drawing from
@@ -2003,7 +2003,7 @@ truth = get_joint_site_frequency_spectra(
 
     The \texttt{run\_sims} function returns an iterator with the complete
 tree sequence and mutational information of each locus. We use the
-function \texttt{get\_joint\_site} \texttt{\_frequency\_spectra} to summarize the
+function \texttt{get\_joint\_site} \texttt{\_frequency\_spectra} to summarise the
 polymorphism information as the joint site frequency spectrum (jSFS) of
 each locus, i.e. the blockwise site frequency spectrum
 or bSFS \cite[sensu][]{Lohse2016}.
@@ -2030,7 +2030,7 @@ print(truth[0])
 One could base inference on the bSFS \citep{Lohse2016, Beeravolu2017, HahnMishr2025}, 
 but we will for the sake of simplicity use a simpler (and lossy)
 summary of the data: the average jSFS across loci. For analyses based on
-SNPs, it is convenient to normalize the jSFS by the total number of
+SNPs, it is convenient to normalise the jSFS by the total number of
 mutations:
 \begin{pythoncode}
 truth_mean = np.mean(truth, axis=0)
@@ -2155,7 +2155,7 @@ print([mean_m, ci_m])
 
 Although the true value of \(M=0.3\) is contained within the 95 \% credible interval, the posterior distribution is clearly downwardly biased. This bias is in fact expected given that our prior is also strongly biased towards low \(M\). We can check the effect of the acceptance threshold on the inference and get a sense of the expected information about \(M\) using a cross-validation procedure: we repeat the inference on pseudo-observed data sets (PODS) simulated under a known truth. Since we can re-use the same set of replicates simulated under the prior for inference, such cross-validation is computationally efficient.
 
-Figure~\ref{fig-abc-b} shows the mean and the root mean square error (RMSE) of \(m\) estimates (across 100 PODS) against the acceptance threshold and confirms that both the downward bias in \(m\) estimates and the associated RMSE increase with larger acceptance tresholds. While this toy example illustrates the principle of ABC inference, sampling only a small fraction of simulations generated under the prior is clearly computationally inefficient and more efficient sampling strategies for ABC inference have been developed \citep{Beaumont2002}. In practice, we are generally interested in fitting parameter-rich models and it would be straightforward to implement ABC inference for complex model of population structure and demography in \msprime.
+Figure~\ref{fig-abc-b} shows the mean and the root mean square error (RMSE) of \(m\) estimates (across 100 PODS) against the acceptance threshold and confirms that both the downward bias in \(m\) estimates and the associated RMSE increase with larger acceptance thresholds. While this toy example illustrates the principle of ABC inference, sampling only a small fraction of simulations generated under the prior is clearly computationally inefficient and more efficient sampling strategies for ABC inference have been developed \citep{Beaumont2002}. In practice, we are generally interested in fitting parameter-rich models and it would be straightforward to implement ABC inference for complex model of population structure and demography in \msprime.
 
 \section{Discussion}
 \label{sec:discussion}
@@ -2170,7 +2170,7 @@ lewanski2024era,nielsen2024inference,wong2024general}.
 This has largely been driven by exciting developments in inference, with great strides being
 made in both statistically rigorous Bayesian sampling
 approaches~\citep{rasmussen2014genome,mahmoudi2022bayesian,deng2024robust}
-and large-scale hueristic
+and large-scale heuristic
 methods~\cite{speidel2019method,kelleher2019inferring,
 zhang2023biobank,gunnarsson2024scalable},
 their potential combination~\citep{bisschop2025likelihoods},
@@ -2187,7 +2187,7 @@ is critical to evaluate these inference methods.
 \texttt{Msprime} is likely to continue to play a significant role
 in this ongoing ARG revolution.
 
-\section*{Acknowledgments}
+\section*{Acknowledgements}
 
 We would like to thank Simon Aeschbacher for comments on the ABC inference example,
 and to thank Yan Wong, Joseph Marcus and Julien Dutheil for
