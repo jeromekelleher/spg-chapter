@@ -1855,20 +1855,19 @@ comparisons with analytic predictions.
 }
 \end{figure}
 
-Here we take 1000 replicate simulations, store the number of infinite
-sites mutations for each and plot this distribution in
+Here we take 1000 replicate simulations, store the number of mutations for each and plot this distribution in
 Figure~\ref{fig-segsites-a}. Also plotted is the analytic prediction, which again provides an excellent fit.
 
 
 \subsection{Recombination}
 
-In the previous section we saw how to run simulations to generate trees
-under the assumptions of the single-locus coalescent and compare these
-with analytic predictions. This assumes that our data is not affected
+In the previous section we saw how to simulate trees
+under the single-locus coalescent and compare these
+with analytic predictions. This assumes that our data is unaffected
 by recombination, which is often unrealistic. Here we show how to
-compute empirical distributions of equivalent quantities, and compare
-these with classical results from the literature. Since analytic
-results for many quantities are generally unknown for the case of recombination along a linear sequence, we limit ourselves to the pairwise samples.
+compute empirical distributions of the number of segregarting sites, and compare
+these with classic results. Since analytic
+results for many quantities do not exist for the coalescent with recombination, we limit ourselves to pairwise samples:
 
 \begin{pythoncode}
 theta = 2
@@ -1894,8 +1893,8 @@ df = pd.DataFrame({"rho": rho_col, "s": s_col})
 
 In this code chunk we again run $10^4$ replicate simulations for a range
 of input parameters, and store the results in a Pandas data frame. We
-are interested in the effects of recombination rate in this example,
-and so the parameter that we vary is the scaled recombination rate
+are interested in the effect recombination has on the distribution of segregating sites in this example,
+and so the parameter we vary is the scaled recombination rate
 $\rho$ (noting, again, that we set \emph{ploidy = 1} and
 \texttt{recombination\_rate} = $\rho / 2$ to convert to \msprime's
 time scales).
@@ -1921,7 +1920,7 @@ plt.xlabel("rho")
 plt.legend();
 \end{pythoncode}
 
-After defining our analytic predictions for the mean and variance of the
+After defining analytic predictions for the mean and variance of the
 number of segregating sites, we then plot the observed and predicted values
 in Figure~\ref{fig-segsites-b}.
 Comparing the simulated results to analytic predictions we see
@@ -1933,27 +1932,28 @@ the variance.
 
 The analytical challenges of deriving likelihood functions even under
 highly idealized models of population structure and history have led to
-the development of likelihood-free inference methods, in particular
-Approximate Bayesian Computation (ABC)~\citep{Beaumont2002}.
+the development of likelihood-free, simulation based inference methods, in particular
+Approximate Bayesian Computation (ABC)~\citep{Beaumont2002} and deep learning~\cite{korfmann2023deep} methods.
 ABC approximates the posterior distribution of model parameters by drawing from
-simulations. Because of its flexibility ABC has become a standard
+simulations. Because of its flexibility, ABC has become a standard
 inference tool in statistical population genetics \citep[see][for a review]{csillery2010approximate}.
 We will demonstrate how \msprime\ can be used to set up an ABC inference
 by means of a simple toy example. We stress that this is meant as an
-illustration rather than a inference tool for practical use. However,
-given the flexibility of \msprime, it should be
-relatively straightforward to implement more a realistic framework focused
-on specific inference applications.
+illustration rather than an inference tool for practical use. However,
+given the flexibility of \msprime, it is
+relatively straightforward to implement more realistic inference focused
+on more detailed demographic and/or selective scenarios and richer data summaries.
 
 We assume that data for 200 loci or sequence blocks
 % Assuming this is out of date now:
 % (these could be RAD loci in practice)
+% yes
 for a single diploid individual have been generated
 from each of two populations. We would like to infer the amount of gene
 flow between the two populations. For the sake of simplicity we will
 assume the simplest possible model of population structure; that is, two
 populations, of the same effective size exchanging migrants at a
-constant rate of $m$ migrants per generation.
+constant scaled rate of \(M\) migrants per generation.
 
 The function \texttt{run\_sims} simulates a dataset consisting of a
 specified number of loci (\texttt{num\_loci}) given a migration rate
@@ -1997,8 +1997,10 @@ or bSFS \cite[sensu][]{Lohse2016}.
 Note that higher level population genetic summaries, e.g.\ pairwise
 measures of divergence and diversity such as \(D_{XY}\) \citep{Nei1972} and
 \(F_{ST}\)~\citep{wright1950genetical} or multi-population \(F\)
-statistics~\citep{Durand2009,patterson2012ancient} which are often
-used in ABC inference are just further (and lossy) summaries of the jSFS.
+statistics~\citep{Durand2009,patterson2012ancient}, which are often
+used in ABC inference are, just further (and lossy) summaries of the jSFS.
+Efficient methods to compute these population genetic summaries from tree sequences
+are available in \tskit\.
 
 Since \msprime\ simulates rooted trees, the columns and rows
 of the unfolded jSFS correspond to the frequency of derived mutations in
@@ -2012,7 +2014,7 @@ print(truth[0])
      [ 8.  1.  0.]]
 \end{pythoncode}
 
-    One could base inference on the bSFS \citep{Lohse2016, Beeravolu2017}, but we will for the sake of simplicity use a simpler (and lossy)
+    One could base inference on the bSFS \citep{Lohse2016, Beeravolu2017, HahnMishr2025}, but we will for the sake of simplicity use a simpler (and lossy)
 summary of the data: the average jSFS across loci. For analyses based on
 SNPs, it is convient to normalize the jSFS by the total number of
 mutations:
@@ -2060,7 +2062,7 @@ print(prior_jSFS[0])
 \end{pythoncode}
 
 Here we run 100 simulation replicates for each of the 10,000
-$m$ values drawn from the prior, giving a total of 1 million individual simulations.
+\(M\) values drawn from the prior, giving a total of 1 million individual simulations.
 We use the \texttt{concurrent.futures} module to distribute these
 computations over the available CPU cores.
 
@@ -2112,10 +2114,10 @@ from pseudo-observed data sets.]{
 
     In its simplest form, ABC approximates the posterior by sampling from
 the simulated data via an acceptance threshold. Here we approximate the
-posterior distribution of \(m\) using the 5\% of simulation replicates
+posterior distribution of \(M\) using the 5\% of simulation replicates
 that most closely match the average jSFS of the observed data.
 Figure~\ref{fig-abc-a} shows that the posterior
-distribution (shown in green) is centred around \(m=0.25\).
+distribution (shown in green) is centred around \(M=0.25\).
 \begin{pythoncode}
 cutoff = np.percentile(distances, 5)
 keep = np.where(distances < cutoff)
@@ -2126,7 +2128,7 @@ sns.histplot(prior_m, label="Prior", kde=True, stat="density")
 sns.histplot(post_m, label="Posterior", kde=True, stat="density")
 \end{pythoncode}
 
-The mean and the 95\% approximate posterior credible interval for \(m\)
+The mean and the 95\% approximate posterior credible interval for \(M\)
 are:
 \begin{pythoncode}
 print([mean_m, ci_m])
@@ -2137,22 +2139,21 @@ print([mean_m, ci_m])
 \end{pythoncode}
 
 
-Although the true value of \(m=0.3\) is contained within the 95 \% credible interval, the posterior distribution is clearly downwardly biased. This bias is in fact expected given that our prior is also strongly biased towards low \(m\). We can check the effect the acceptance threshold on the inference and get a sense of the expected information about \(m\) using a cross-validation procedure: we repeat the inference on pseudo-observed data sets (PODS) simulated under a known truth. Since we can re-use the same set of replicates simulated under the prior for inference, such cross-validation is computationally efficient.
+Although the true value of \(M=0.3\) is contained within the 95 \% credible interval, the posterior distribution is clearly downwardly biased. This bias is in fact expected given that our prior is also strongly biased towards low \(M\). We can check the effect of the acceptance threshold on the inference and get a sense of the expected information about \(M\) using a cross-validation procedure: we repeat the inference on pseudo-observed data sets (PODS) simulated under a known truth. Since we can re-use the same set of replicates simulated under the prior for inference, such cross-validation is computationally efficient.
 
 Figure~\ref{fig-abc-b} shows the mean and the root mean square error (RMSE) of \(m\) estimates (across 100 PODS) against the acceptance threshold and confirms that both the downward bias in \(m\) estimates and the associated RMSE increase with larger acceptance tresholds. While this toy example illustrates the principle of ABC inference, sampling only a small fraction of simulations generated under the prior is clearly computationally inefficient and more efficient sampling strategies for ABC inference have been developed \citep{Beaumont2002}. In practice, we are generally interested in fitting parameter-rich models and it would be straightforward to implement ABC inference for complex model of population structure and demography in \msprime.
 
 \section{Discussion}
 \label{sec:discussion}
-\texttt{Msprime} simulates the complete history of a sample of genomes under
+\texttt{msprime} simulates the complete history of a sample of genomes under
 the influence of recombination. Although there has been some confusion about
 the precise meaning of the term, the recent consensus has been to loosely
-refer to such structures as Ancestral Recombination Graphs, or
-ARGs~\citep{wong2024general}. Since \msprime\ was first released in 2014
+refer to the resulting structures as Ancestral Recombination Graphs, or
+ARGs~\citep{wong2024general}. Since \msprime\ was first released in 2014,
 there has been an explosion of interest in ARGs, with four separate
 review articles published in 2024~\citep{brandt2024promise,
 lewanski2024era,nielsen2024inference,wong2024general}.
-This has largely been
-driven by exciting developments in inference, with great strides being
+This has largely been driven by exciting developments in inference, with great strides being
 made in both statistically rigorous Bayesian sampling
 approaches~\citep{rasmussen2014genome,mahmoudi2022bayesian,deng2024robust}
 and large-scale hueristic
@@ -2160,7 +2161,7 @@ methods~\cite{speidel2019method,kelleher2019inferring,
 zhang2023biobank,gunnarsson2024scalable},
 their potential combination~\citep{bisschop2025likelihoods},
 along with important auxiliary inference tasks such as node
-dating~\cite{wohns2022unified,deng2025general}.
+dating~\cite{wohns2022unified,deng2025general} and the calculation of ARG based summaries~\cite{ignatieva2025haplotype}.
 Sophisticated simulation tools, however, have also played an important
 role. The ability to generate truth data at scale
 under a range of complex demographic
@@ -2168,7 +2169,7 @@ models~\citep{adrion2020stdpopsim,gower2022demes,lauterbur2023expanding}
 and arbitrary patterns of
 selection~\citep{kelleher2018efficient,haller2018tree,gower2025accessible}
 is critical to evaluate these inference methods.
-\texttt{Msprime} is likely to continue playing a significant role
+\texttt{msprime} is likely to continue to play a significant role
 in this ongoing ARG revolution.
 
 \section*{Acknowledgments}
