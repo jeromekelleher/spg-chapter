@@ -576,7 +576,7 @@ print(np.mean(S))
 \end{pythoncode}
 
 Note that we set \emph{discrete\_genome=False} in this example, that is,
-we are simulating mutations under the infinitely-many sites model.
+we are simulating mutations under the infinitely many sites model.
 Note also that we set the mutation rate to \(\theta / 2\) (to cancel out
 the factor of 2 in the definition of \(\theta\)) and \emph{ploidy = 1} (so
 that time is measured in haploid coalescent time units).
@@ -942,9 +942,9 @@ and the higher-level tools provided by Demes where applicable.
 \subsection{Recombination}\label{recombination}
 
 One of the key innovations of \msprime\ is that it makes simulation of the
-full coalescent with recombination possible at whole-chromosome scale.
+full coalescent with recombination possible at the whole-chromosome scale.
 Adding recombination to a simulation is simple, requiring very minor
-changes to the methods given above.
+changes to the methods given above:
 
 \begin{pythoncode}
 ts = msprime.sim_ancestry(
@@ -966,13 +966,13 @@ For this example, we defined a sequence length of 100kb, and a recombination rat
 simulations with different random seeds will usually result in different
 numbers of trees.
 
-Up to this point we have focused on simulations that returned a single
+Up to this point we have focused on simulations that return a single
 tree representing the genealogy of a sample. The inclusion of
 recombination, however, means that there may be more than one tree
 relating our samples. The \tskit\ \texttt{TreeSequence} object returned by
 \msprime\ is a very concise and efficient representation of these highly
 correlated trees. To process the trees, we simply consider
-them one at a time, using the \texttt{trees()} iterator.
+them one at a time, using the \texttt{trees()} iterator:
 
 \begin{pythoncode}
 tmrca = np.zeros(ts.num_trees)
@@ -993,7 +993,7 @@ plt.plot(breakpoints / 1000, tmrca, "o");
 a sample across a 100kb region.}
 \end{figure}
 
-This code generates the plot in Figure~\ref{fig:tree_tmrcas} showing the time of the MRCA of the sample for each tree across the
+This code generates the plot in Figure~\ref{fig:tree_tmrcas}, showing the time of the MRCA of the sample for each tree across the
 sequence. We find the \(T_{MRCA}\) as before, and plot this against the
 left coordinate of the genomic interval that each tree covers. A full description of
 \tskit\ tree sequences and the methods for working with them is
@@ -1072,13 +1072,12 @@ that the trees on either end of the genome are identical, which would not
 happen with crossover recombination.
 
 \subsection{Ancestry Models}\label{ancestry-models}
-By default, \msprime\ simulates the coalescent process based on the
+By default, \msprime\ simulates ancestry under the
 classical coalescent with recombination model~\citep{hudson1983properties}.
-\texttt{Msprime} supports several other ancestry models, appropriate for use in different
-scenarios; see~\cite{baumdicker2022efficient} for a discussion.
-The fixed-pedigree model was added more recently, an can lead
-to very realistic simulations when applied to a large
-pedigree~\cite{andersontrocme2023genes}. A full discussion of these
+\texttt{msprime} supports several other ancestry models, appropriate for use in different
+scenarios; see~\cite{baumdicker2022efficient} for a discussion:
+e.g.\ the fixed-pedigree model---added recently---can generate very realistic simulations when applied to large
+pedigrees~\cite{andersontrocme2023genes}. A full discussion of these
 models is beyond the scope of this chapter; the online documentation
 is extensive and authoritative.
 
@@ -1305,7 +1304,7 @@ This simulation required about 20 seconds to complete. Note that we set the
 \texttt{discrete\_genome} parameter of \texttt{sim\_mutations} to
 \texttt{False} to simulate mutations using an infinitely many sites model.
 This is convenient for the purposes of this chapter as we can assume
-that all sites have a single mutation, simplifying some logic. As many
+that all sites have a single mutation, simplifying comparisons with analuytic results. As many
 of the operations described here are implemented in full generality
 within \tskit\, the code snippets provided here are mainly for pedagogical
 purposes.
@@ -1356,12 +1355,13 @@ In this example we create a function \texttt{ibd\_segments} that returns
 a NumPy array of the lengths of IBD segments for a given pair of
 samples, \texttt{a} and \texttt{b}. It works simply by computing the
 MRCA for the samples at the left hand side of the sequence and then,
-moving rightwards, records a segment each time the MRCA changes. We then
-plot the distribution of tract lengths for samples 0 and 1 (which are
-both in population 0), and also the tract lengths for a pair of
+moving rightwards, records a segment each time the MRCA changes. Having 
+applied \texttt{ibd\_segments} to the tree sequence for a sample from three populations (simulated in previous section),
+we can plot the distribution of tract lengths for samples 0 and 1 (which are
+both in population 0), and a pair of
 samples from different populations. The results are shown in
-Figure~\ref{fig:ibd_segments}. As we might expect, the tract
-lengths are shorter for the between population pair.
+Figure~\ref{fig:ibd_segments}. As we might expect, IBD tracts
+are shorter for the between population pair.
 
 Of course, we would need to sample many such pairs of samples or longer sequences to
 get a reasonable approximation of the real distribution of block lengths.
@@ -1433,7 +1433,7 @@ print((ts.num_sites, private_0 + private_1, private_0, private_1))
 >>> (102783, 102117, 50850, 51267)
 \end{pythoncode}
 
-    This example is very similar, except we provide an extra argument to
+    This example is similar, except that we provide an extra argument to
 \texttt{ts.trees}. The \texttt{tracked\_samples} argument specifies a list of samples to be tracked, which can be
 any arbitrary subset of the samples in the simulation. Here we indicate
 that we are interested in tracking the set of samples within the
@@ -1470,10 +1470,10 @@ within these subtrees (i.e., those that are fixed for the ancestral
 state). These can be retained by using the
 \texttt{filter\_zero\_mutation\_sites=False} argument.
 
-Node IDs in the simplified tree sequence are not the same as in the
+Note that the node IDs in the simplified tree sequence are not the same as in the
 original. The \texttt{map\_nodes} argument allows us to obtain the
 mapping from IDs in the original tree sequence to their equivalant nodes
-in the new tree sequence.
+in the new tree sequence:
 
 \begin{pythoncode}
 ts_subset, node_map = ts.simplify(samples, map_nodes=True)
@@ -1491,7 +1491,7 @@ tree.draw_svg(node_labels=node_labels)
 simulation. Node IDs in the subset and full tree sequences are shown.}
 \end{figure}
 
-The result of running this code chunk is show in Figure~\ref{fig-tree-subset}.
+The result of running this code chunk is shown in Figure~\ref{fig-tree-subset}.
 Here we draw the first tree in the subset tree sequence, showing the new
 node IDs along with the IDs from the original tree sequence in
 parentheses. The number of nodes is greatly reduced from the original.
