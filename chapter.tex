@@ -188,7 +188,8 @@ Approximate Bayesian Computation (ABC)~\citep{huang2025estimating}
 and deep learning~\cite{korfmann2023deep}.
 These applications have been facilitated by the ease with
 which we can integrate with state-of-the-art tools from the
-Python data science ecosystem such as NumPy~\citep{walt2011numpy},
+Python data science ecosystem such as
+NumPy~\citep{walt2011numpy,harris2020array},
 SciPy~\citep{jones-2018-scipy},
 Matplotlib~\citep{hunter2007matplotlib}, Pandas~\citep{mckinney2010data},
 Seaborn~\citep{michael_waskom_2017_883859}, and
@@ -467,11 +468,15 @@ As this code chunk suggests, simulating mutations on a tree sequence is a two-st
 First, we simulate the genealogy using \texttt{sim\_ancestry} and store the resulting
 tree sequence in the variable \texttt{ts}. Note that we specified a \texttt{sequence\_length} parameter;
 this determines the number of discrete sites in the sequence at which mutation
-may occur. After that, we simulate mutations on this tree sequence using the \texttt{sim\_mutations} function.
-We specified a \texttt{rate} parameter for the \texttt{sim\_mutations} function; this
-parameter specifies the per-generation per-site mutation rate. We overwrote the \texttt{ts} variable
-with the new tree sequence object that now contains mutations to save memory, as otherwise we would
-store the tree sequence twice---once without mutations and once with mutations. We then
+may occur. After that, we simulate mutations on this tree sequence 
+using the \texttt{sim\_mutations} function, which takes a 
+\texttt{rate} parameter; this
+defines the per-site per-generation mutation rate. 
+Note that we deliberately overwrite the \texttt{ts} variable
+with the new tree sequence object containing 
+mutations to save memory, as otherwise we would
+store the tree sequence twice---once without mutations and once with mutations. 
+We then
 select the first (and only) tree in the tree sequence and plot it using the \texttt{draw\_svg()}
 method. The tree produced by this code chunk is shown in Figure~\ref{fig-tree-mutations}.
 
