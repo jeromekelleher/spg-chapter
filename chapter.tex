@@ -164,16 +164,16 @@ package~\citep{baumdicker2022efficient}.
 Thirdly, the data structure that \msprime\ uses
 to represent results,
 the \emph{succinct tree sequence},
-is a concise and efficient encoding of
-an Ancestral Recombination Graph~\citep{wong2024general}
+is a concise and efficient encoding 
+for Ancestral Recombination Graphs~\citep{wong2024general}
 (see the Discussion),
 and is the basis of the \tskit\ library used by \msprime.
 Using \tskit\ provides many benefits, including access to efficient
-data processing algorithms~\citep{ralph2020efficiently,lehmann2025on}
-and the ability to interoperate with forwards-time
-simulators~\citep{kelleher2018efficient,haller2018tree}.
-A diverse ecosystem of downstream utilities is also developing around
-\tskit~\cite{fan2022genealogical,nowbandegani2023extremely,tsambos2023link,
+data processing algorithms~\citep{ralph2020efficiently,lehmann2025on},
+the ability to interoperate with forwards-time
+simulators~\citep{kelleher2018efficient,haller2018tree},
+and access to a diverse ecosystem of downstream 
+utilities~\cite{fan2022genealogical,nowbandegani2023extremely,tsambos2023link,
 tagami2024tstrait,fritze2024forest}.
 Finally, \msprime's primary interface is through a simple but powerful Python
 API, providing significant advantages over command-line or GUI based alternatives.
@@ -182,7 +182,7 @@ on \msprime\ APIs, for example to provide easy access to
 realistic simulations across a range of
 species~\citep{adrion2020stdpopsim,lauterbur2023expanding,gower2025accessible}
 and other more specialised simulation
-scenarios~\citep{mckenzie2020ipcoal,rivera2021simulation,petrslendr2023, laetsch2023gimble},
+scenarios~\citep{mckenzie2020ipcoal,rivera2021simulation,petrslendr2023,laetsch2023demographically},
 % Could cite a bunch more stuff here but can't be bothered
 Approximate Bayesian Computation (ABC)~\citep{huang2025estimating}
 and deep learning~\cite{korfmann2023deep}.
@@ -214,8 +214,9 @@ and provide idiomatic examples that can be extended. For a high-level
 description of the algorithms and features of \msprime,
 see~\cite{kelleher2016efficient,baumdicker2022efficient}.
 See the corresponding publications for descriptions of
-the Discrete Time Wright-Fisher~\cite{nelson2020accounting},
-and fixed-pedigree~\cite{andersontrocme2023genes} models.
+the Discrete Time Wright-Fisher~\cite{nelson2020accounting}
+and fixed-pedigree~\cite{andersontrocme2023genes} models,
+and their applications.
 
 The chapter is organised as follows.
 Section~\ref{running-simulations} provides an overview of how to run coalescent simulations in \msprime, including some of the most important extensions to the basic model.
