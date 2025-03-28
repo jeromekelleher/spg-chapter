@@ -1284,10 +1284,10 @@ See the online documentation for full details.
 
 \section{Processing results}\label{processing-results}
 
-In the previous section we showed how to run simulations in \msprime, and
-how to construct population models and demographic histories. In this
+In the previous section we showed how to run basic simulations and
+how to construct demographic models in \msprime. In this
 section we show how to process the results of simulations using
-a \tskit\ \texttt{TreeSequence}. This is not a
+\tskit. This is not a
 comprehensive review of the capabilities of the \tskit\ Python API, but
 concentrates on some useful examples.
 \msprime\ is specifically designed to enable very large simulations, and
@@ -1304,7 +1304,8 @@ ts = msprime.sim_ancestry(
     samples={0: 50_000, 1: 50_000},
     demography=demography, recombination_rate=1e-8,
     sequence_length=10*10**6, random_seed=3)
-ts = msprime.sim_mutations(ts, rate=1e-8, random_seed=7)
+ts = msprime.sim_mutations(ts, rate=1e-8, 
+    random_seed=7, discrete_genome=False)
 print((ts.num_trees, ts.num_sites))
 
 >>> (93844, 102270)
@@ -1314,7 +1315,8 @@ This simulation required about 20 seconds to complete. Note that we set the
 \texttt{discrete\_genome} parameter of \texttt{sim\_mutations} to
 \texttt{False} to simulate mutations using an infinite sites model.
 This is convenient for the purposes of this chapter as we can assume
-that all sites have a single mutation, simplifying comparisons with analytic results. As many
+that all sites have a single mutation, simplifying logic 
+and comparisons with analytic results. As many
 of the operations described here are implemented in full generality
 within \tskit\, the code snippets provided here are mainly for pedagogical
 purposes.
@@ -1383,7 +1385,7 @@ call the above \texttt{ibd\_segments} function.
 \subsection{Sample counts}\label{sample-counts}
 
 The \tskit\ API provides an efficient way to count the number of samples that
-descent from  a particular node in a tree. This can be used,
+descend from  a particular node in a tree. This can be used,
 for example, to compute allele frequencies efficiently and is the basis
 for many of the fast algorithms in the API. As a simple illustration of
 this technique, consider the following code to compute the number of
@@ -1424,7 +1426,7 @@ to a specific population:
 
 \begin{pythoncode}
 def num_private_sites(pop_id):
-    pop_samples = ts.samples(pop_id)
+    pop_samples = ts.samples(population=pop_id)
     num_private = 0
     for tree in ts.trees(tracked_samples=pop_samples):
         for site in tree.sites():
@@ -1583,7 +1585,8 @@ CPU times: user 1.75 s, sys: 36 ms, total: 1.79 s
 A powerful property of the tree sequence representation is that we can
 efficiently find the differences between adjacent trees. This is very
 useful when we have some value that we wish to compute that changes in a
-simple way from one tree to the next in a treesequence. The \texttt{edge\_diffs} iterator provides us
+simple way from one tree to the next in a tree sequence. 
+The \texttt{edge\_diffs} iterator provides us
 with the information that we need to perform such incremental
 calculations. Here we use it to keep a running track of the total branch
 length of our trees, without needing to perform a full traversal each
