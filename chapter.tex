@@ -164,16 +164,16 @@ package~\citep{baumdicker2022efficient}.
 Thirdly, the data structure that \msprime\ uses
 to represent results,
 the \emph{succinct tree sequence},
-is a concise and efficient encoding of
-an Ancestral Recombination Graph~\citep{wong2024general}
+is a concise and efficient encoding 
+for Ancestral Recombination Graphs~\citep{wong2024general}
 (see the Discussion),
 and is the basis of the \tskit\ library used by \msprime.
 Using \tskit\ provides many benefits, including access to efficient
-data processing algorithms~\citep{ralph2020efficiently,lehmann2025on}
-and the ability to interoperate with forwards-time
-simulators~\citep{kelleher2018efficient,haller2018tree}.
-A diverse ecosystem of downstream utilities is also developing around
-\tskit~\cite{fan2022genealogical,nowbandegani2023extremely,tsambos2023link,
+data processing algorithms~\citep{ralph2020efficiently,lehmann2025on},
+the ability to interoperate with forwards-time
+simulators~\citep{kelleher2018efficient,haller2018tree},
+and access to a diverse ecosystem of downstream 
+utilities~\cite{fan2022genealogical,nowbandegani2023extremely,tsambos2023link,
 tagami2024tstrait,fritze2024forest}.
 Finally, \msprime's primary interface is through a simple but powerful Python
 API, providing significant advantages over command-line or GUI based alternatives.
@@ -182,13 +182,14 @@ on \msprime\ APIs, for example to provide easy access to
 realistic simulations across a range of
 species~\citep{adrion2020stdpopsim,lauterbur2023expanding,gower2025accessible}
 and other more specialised simulation
-scenarios~\citep{mckenzie2020ipcoal,rivera2021simulation,petrslendr2023, laetsch2023gimble},
+scenarios~\citep{mckenzie2020ipcoal,rivera2021simulation,petrslendr2023,laetsch2023demographically},
 % Could cite a bunch more stuff here but can't be bothered
 Approximate Bayesian Computation (ABC)~\citep{huang2025estimating}
 and deep learning~\cite{korfmann2023deep}.
 These applications have been facilitated by the ease with
 which we can integrate with state-of-the-art tools from the
-Python data science ecosystem such as NumPy~\citep{walt2011numpy},
+Python data science ecosystem such as
+NumPy~\citep{walt2011numpy,harris2020array},
 SciPy~\citep{jones-2018-scipy},
 Matplotlib~\citep{hunter2007matplotlib}, Pandas~\citep{mckinney2010data},
 Seaborn~\citep{michael_waskom_2017_883859}, and
@@ -214,8 +215,9 @@ and provide idiomatic examples that can be extended. For a high-level
 description of the algorithms and features of \msprime,
 see~\cite{kelleher2016efficient,baumdicker2022efficient}.
 See the corresponding publications for descriptions of
-the Discrete Time Wright-Fisher~\cite{nelson2020accounting},
-and fixed-pedigree~\cite{andersontrocme2023genes} models.
+the Discrete Time Wright-Fisher~\cite{nelson2020accounting}
+and fixed-pedigree~\cite{andersontrocme2023genes} models,
+and their applications.
 
 The chapter is organised as follows.
 Section~\ref{running-simulations} provides an overview of how to run coalescent simulations in \msprime, including some of the most important extensions to the basic model.
@@ -466,11 +468,15 @@ As this code chunk suggests, simulating mutations on a tree sequence is a two-st
 First, we simulate the genealogy using \texttt{sim\_ancestry} and store the resulting
 tree sequence in the variable \texttt{ts}. Note that we specified a \texttt{sequence\_length} parameter;
 this determines the number of discrete sites in the sequence at which mutation
-may occur. After that, we simulate mutations on this tree sequence using the \texttt{sim\_mutations} function.
-We specified a \texttt{rate} parameter for the \texttt{sim\_mutations} function; this
-parameter specifies the per-generation per-site mutation rate. We overwrote the \texttt{ts} variable
-with the new tree sequence object that now contains mutations to save memory, as otherwise we would
-store the tree sequence twice---once without mutations and once with mutations. We then
+may occur. After that, we simulate mutations on this tree sequence 
+using the \texttt{sim\_mutations} function, which takes a 
+\texttt{rate} parameter; this
+defines the per-site per-generation mutation rate. 
+Note that we deliberately overwrite the \texttt{ts} variable
+with the new tree sequence object containing 
+mutations to save memory, as otherwise we would
+store the tree sequence twice---once without mutations and once with mutations. 
+We then
 select the first (and only) tree in the tree sequence and plot it using the \texttt{draw\_svg()}
 method. The tree produced by this code chunk is shown in Figure~\ref{fig-tree-mutations}.
 
@@ -703,7 +709,7 @@ indefinitely. This is particularly important in simulation based
 approaches to inference from real data.)
 
 \subsubsection{Population structure}\label{population-structure}
-\msprime has a fully-featured API for modelling demography, which
+\msprime\ has a fully-featured API for modelling demography, which
 is thoroughly described in the online documenation. Here, we give a few examples
 of how to use this API for simple theoretical models as well as
 defining a more complex example.
@@ -733,7 +739,7 @@ need to specify the migration rate between each pair of populations. Instead,
 we can use the \texttt{Demography.island\_model()} method which accepts
 the same parameters as \texttt{Demography.isolated\_model()} in
 addition to the \texttt{migration\_rate} parameter. The following line sets up an
-\texttt{island\_model()} with three populations:
+island model with three populations with $N_e = 1$:
 \begin{pythoncode}
     demography = msprime.Demography.island_model(
         [1, 1, 1], migration_rate=0.1)
@@ -816,12 +822,11 @@ we simply use \texttt{demography.debug()}, which displays the demographic histor
 format. Figure~\ref{fig:DemographyDebugger} shows the \texttt{demography.debug()} output
 for the example model.
 
-\runinhead{Using Demes standard format}
+\runinhead{Demes format}
 The Demes format~\citep{gower2022demes} is a standard for writing
 demographic models, to facilitate interchange between simulators, as well as between
 demographic inference software and simulators. Demes models are typically written as
 YAML files, and loaded into Python using the demes library.
-
 For example, the complex demography model described in the previous section can be
 written in the Demes format as follows:
 
@@ -839,9 +844,8 @@ demes:
 \end{minted}
 \end{footnotesize}
 
-This YAML file can be loaded into Python using the demes library and can be represented
-easily using the \texttt{demesdraw} package. The following code chunk demonstrates how to
-load the Demes model from the YAML file to visualise it using \texttt{demesdraw}:
+This YAML file can be loaded into Python using the \texttt{demes} library and 
+visualised using the \texttt{demesdraw} package:
 
 \begin{figure}[t]
 \centering
@@ -852,34 +856,32 @@ simulated using \msprime. This figure is generated by expressing demography usin
 \end{figure}
 
 \begin{pythoncode}
+import demes
+import demesdraw
+
 graph = demes.load("admixture.yaml")
 demesdraw.tubes(graph)
 \end{pythoncode}
 This code chunk produces Figure~\ref{fig:complex-demography}. In this figure, arrows indicate
 the movement of individuals as time proceeds from the past to the present.
-
-To import a demes model from a YAML file, we can use the \texttt{demes.load()} function to
-load a demes graph object. Then, the \texttt{Demography.from\_demes()} method is used to convert a
-\texttt{demes graph} object into a \texttt{Demography} object.
-For example:
+We can then convert the \texttt{demes} description of the demography
+into \texttt{msprime} format, and use it for simulations:
+% To import a demes model from a YAML file, we can use the \texttt{demes.load()} function to
+% load a demes graph object. Then, the \texttt{Demography.from\_demes()} method is used to convert a
+% \texttt{demes graph} object into a \texttt{Demography} object.
+% For example:
 % On the
 % other hand, the \texttt{Demography.to\_demes()} method performs the opposite conversion; it
 % converts a \texttt{Demography} object to a \texttt{demes graph} object, which can then be
 % exported as a YAML file.
-
 \begin{pythoncode}
-import demes
 graph = demes.load("admixture.yaml")
 demography = msprime.Demography.from_demes(graph)
 ts = msprime.sim_ancestry(
     {"A":1, "B":1, "ADMIX":1},
     demography=demography)
 \end{pythoncode}
-
-The previous code block loads the example demes model of
-Figure~\ref{fig:complex-demography} from a YAML file. Then, a \texttt{Demography} object
-is created from the loaded \texttt{demes graph}. Finally, a tree sequence is simulated using the
-\texttt{Demography} object, with samples drawn from demes A, B, and ADMIX. This is
+This code block is 
 equivalent to running the earlier example defined using the \msprime\
 demography API.
 
@@ -957,11 +959,11 @@ print(ts.num_trees)
 In this case, we provide two extra parameters: \texttt{sequence\_length}, which
 defines the length of the genomic region to be simulated, and
 \texttt{recombination\_rate}, which defines the rate of recombination
-per base per generation. (It is also possible to specify a variable
-rate of recombination along the genome; see the online documentation.)
-
-For this example, we defined a sequence length of 100kb, and a recombination rate of
-\(10^{-8}\) per base per generation. The result of this particular simulation is a
+per base per generation .
+For this example, we defined a sequence length of 100kb, a recombination rate of
+\(10^{-8}\) per base per generation and an $N_e$ of $10^4$ 
+(corresponding---very roughly---to human parameters).
+The result of this particular simulation is a
 \emph{tree sequence} that contains 135 distinct trees. Other replicate
 simulations with different random seeds will usually result in different
 numbers of trees.
@@ -993,12 +995,20 @@ plt.plot(breakpoints / 1000, tmrca, "o");
 a sample across a 100kb region.}
 \end{figure}
 
-This code generates the plot in Figure~\ref{fig:tree_tmrcas}, showing the time of the MRCA of the sample for each tree across the
-sequence. We find the \(T_{MRCA}\) as before, and plot this against the
-left coordinate of the genomic interval that each tree covers. A full description of
-\tskit\ tree sequences and the methods for working with them is
-beyond the scope of this chapter.
+This code generates the plot in Figure~\ref{fig:tree_tmrcas}, showing the time
+of the MRCA of the sample for each tree across the sequence. We find the
+\(T_{MRCA}\) as before, and plot this against the left coordinate of the
+genomic interval that each tree covers. 
 
+The example given here is a very basic instance of simulating
+recombination in \msprime,  and other complexities such as 
+variable rates of recombination and gene 
+conversion~\citep{wiuf2000coalescent} can be incorporated. 
+See the online documentation for full details.
+
+% A full description of \tskit\ tree
+% sequences and the methods for working with them is beyond the scope of this
+% chapter. We will explore some idiomatic examples in the next section
 
 
 % It is also possible to simulate data with recombination rates varying
@@ -1047,39 +1057,39 @@ beyond the scope of this chapter.
 % a standard continuous genome by setting the \texttt{discrete\_genome} parameter for the \texttt{sim\_ancestry} function
 % to \texttt{False}.
 
-\subsubsection{Gene conversion}\label{gene-conversion}
-To simulate gene conversion in \msprime,
-two parameters are required: the gene conversion rate and the tract length distribution.
-In the following example, gene conversion events are initiated at a rate of
-0.02 per base per generation, and the tract lengths drawn from a
-genometric distribution with a mean of 1.
-% Gene conversion can be simulated independently, or it can be simulated alongside recombination, provided that both rates are constants.
-% The following example shows a simulation with gene conversion and recombination.
-\begin{pythoncode}
-ts = msprime.sim_ancestry(
-    3, gene_conversion_rate=0.02, gene_conversion_tract_length=1,
-    sequence_length=10, random_seed=3)
-\end{pythoncode}
+% \subsubsection{Gene conversion}\label{gene-conversion}
+% To simulate gene conversion in \msprime,
+% two parameters are required: the gene conversion rate and the tract length distribution.
+% In the following example, gene conversion events are initiated at a rate of
+% 0.02 per base per generation, and the tract lengths drawn from a
+% genometric distribution with a mean of 1.
+% % Gene conversion can be simulated independently, or it can be simulated alongside recombination, provided that both rates are constants.
+% % The following example shows a simulation with gene conversion and recombination.
+% \begin{pythoncode}
+% ts = msprime.sim_ancestry(
+%     3, gene_conversion_rate=0.02, gene_conversion_tract_length=1,
+%     sequence_length=10, random_seed=3)
+% \end{pythoncode}
 
-\begin{figure}
-\begin{center}
-\includegraphics[width=\textwidth]{images/gene_conversion.pdf}
-\end{center}
-\caption{\label{fig:gene_conversion} An example of simulated gene conversion.}
-\end{figure}
-Figure~\ref{fig:gene_conversion} shows the output of this example. We can see
-that the trees on either end of the genome are identical, which would not
-happen with crossover recombination.
+% \begin{figure}
+% \begin{center}
+% \includegraphics[width=\textwidth]{images/gene_conversion.pdf}
+% \end{center}
+% \caption{\label{fig:gene_conversion} An example of simulated gene conversion.}
+% \end{figure}
+% Figure~\ref{fig:gene_conversion} shows the output of this example. We can see
+% that the trees on either end of the genome are identical, which would not
+% happen with crossover recombination.
 
-\subsection{Ancestry Models}\label{ancestry-models}
-By default, \msprime\ simulates ancestry under the
-classical coalescent with recombination model~\citep{hudson1983properties}.
-\texttt{msprime} supports several other ancestry models, appropriate for use in different
-scenarios; see~\cite{baumdicker2022efficient} for a discussion:
-e.g.\ the fixed-pedigree model---added recently---can generate very realistic simulations when applied to large
-pedigrees~\cite{andersontrocme2023genes}. A full discussion of these
-models is beyond the scope of this chapter; the online documentation
-is extensive and authoritative.
+% \subsection{Ancestry Models}\label{ancestry-models}
+% By default, \msprime\ simulates ancestry under the
+% classical coalescent with recombination model~\citep{hudson1983properties}.
+% \texttt{msprime} supports several other ancestry models, appropriate for use in different
+% scenarios; see~\cite{baumdicker2022efficient} for a discussion:
+% e.g.\ the fixed-pedigree model---added recently---can generate very realistic simulations when applied to large
+% pedigrees~\cite{andersontrocme2023genes}. A full discussion of these
+% models is beyond the scope of this chapter; the online documentation
+% is extensive and authoritative.
 
 % However, \msprime\ is able to simulate the coalescent process using other models.
 
@@ -1274,10 +1284,10 @@ is extensive and authoritative.
 
 \section{Processing results}\label{processing-results}
 
-In the previous section we showed how to run simulations in \msprime, and
-how to construct population models and demographic histories. In this
+In the previous section we showed how to run basic simulations and
+how to construct demographic models in \msprime. In this
 section we show how to process the results of simulations using
-a \tskit\ \texttt{TreeSequence}. This is not a
+\tskit. This is not a
 comprehensive review of the capabilities of the \tskit\ Python API, but
 concentrates on some useful examples.
 \msprime\ is specifically designed to enable very large simulations, and
@@ -1294,7 +1304,8 @@ ts = msprime.sim_ancestry(
     samples={0: 50_000, 1: 50_000},
     demography=demography, recombination_rate=1e-8,
     sequence_length=10*10**6, random_seed=3)
-ts = msprime.sim_mutations(ts, rate=1e-8, random_seed=7)
+ts = msprime.sim_mutations(ts, rate=1e-8, 
+    random_seed=7, discrete_genome=False)
 print((ts.num_trees, ts.num_sites))
 
 >>> (93844, 102270)
@@ -1304,7 +1315,8 @@ This simulation required about 20 seconds to complete. Note that we set the
 \texttt{discrete\_genome} parameter of \texttt{sim\_mutations} to
 \texttt{False} to simulate mutations using an infinite sites model.
 This is convenient for the purposes of this chapter as we can assume
-that all sites have a single mutation, simplifying comparisons with analytic results. As many
+that all sites have a single mutation, simplifying logic 
+and comparisons with analytic results. As many
 of the operations described here are implemented in full generality
 within \tskit\, the code snippets provided here are mainly for pedagogical
 purposes.
@@ -1373,7 +1385,7 @@ call the above \texttt{ibd\_segments} function.
 \subsection{Sample counts}\label{sample-counts}
 
 The \tskit\ API provides an efficient way to count the number of samples that
-descent from  a particular node in a tree. This can be used,
+descend from  a particular node in a tree. This can be used,
 for example, to compute allele frequencies efficiently and is the basis
 for many of the fast algorithms in the API. As a simple illustration of
 this technique, consider the following code to compute the number of
@@ -1414,7 +1426,7 @@ to a specific population:
 
 \begin{pythoncode}
 def num_private_sites(pop_id):
-    pop_samples = ts.samples(pop_id)
+    pop_samples = ts.samples(population=pop_id)
     num_private = 0
     for tree in ts.trees(tracked_samples=pop_samples):
         for site in tree.sites():
@@ -1573,7 +1585,8 @@ CPU times: user 1.75 s, sys: 36 ms, total: 1.79 s
 A powerful property of the tree sequence representation is that we can
 efficiently find the differences between adjacent trees. This is very
 useful when we have some value that we wish to compute that changes in a
-simple way from one tree to the next in a treesequence. The \texttt{edge\_diffs} iterator provides us
+simple way from one tree to the next in a tree sequence. 
+The \texttt{edge\_diffs} iterator provides us
 with the information that we need to perform such incremental
 calculations. Here we use it to keep a running track of the total branch
 length of our trees, without needing to perform a full traversal each
@@ -1981,7 +1994,7 @@ def get_joint_site_frequency_spectra(reps):
     data = np.zeros((num_loci, nsamp + 1, nsamp + 1))
     for rep_index, ts in enumerate(reps):
         data[rep_index] = ts.allele_frequency_spectrum([
-            [0, 1], [2,3]], polarised=True)
+            [0, 1], [2, 3]], polarised=True)
     return data
 
 truth = get_joint_site_frequency_spectra(
@@ -2016,7 +2029,7 @@ print(truth[0])
 
     One could base inference on the bSFS \citep{Lohse2016, Beeravolu2017, HahnMishr2025}, but we will for the sake of simplicity use a simpler (and lossy)
 summary of the data: the average jSFS across loci. For analyses based on
-SNPs, it is convient to normalize the jSFS by the total number of
+SNPs, it is convenient to normalize the jSFS by the total number of
 mutations:
 \begin{pythoncode}
 truth_mean = np.mean(truth, axis=0)
