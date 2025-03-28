@@ -635,7 +635,9 @@ biological interpretation of effective population size.
 The \texttt{sim\_ancestry} function accepts a ploidy parameter, which defines
 the number of ``genomes'' per individual~\cite{wong2024general}.
 In \msprime, this has two effects: it determines the number of nodes
-per sample, and how time is scaled.
+per sample, and how time is scaled. It is important to note that 
+the grouping of sample nodes into individuals under coalescent 
+models in \msprime\ is arbitrary.
 
 By default, \emph{population\_size=1} in \msprime, which is equivalent to measuring
 time in units of $\mbox{ploidy}\times N_e$ generations. Thus,
