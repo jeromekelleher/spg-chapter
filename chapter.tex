@@ -722,18 +722,25 @@ simulate populations in isolation,
 using the  \texttt{initial\_size} and
 \texttt{growth\_rate} parameters to specify the per-population
 values.
-Here, we set up a simple model of two populations with asymmetric
+Here, we set up a simple model of two constant sized populations 
+with $N_e=1$ and $2$ respectively,
+with asymmetric
 migration (i.e.\ a continent-island model):
 \begin{pythoncode}
-    demography = msprime.Demography.isolated_model(
-        [1, 1], growth_rate=[0.01, 0.02])
+    demography = msprime.Demography.isolated_model([1, 2])
     demography.set_migration_rate(source=0, dest=1, rate=0.1)
 \end{pythoncode}
-The two populations have a constant rate of migration 0.1 which we set
-using the \texttt{set\_migration\_rate()}
-method. The interpretation of source and destination populations
-as well as the rate parameter is subtle and confusing; please see
-the online documentation for both precise and intuitive descriptions.
+It is important to note that the \texttt{source} and 
+\texttt{dest} populations are in the \emph{backwards time} 
+sense in \msprime. 
+In this example, we have a constant rate of 
+of 0.1 lineages per generation migrating from population
+\texttt{source} to \texttt{dest}, backwards in time.
+Note that this implies that (forwards in time) \emph{individuals}
+would migrate from population \texttt{dest} to \texttt{source},
+and that the rate depends on the current population sizes.
+Please see the online documentation 
+for full details on these subtle and important points.
 
 \runinhead{Symmetric Island model}\label{island-model}
 When the migration rate is the same between populations, we do not
