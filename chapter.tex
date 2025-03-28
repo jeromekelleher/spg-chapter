@@ -959,11 +959,11 @@ print(ts.num_trees)
 In this case, we provide two extra parameters: \texttt{sequence\_length}, which
 defines the length of the genomic region to be simulated, and
 \texttt{recombination\_rate}, which defines the rate of recombination
-per base per generation. (It is also possible to specify a variable
-rate of recombination along the genome; see the online documentation.)
-
-For this example, we defined a sequence length of 100kb, and a recombination rate of
-\(10^{-8}\) per base per generation. The result of this particular simulation is a
+per base per generation .
+For this example, we defined a sequence length of 100kb, a recombination rate of
+\(10^{-8}\) per base per generation and an $N_e$ of $10^4$ 
+(corresponding---very roughly---to human parameters).
+The result of this particular simulation is a
 \emph{tree sequence} that contains 135 distinct trees. Other replicate
 simulations with different random seeds will usually result in different
 numbers of trees.
@@ -995,12 +995,20 @@ plt.plot(breakpoints / 1000, tmrca, "o");
 a sample across a 100kb region.}
 \end{figure}
 
-This code generates the plot in Figure~\ref{fig:tree_tmrcas}, showing the time of the MRCA of the sample for each tree across the
-sequence. We find the \(T_{MRCA}\) as before, and plot this against the
-left coordinate of the genomic interval that each tree covers. A full description of
-\tskit\ tree sequences and the methods for working with them is
-beyond the scope of this chapter.
+This code generates the plot in Figure~\ref{fig:tree_tmrcas}, showing the time
+of the MRCA of the sample for each tree across the sequence. We find the
+\(T_{MRCA}\) as before, and plot this against the left coordinate of the
+genomic interval that each tree covers. 
 
+The example given here is a very basic instance of simulating
+recombination in \msprime,  and other complexities such as 
+variable rates of recombination and gene 
+conversion~\citep{wiuf2000coalescent} can be incorporated. 
+See the online documentation for full details.
+
+% A full description of \tskit\ tree
+% sequences and the methods for working with them is beyond the scope of this
+% chapter. We will explore some idiomatic examples in the next section
 
 
 % It is also possible to simulate data with recombination rates varying
@@ -1049,39 +1057,39 @@ beyond the scope of this chapter.
 % a standard continuous genome by setting the \texttt{discrete\_genome} parameter for the \texttt{sim\_ancestry} function
 % to \texttt{False}.
 
-\subsubsection{Gene conversion}\label{gene-conversion}
-To simulate gene conversion in \msprime,
-two parameters are required: the gene conversion rate and the tract length distribution.
-In the following example, gene conversion events are initiated at a rate of
-0.02 per base per generation, and the tract lengths drawn from a
-genometric distribution with a mean of 1.
-% Gene conversion can be simulated independently, or it can be simulated alongside recombination, provided that both rates are constants.
-% The following example shows a simulation with gene conversion and recombination.
-\begin{pythoncode}
-ts = msprime.sim_ancestry(
-    3, gene_conversion_rate=0.02, gene_conversion_tract_length=1,
-    sequence_length=10, random_seed=3)
-\end{pythoncode}
+% \subsubsection{Gene conversion}\label{gene-conversion}
+% To simulate gene conversion in \msprime,
+% two parameters are required: the gene conversion rate and the tract length distribution.
+% In the following example, gene conversion events are initiated at a rate of
+% 0.02 per base per generation, and the tract lengths drawn from a
+% genometric distribution with a mean of 1.
+% % Gene conversion can be simulated independently, or it can be simulated alongside recombination, provided that both rates are constants.
+% % The following example shows a simulation with gene conversion and recombination.
+% \begin{pythoncode}
+% ts = msprime.sim_ancestry(
+%     3, gene_conversion_rate=0.02, gene_conversion_tract_length=1,
+%     sequence_length=10, random_seed=3)
+% \end{pythoncode}
 
-\begin{figure}
-\begin{center}
-\includegraphics[width=\textwidth]{images/gene_conversion.pdf}
-\end{center}
-\caption{\label{fig:gene_conversion} An example of simulated gene conversion.}
-\end{figure}
-Figure~\ref{fig:gene_conversion} shows the output of this example. We can see
-that the trees on either end of the genome are identical, which would not
-happen with crossover recombination.
+% \begin{figure}
+% \begin{center}
+% \includegraphics[width=\textwidth]{images/gene_conversion.pdf}
+% \end{center}
+% \caption{\label{fig:gene_conversion} An example of simulated gene conversion.}
+% \end{figure}
+% Figure~\ref{fig:gene_conversion} shows the output of this example. We can see
+% that the trees on either end of the genome are identical, which would not
+% happen with crossover recombination.
 
-\subsection{Ancestry Models}\label{ancestry-models}
-By default, \msprime\ simulates ancestry under the
-classical coalescent with recombination model~\citep{hudson1983properties}.
-\texttt{msprime} supports several other ancestry models, appropriate for use in different
-scenarios; see~\cite{baumdicker2022efficient} for a discussion:
-e.g.\ the fixed-pedigree model---added recently---can generate very realistic simulations when applied to large
-pedigrees~\cite{andersontrocme2023genes}. A full discussion of these
-models is beyond the scope of this chapter; the online documentation
-is extensive and authoritative.
+% \subsection{Ancestry Models}\label{ancestry-models}
+% By default, \msprime\ simulates ancestry under the
+% classical coalescent with recombination model~\citep{hudson1983properties}.
+% \texttt{msprime} supports several other ancestry models, appropriate for use in different
+% scenarios; see~\cite{baumdicker2022efficient} for a discussion:
+% e.g.\ the fixed-pedigree model---added recently---can generate very realistic simulations when applied to large
+% pedigrees~\cite{andersontrocme2023genes}. A full discussion of these
+% models is beyond the scope of this chapter; the online documentation
+% is extensive and authoritative.
 
 % However, \msprime\ is able to simulate the coalescent process using other models.
 
