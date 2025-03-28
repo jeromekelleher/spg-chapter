@@ -576,7 +576,7 @@ print(np.mean(S))
 \end{pythoncode}
 
 Note that we set \emph{discrete\_genome=False} in this example, that is,
-we are simulating mutations under the infinitely many sites model.
+we are simulating mutations under the infinite sites model.
 Note also that we set the mutation rate to \(\theta / 2\) (to cancel out
 the factor of 2 in the definition of \(\theta\)) and \emph{ploidy = 1} (so
 that time is measured in haploid coalescent time units).
@@ -1302,7 +1302,7 @@ print((ts.num_trees, ts.num_sites))
 
 This simulation required about 20 seconds to complete. Note that we set the
 \texttt{discrete\_genome} parameter of \texttt{sim\_mutations} to
-\texttt{False} to simulate mutations using an infinitely many sites model.
+\texttt{False} to simulate mutations using an infinite sites model.
 This is convenient for the purposes of this chapter as we can assume
 that all sites have a single mutation, simplifying comparisons with analytic results. As many
 of the operations described here are implemented in full generality
@@ -1400,7 +1400,7 @@ of the derived allele at each site using the \texttt{num\_samples}
 method, which returns the number of samples subtending a given
 node. The underlying implementation ensures that this operation requires
 constant time, and so it is \emph{very} efficient. We see that such rare alleles are common.
-(Since we are using the infinitely many sites model, we can be confident that
+(Since we are using the infinite sites model, we can be confident that
 each mutation occurs at a unique site. Using other mutation models may produce
 tree sequences with back or recurrent mutations, where this simple approach
 will not work. To emphasise this point and to ensure that
@@ -1503,7 +1503,7 @@ Simplification is a powerful tool with many applications---see
 While it is nearly always more efficient to work with mutations in terms
 of their context within the trees, it is sometimes more convenient to
 work with the allelic states of the samples. This information is
-obtained in msprime using the \texttt{variants()} iterator, which
+obtained in \msprime\ using the \texttt{variants()} iterator, which
 returns a \texttt{Variant} object for each site in the tree sequence. A
 \texttt{Variant} consists of: (a) a reference to the \texttt{Site} in question;
 (b) the \texttt{alleles} at this site (the strings representing the
@@ -1515,17 +1515,17 @@ gives the allelic state for sample ID \texttt{j}. The values in the
 \texttt{genotypes} array are therefore indexes into the \texttt{alleles}
 list. The ancestral state at a given site is guaranteed to be the first
 element in the \texttt{alleles} list, but no other assumptions about
-ordering of the alleles list should be made.
+the ordering of the alleles list should be made.
 
-For biallelic sites, working with genotypes is straightforward as the
-genotypes array can only contain 0 and 1 values, which correspond to
+For biallelic sites, working with genotypes is straightforward, as the
+genotypes array can only contain 0 and 1 entries, which correspond to
 the ancestral and derived states, respectively. The \texttt{genotypes}
 values are returned as a NumPy array, and so the full NumPy library is
-available for efficient processing. As an example, we show here how to
+available for efficient processing. As an example, we show how to
 count the number of sites at which the derived allele is at frequency
 less than 10\%. Using the genotypes in this way is convenient, as
 complex patterns of back and recurrent mutations can be handled without
-difficulty.
+difficulty:
 
 \begin{pythoncode}
 %%time
@@ -1542,17 +1542,17 @@ print(num_rare)
 CPU times: user 1min 30s, sys: 4 ms, total: 1min 30s
 \end{pythoncode}
 
-This code is straightforward, as we simply iterate over all variants and
-count the number of 1 values in the genotypes array. Using the \texttt{np.sum}
+This code simply iterates over all variants and
+counts the number of 1 values in the genotypes array. Using the \texttt{np.sum}
 function, this operation is efficient. Generating all the genotypes for
 200,000 samples at 100,000 sites, however,
 is an expensive operation and the overall calculation takes about 1.5 minutes
 to complete.
 
 In the case of infinite sites mutations, we can recast this operation
-to use the efficient sample counting methods describe in
+to use the efficient sample counting methods described in
 Section~\ref{sample-counts}. This approach is far more
-efficient, requiring less than 2 seconds to compute the same value.
+efficient, requiring less than 2 seconds to compute the same value:
 \begin{pythoncode}
 %%time
 num_rare = 0
@@ -1573,7 +1573,7 @@ CPU times: user 1.75 s, sys: 36 ms, total: 1.79 s
 A powerful property of the tree sequence representation is that we can
 efficiently find the differences between adjacent trees. This is very
 useful when we have some value that we wish to compute that changes in a
-simple way between trees. The \texttt{edge\_diffs} iterator provides us
+simple way from one tree to the next in a treesequence. The \texttt{edge\_diffs} iterator provides us
 with the information that we need to perform such incremental
 calculations. Here we use it to keep a running track of the total branch
 length of our trees, without needing to perform a full traversal each
@@ -1593,7 +1593,7 @@ def get_total_branch_length(ts):
     return total_branch_length
 \end{pythoncode}
 
-    This function returns the total branch length value for each tree in the
+    This function returns the total branch length for each tree in the
 sequence as a NumPy array. It works by keeping track of the total branch
 length as we proceed from left to right, and storing this value in the
 output array for each tree. The \texttt{edge\_diffs} method returns a
@@ -1616,11 +1616,11 @@ CPU times: user 7.67 s, sys: 64 ms, total: 7.74 s
 
 In contrast, if we compute the total branch length by performing a
 full traversal for each tree, each tree transition is very costly
-when we have a large sample size. In this example, computing the array of branch lengths
-using the incremental approach given here took 8 seconds. Computing the
+when we have a large sample size. In the example above, computing the array of branch lengths
+using the incremental approach took 8 seconds. Computing the
 same array using the \texttt{tree.total\_branch\_length} for each tree
 in a straightforward way still had not completed after \emph{twenty
-minutes}.  Full tree traversals of large trees are
+minutes}. Full tree traversals of large trees are
 expensive, and great gains can be made if calculations can be expressed
 in an incremental manner using \texttt{edge\_diffs}.
 
@@ -1684,7 +1684,7 @@ for n in ns:
 df = pd.DataFrame({"n": n_col, "T_total": T_total_col})
 \end{pythoncode}
 
-    We first create an array of the six different \(n\) values that we wish to simulate, and then create arrays to hold the results of the
+    We first create an array of the six different sample sizes \(n\) we wish to simulate, and then create arrays to hold the results of the
 simulations. Because we are running 10,000 replicates for each sample
 size, we allocate arrays to hold 60,000 values. This approach of storing
 the data in arrays is convenient because it allows us to use Pandas
@@ -1771,7 +1771,7 @@ deviations from the simulations, as green circles and red triangles,
 respectively. We can see that the simulated values match our theoretical
 predictions for mean and variance very well. We can also see, however,
 that these one-dimensional summaries of the distribution capture some
-essential properties but lose some important aspects of the
+essential properties, but lose some important aspects of the
 distribution.
 
     Ideally, we wish to capture the full distribution analytically. In the following code chunk we define the analytic
@@ -1795,11 +1795,11 @@ plt.xlabel("T_total")
 plt.legend();
 \end{pythoncode}
 
-Since we cannot directly observe branch lengths, we are usually more
-interested in mutations when working with data. The mutation process is
+Since we cannot directly observe branch lengths, we are often more
+interested in mutations when working with data. Counts of mutations are
 intimately related to the distribution of branch lengths, since
-mutations occur randomly along tree branches. One simple summary of the
-mutational process is the total number of segregating sites, that is, the number of
+mutations occur randomly along tree branches. A simple summary
+of genetic variation is the total number of segregating sites, that is, the number of
 sites at which we observe variation. We can obtain this very
 easily from simulations simply by specifying a mutation rate parameter.
 (Note again that we set \emph{ploidy = 1} and our mutation rate
